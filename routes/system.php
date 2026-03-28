@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', 'verified'])
+Route::middleware(['web', 'auth'])
     ->prefix('system')
     ->name('system.')
     ->group(function (): void {

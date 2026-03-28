@@ -105,9 +105,7 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
             </div>
         </template>
 
-        <div class="py-6">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="bg-card shadow-sm rounded-lg border border-border">
+        <div class="bg-card shadow-sm rounded-lg border border-border">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -199,7 +197,5 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
                         </TableBody>
                     </Table>
                 </div>
-            </div>
-        </div>
     </AuthenticatedLayout>
 </template>

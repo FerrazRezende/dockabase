@@ -171,8 +171,7 @@ const getActionBadge = (action: string) => {
             </div>
         </template>
 
-        <div class="py-6 space-y-6">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+        <div class="space-y-6">
                 <!-- Status Card -->
                 <Card class="mb-6">
                     <CardHeader>
@@ -357,7 +356,6 @@ const getActionBadge = (action: string) => {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
         </div>
     </AuthenticatedLayout>
 </template>

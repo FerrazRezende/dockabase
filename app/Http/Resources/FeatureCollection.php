@@ -25,7 +25,7 @@ class FeatureCollection extends JsonResource
         return [
             'data' => $collection->map(
                 fn (FeatureConfigDTO $feature) => (new FeatureResource($feature))->toArray($request)
-            ),
+            )->values()->toArray(),
         ];
     }
 }

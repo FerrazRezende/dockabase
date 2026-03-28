@@ -33,7 +33,7 @@ class FeatureFlagController extends Controller
         }
 
         return Inertia::render('System/Features/Index', [
-            'features' => new FeatureCollection($features),
+            'features' => (new FeatureCollection($features))->toArray($request),
         ]);
     }
 
@@ -48,7 +48,16 @@ class FeatureFlagController extends Controller
 
         abort_unless($featureDto, 404, 'Feature not found');
 
-        return new FeatureResource($featureDto);
+        if ($request->wantsJson()) {
+            return new FeatureResource($featureDto);
+        }
+
+        $history = $this->featureService->getHistory($feature);
+
+        return Inertia::render('System/Features/Show', [
+            'feature' => (new FeatureResource($featureDto))->toArray($request),
+            'history' => $history,
+        ]);
     }
 
     /**

@@ -48,4 +48,9 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
         ];
     }
+
+    public function getAvatarAttribute(): ?string
+    {
+        return $this->attributes['avatar'] ?? null;
+    }
 }
