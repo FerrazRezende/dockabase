@@ -13,10 +13,11 @@ class FeaturePolicy
 
     /**
      * Determine whether the user can view features.
+     * Only God Admin (is_admin = true) can manage features.
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('admin');
+        return $user->is_admin === true;
     }
 
     /**
@@ -24,7 +25,7 @@ class FeaturePolicy
      */
     public function view(User $user): bool
     {
-        return $user->hasRole('admin');
+        return $user->is_admin === true;
     }
 
     /**
@@ -32,7 +33,7 @@ class FeaturePolicy
      */
     public function activate(User $user): bool
     {
-        return $user->hasRole('admin');
+        return $user->is_admin === true;
     }
 
     /**
@@ -40,7 +41,7 @@ class FeaturePolicy
      */
     public function deactivate(User $user): bool
     {
-        return $user->hasRole('admin');
+        return $user->is_admin === true;
     }
 
     /**
@@ -48,6 +49,14 @@ class FeaturePolicy
      */
     public function update(User $user): bool
     {
-        return $user->hasRole('admin');
+        return $user->is_admin === true;
+    }
+
+    /**
+     * Determine whether the user can manage feature users.
+     */
+    public function manageUsers(User $user): bool
+    {
+        return $user->is_admin === true;
     }
 }

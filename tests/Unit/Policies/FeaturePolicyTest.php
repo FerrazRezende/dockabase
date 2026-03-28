@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Policies;
 
 use App\Models\User;
 use App\Policies\FeaturePolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class FeaturePolicyTest extends TestCase
@@ -13,8 +14,8 @@ class FeaturePolicyTest extends TestCase
     use RefreshDatabase;
 
     private FeaturePolicy $policy;
-    private User $user;
     private User $admin;
+    private User $user;
 
     protected function setUp(): void
     {
@@ -22,15 +23,11 @@ class FeaturePolicyTest extends TestCase
 
         $this->policy = new FeaturePolicy();
 
-        // Create roles
-        Role::create(['name' => 'admin', 'guard_name' => 'web']);
+        // God Admin
+        $this->admin = User::factory()->create(['is_admin' => true]);
 
-        // Create regular user
-        $this->user = User::factory()->create();
-
-        // Create admin user
-        $this->admin = User::factory()->create();
-        $this->admin->assignRole('admin');
+        // Regular user
+        $this->user = User::factory()->create(['is_admin' => false]);
     }
 
     public function test_admin_can_view_any_features(): void
