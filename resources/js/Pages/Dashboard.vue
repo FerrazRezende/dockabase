@@ -1,30 +1,193 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    Database,
+    Home,
+    Sun,
+    Moon,
+    LogOut,
+    Settings,
+    PanelLeftClose,
+    PanelLeft,
+    ChevronDown,
+    Flag,
+} from 'lucide-vue-next';
+import { useDarkMode } from '@/composables/useDarkMode';
+import { ref } from 'vue';
+
+defineProps({
+    auth: Object,
+});
+
+const { isDark, toggleDark } = useDarkMode();
+const collapsed = ref(false);
+
+const toggleSidebar = () => {
+    collapsed.value = !collapsed.value;
+};
+
+const initials = (name) => {
+    return name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+};
 </script>
 
 <template>
     <Head title="Dashboard" />
 
-    <AuthenticatedLayout>
-        <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
+    <div class="flex min-h-screen bg-background">
+        <!-- Sidebar -->
+        <aside
+            :class="[
+                'fixed left-0 top-0 z-40 h-screen border-r border-border bg-card transition-all duration-300 flex flex-col',
+                collapsed ? 'w-16' : 'w-64',
+            ]"
+        >
+            <!-- Header -->
+            <div
+                :class="[
+                    'flex h-16 items-center border-b border-border',
+                    collapsed ? 'px-2 justify-center' : 'px-4 gap-3',
+                ]"
             >
-                Dashboard
-            </h2>
-        </template>
-
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    class="h-9 w-9 shrink-0"
+                    @click="toggleSidebar"
                 >
-                    <div class="p-6 text-gray-900">
-                        You're logged in!
-                    </div>
+                    <PanelLeftClose v-if="!collapsed" class="h-4 w-4" />
+                    <PanelLeft v-else class="h-4 w-4" />
+                </Button>
+
+                <div
+                    v-if="!collapsed"
+                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary"
+                >
+                    <Database class="h-5 w-5 text-primary-foreground" />
                 </div>
+                <span
+                    v-if="!collapsed"
+                    class="text-lg font-semibold text-foreground"
+                >
+                    DockaBase
+                </span>
             </div>
-        </div>
-    </AuthenticatedLayout>
+
+            <!-- Navigation -->
+            <nav class="flex-1 space-y-1 p-2">
+                <Link
+                    :href="route('dashboard')"
+                    :class="[
+                        'flex items-center rounded-lg text-sm font-medium transition-colors',
+                        collapsed
+                            ? 'justify-center p-3 bg-primary text-primary-foreground'
+                            : 'gap-3 px-3 py-2 bg-primary text-primary-foreground',
+                    ]"
+                >
+                    <Home class="h-5 w-5 shrink-0" />
+                    <span v-if="!collapsed">Home</span>
+                </Link>
+
+                <Link
+                    v-if="auth.user.is_admin"
+                    :href="route('system.features.index')"
+                    :class="[
+                        'flex items-center rounded-lg text-sm font-medium transition-colors',
+                        collapsed
+                            ? 'justify-center p-3'
+                            : 'gap-3 px-3 py-2',
+                        route().current('system.features.*')
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                    ]"
+                >
+                    <Flag class="h-5 w-5 shrink-0" />
+                    <span v-if="!collapsed">Features</span>
+                </Link>
+            </nav>
+
+            <!-- Footer -->
+            <div class="border-t border-border p-2">
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <Button
+                            variant="ghost"
+                            :class="[
+                                'w-full',
+                                collapsed
+                                    ? 'h-10 w-10 p-0 justify-center'
+                                    : 'justify-start gap-2 h-10 px-2',
+                            ]"
+                        >
+                            <Avatar class="h-8 w-8 shrink-0">
+                                <AvatarImage :src="auth.user.avatar" />
+                                <AvatarFallback class="bg-primary text-primary-foreground text-xs">
+                                    {{ initials(auth.user.name) }}
+                                </AvatarFallback>
+                            </Avatar>
+                            <template v-if="!collapsed">
+                                <div class="flex flex-1 flex-col items-start text-left truncate">
+                                    <span class="text-sm font-medium leading-none">
+                                        {{ auth.user.name }}
+                                    </span>
+                                    <span class="text-xs text-muted-foreground truncate">
+                                        {{ auth.user.email }}
+                                    </span>
+                                </div>
+                                <ChevronDown class="h-4 w-4 shrink-0 text-muted-foreground" />
+                            </template>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" side="top" :side-offset="8" class="w-56">
+                        <DropdownMenuItem as-child>
+                            <Link :href="route('profile.edit')" class="flex items-center gap-2">
+                                <Settings class="h-4 w-4" />
+                                Configurações
+                            </Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main :class="['flex-1 transition-all duration-300', collapsed ? 'ml-16' : 'ml-64']">
+            <!-- Header -->
+            <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-6">
+                <div></div>
+                <div class="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" @click="toggleDark">
+                        <Sun v-if="isDark" class="h-5 w-5" />
+                        <Moon v-else class="h-5 w-5" />
+                    </Button>
+                    <Link :href="route('logout')" method="post" as="button">
+                        <Button variant="ghost" size="sm" class="gap-2">
+                            <LogOut class="h-4 w-4" />
+                            Sair
+                        </Button>
+                    </Link>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="p-6">
+                <h1 class="text-3xl font-bold text-foreground">
+                    Bem-vindo, {{ auth.user.name }}!
+                </h1>
+            </div>
+        </main>
+    </div>
 </template>
