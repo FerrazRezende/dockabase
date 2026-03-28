@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\FeatureCollection;
 use App\Services\FeatureFlagService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class FeatureFlagController extends Controller
 {
@@ -24,6 +25,12 @@ class FeatureFlagController extends Controller
 
         $features = $this->featureService->getAllFeatures();
 
-        return new FeatureCollection($features);
+        if ($request->wantsJson()) {
+            return new FeatureCollection($features);
+        }
+
+        return Inertia::render('System/Features/Index', [
+            'features' => new FeatureCollection($features),
+        ]);
     }
 }
