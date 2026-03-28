@@ -10,6 +10,34 @@ DockaBase é um clone funcional e simplificado do Supabase, construído com Lara
 - **Realtime** - Websockets com LISTEN/NOTIFY do PostgreSQL
 - **Storage** - Abstração S3/MinIO com políticas de acesso
 
+## Estratégia de Distribuição
+
+**Modelo: Single-Tenant Self-Hosted**
+
+Cada instância do DockaBase é **individual e isolada** - não há compartilhamento de dados entre clientes.
+
+### Opções de Deploy
+
+| Modalidade | Descrição |
+|------------|-----------|
+| **Self-Hosted (Free)** | Cliente roda localmente via Docker |
+| **Cloud Managed (Paid)** | Subimos em servidor dedicado para o cliente |
+
+### Implicações Arquiteturais
+
+- **Sem multi-tenancy:** Features são globais por instância
+- **Sem Project model:** Não há necessidade de isolar dados por projeto
+- **Rotas simplificadas:** `/system/features` ao invés de `/system/projects/{id}/features`
+- **Banco isolado:** Cada cliente tem seu próprio PostgreSQL
+
+### Comparação
+
+| Aspecto | DockaBase | Supabase |
+|---------|-----------|----------|
+| Modelo | Single-tenant | Multi-tenant |
+| Isolamento | Por instância | Por projeto |
+| Features | Globais | Por projeto |
+
 ## Stack Tecnológica
 
 | Componente | Tecnologia |

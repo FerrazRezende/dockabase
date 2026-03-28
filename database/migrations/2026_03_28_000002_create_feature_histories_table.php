@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('feature_histories', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->foreignUuid('feature_setting_id')->constrained('feature_settings')->cascadeOnDelete();
             $table->string('action'); // activated, deactivated, updated
             $table->foreignId('actor_id')->constrained('users')->cascadeOnDelete();

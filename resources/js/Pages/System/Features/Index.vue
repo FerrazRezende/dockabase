@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { FeatureCollection } from '@/types/feature';
-import { MoreHorizontal, Play, Square, Settings } from 'lucide-vue-next';
+import { MoreHorizontal, Play, Square, Settings, ExternalLink } from 'lucide-vue-next';
 
 defineProps<{
     features: FeatureCollection;
@@ -125,7 +125,12 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
                                 :key="feature.name"
                             >
                                 <TableCell class="font-medium">
-                                    {{ feature.display_name }}
+                                    <Link
+                                        :href="route('system.features.show', feature.name)"
+                                        class="hover:underline"
+                                    >
+                                        {{ feature.display_name }}
+                                    </Link>
                                 </TableCell>
                                 <TableCell class="text-muted-foreground">
                                     {{ feature.description }}
@@ -178,9 +183,14 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
                                                 <Square class="mr-2 h-4 w-4" />
                                                 Desativar
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem>
-                                                <Settings class="mr-2 h-4 w-4" />
-                                                Configurar
+                                            <DropdownMenuItem as-child>
+                                                <Link
+                                                    :href="route('system.features.show', feature.name)"
+                                                    class="flex items-center w-full"
+                                                >
+                                                    <Settings class="mr-2 h-4 w-4" />
+                                                    Configurar
+                                                </Link>
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>

@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('feature_settings', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('id')->primary();
             $table->string('feature_name')->unique();
             $table->string('strategy')->default(RolloutStrategyEnum::Inactive->value);
             $table->unsignedInteger('percentage')->default(0);

@@ -24,7 +24,7 @@ class FeatureFlagController extends Controller
      */
     public function index(Request $request)
     {
-        abort_unless($request->user()->hasRole('admin'), 403);
+        abort_unless($request->user()->is_admin, 403);
 
         $features = $this->featureService->getAllFeatures();
 
@@ -46,7 +46,7 @@ class FeatureFlagController extends Controller
 
         $featureDto = $this->featureService->getFeature($feature);
 
-        abort_unless($featureDto, 404, "Feature not found");
+        abort_unless($featureDto, 404, 'Feature not found');
 
         return new FeatureResource($featureDto);
     }
