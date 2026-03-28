@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -23,6 +24,62 @@ import { MoreHorizontal, Play, Square, Settings } from 'lucide-vue-next';
 defineProps<{
     features: FeatureCollection;
 }>();
+
+const activating = ref<string | null>(null);
+
+const getCsrfToken = (): string => {
+    const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+    return meta?.content || '';
+};
+
+const activateFeature = async (featureName: string, strategy: string = 'all'): Promise<void> => {
+    activating.value = featureName;
+    try {
+        const response = await fetch(route('system.features.activate', featureName), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+            },
+            body: JSON.stringify({ strategy }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        router.reload({ only: ['features'] });
+    } catch (error) {
+        console.error('Failed to activate feature:', error);
+    } finally {
+        activating.value = null;
+    }
+};
+
+const deactivateFeature = async (featureName: string): Promise<void> => {
+    activating.value = featureName;
+    try {
+        const response = await fetch(route('system.features.deactivate', featureName), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        router.reload({ only: ['features'] });
+    } catch (error) {
+        console.error('Failed to deactivate feature:', error);
+    } finally {
+        activating.value = null;
+    }
+};
 
 const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'outline' => {
     if (strategy === 'all') return 'default';
@@ -105,11 +162,19 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem v-if="!feature.is_active">
+                                            <DropdownMenuItem
+                                                v-if="!feature.is_active"
+                                                @click="activateFeature(feature.name)"
+                                                :disabled="activating === feature.name"
+                                            >
                                                 <Play class="mr-2 h-4 w-4" />
                                                 Ativar
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem v-if="feature.is_active">
+                                            <DropdownMenuItem
+                                                v-if="feature.is_active"
+                                                @click="deactivateFeature(feature.name)"
+                                                :disabled="activating === feature.name"
+                                            >
                                                 <Square class="mr-2 h-4 w-4" />
                                                 Desativar
                                             </DropdownMenuItem>
