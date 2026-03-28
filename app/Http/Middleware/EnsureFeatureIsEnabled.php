@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Models\User;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,14 +19,7 @@ class EnsureFeatureIsEnabled
      */
     public function handle(Request $request, Closure $next, string $feature): mixed
     {
-        $user = $request->user();
-
-        // Admin users bypass feature flags
-        if ($user instanceof User && $user->hasRole('admin')) {
-            return $next($request);
-        }
-
-        // Check if feature is active
+        // Check if feature is active (uses FeatureServiceProvider's resolve logic)
         if (!Feature::active($feature)) {
             if ($request->wantsJson()) {
                 return new JsonResponse([

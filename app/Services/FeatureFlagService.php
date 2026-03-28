@@ -10,6 +10,7 @@ use App\Models\FeatureHistory;
 use App\Models\FeatureSetting;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Laravel\Pennant\Feature;
 
 class FeatureFlagService
 {
@@ -90,6 +91,9 @@ class FeatureFlagService
 
         $this->recordHistory($setting, 'activated', $actor, $previousState, $setting->fresh()->toArray());
 
+        // Purge Pennant cache so feature gets re-resolved
+        Feature::purge($featureName);
+
         return $this->getFeature($featureName);
     }
 
@@ -116,6 +120,9 @@ class FeatureFlagService
 
         $this->recordHistory($setting, 'deactivated', $actor, $previousState, $setting->fresh()->toArray());
 
+        // Purge Pennant cache so feature gets re-resolved
+        Feature::purge($featureName);
+
         return $this->getFeature($featureName);
     }
 
@@ -138,6 +145,9 @@ class FeatureFlagService
         if (!empty($updateData)) {
             $setting->update($updateData);
             $this->recordHistory($setting, 'updated', $actor, $previousState, $setting->fresh()->toArray());
+
+            // Purge Pennant cache so feature gets re-resolved
+            Feature::purge($featureName);
         }
 
         return $this->getFeature($featureName);
@@ -156,6 +166,9 @@ class FeatureFlagService
             $userIds[] = $userId;
             $setting->update(['user_ids' => $userIds]);
             $this->recordHistory($setting, 'updated', $actor, $previousState, $setting->fresh()->toArray());
+
+            // Purge Pennant cache so feature gets re-resolved
+            Feature::purge($featureName);
         }
 
         return $this->getFeature($featureName);
@@ -174,6 +187,9 @@ class FeatureFlagService
 
         $setting->update(['user_ids' => $userIds ?: null]);
         $this->recordHistory($setting, 'updated', $actor, $previousState, $setting->fresh()->toArray());
+
+        // Purge Pennant cache so feature gets re-resolved
+        Feature::purge($featureName);
 
         return $this->getFeature($featureName);
     }
