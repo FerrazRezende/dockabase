@@ -15,12 +15,13 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create super-admin user
+        // Create God Admin user (system owner)
         $user = User::create([
             'name' => 'Admin',
             'email' => 'admin@dockabase.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
+            'is_admin' => true, // God Admin - full system access
         ]);
 
         // Create super-admin role
