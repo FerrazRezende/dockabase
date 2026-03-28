@@ -3,17 +3,19 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
         Schema::create('credential_database', function (Blueprint $table) {
-            $table->uuid('id')->primary()->default(DB::raw('gen_random_uuid()'));
-            $table->foreignUuid('credential_id')->constrained('credentials')->cascadeOnDelete();
-            $table->foreignUuid('database_id')->constrained('databases')->cascadeOnDelete();
+            $table->id();
+            $table->char('credential_id', 27);
+            $table->char('database_id', 27);
             $table->timestamp('created_at')->useCurrent();
+
+            $table->foreign('credential_id')->references('id')->on('credentials')->cascadeOnDelete();
+            $table->foreign('database_id')->references('id')->on('databases')->cascadeOnDelete();
 
             $table->unique(['credential_id', 'database_id']);
         });
