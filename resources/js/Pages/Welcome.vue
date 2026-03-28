@@ -18,41 +18,14 @@ import {
     Sun,
     Moon,
 } from 'lucide-vue-next';
-import { ref, onMounted, watch } from 'vue';
+import { useDarkMode } from '@/composables/useDarkMode';
 
 defineProps({
     canLogin: Boolean,
     canRegister: Boolean,
 });
 
-const isDark = ref(false);
-
-const toggleDark = () => {
-    isDark.value = !isDark.value;
-};
-
-onMounted(() => {
-    // Check localStorage or system preference
-    const stored = localStorage.getItem('theme');
-    if (stored === 'dark') {
-        isDark.value = true;
-    } else if (stored === 'light') {
-        isDark.value = false;
-    } else {
-        isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-});
-
-watch(isDark, (value) => {
-    // Update DOM
-    if (value) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-    }
-}, { immediate: true });
+const { isDark, toggleDark } = useDarkMode();
 </script>
 
 <template>

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "laravel-mcp-companion": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "ghcr.io/brianirish/laravel-mcp-companion:latest"
+      ],
+      "env": {}
+    }
+  }
+}

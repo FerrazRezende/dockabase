@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Database } from 'lucide-vue-next';
-import { ref, onMounted, watch } from 'vue';
+import { Database, Sun, Moon } from 'lucide-vue-next';
+import { useDarkMode } from '@/composables/useDarkMode';
 
 defineProps({
     canResetPassword: Boolean,
@@ -25,33 +25,7 @@ const submit = () => {
     });
 };
 
-// Dark mode toggle
-const isDark = ref(false);
-
-const toggleDark = () => {
-    isDark.value = !isDark.value;
-};
-
-onMounted(() => {
-    const stored = localStorage.getItem('theme');
-    if (stored === 'dark') {
-        isDark.value = true;
-    } else if (stored === 'light') {
-        isDark.value = false;
-    } else {
-        isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-});
-
-watch(isDark, (value) => {
-    if (value) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-    }
-}, { immediate: true });
+const { isDark, toggleDark } = useDarkMode();
 </script>
 
 <template>
@@ -70,8 +44,8 @@ watch(isDark, (value) => {
 
                 <div class="flex items-center gap-2">
                     <Button variant="ghost" size="icon" @click="toggleDark">
-                        <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                        <Sun v-if="isDark" class="h-5 w-5" />
+                        <Moon v-else class="h-5 w-5" />
                     </Button>
                 </div>
             </div>

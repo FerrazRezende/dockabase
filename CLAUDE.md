@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-DockaBase é um clone funcional e simplificado do Supabase, construído com Laravel 12. O objetivo é criar uma plataforma BaaS que fornece:
+DockaBase é um clone funcional e simplificado do Supabase, construído com Laravel 13. O objetivo é criar uma plataforma BaaS que fornece:
 
 - **Database Manager** - Interface visual para gerenciar tabelas PostgreSQL
 - **Auth Provider** - Autenticação multi-tenant para usuários finais (OTP-based)
@@ -14,16 +14,18 @@ DockaBase é um clone funcional e simplificado do Supabase, construído com Lara
 
 | Componente | Tecnologia |
 |------------|------------|
-| Backend | Laravel 12+ / PHP 8.4+ |
+| Backend | Laravel 13+ / PHP 8.4+ |
 | Performance | Laravel Octane (Swoole) |
 | Database | PostgreSQL 16+ |
 | Cache | Redis 7+ |
 | Queue | RabbitMQ 7+ |
-| Frontend | Inertia.js + Vue 3 + Pinia |
+| Frontend | Inertia.js + Vue 3 + Pinia + TypeScript (strict) |
 | UI | shadcn-vue + Tailwind CSS 4.x |
 | Feature Flags | Laravel Pennant |
 | RBAC | Spatie Permission |
 | Storage | MinIO (Self-hosted S3) |
+| AI Tools | Laravel MCP Server |
+| Observabilidade | Laravel Pulse |
 
 ## Design System
 
@@ -48,15 +50,16 @@ Usar **shadcn-vue** (https://www.shadcn-vue.com/) - componentes copiáveis, não
 
 ## Arquitetura
 
-### Estrutura MVC Laravel
+### Estrutura de Diretórios
 
 ```
 app/
 ├── Http/
-│   ├── Controllers/     # Controllers enxutos (System, Api, Auth, Realtime, Storage)
+│   ├── Controllers/     # Controllers enxutos
 │   ├── Middleware/      # RLS, Features, Auth
 │   └── Requests/        # FormRequest para validação
-├── Models/              # Models com Scopes e Relationships
+├── DTOs/                # Data Transfer Objects (imutáveis, tipados)
+├── Models/              # Models gordas com Scopes e Relationships
 ├── Services/            # Lógica de negócio
 ├── Strategies/          # Comportamentos variáveis (filtros, ordenação)
 ├── Policies/            # Autorização (RBAC)
@@ -76,23 +79,63 @@ app/
 ### Camadas da Aplicação
 
 ```
-Controller (Enxuto)
-    ↓ delega para
-Service (Lógica de negócio)
-    ↓ usa
-Model (Robusto com Scopes)
+Request → FormRequest (validação) → Controller (orquestração) → Service (regras) → Resource
+                                        ↓
+                              Model / DTO / Events / Transactions
 ```
 
-**Controller:** Apenas recebe Request, valida com FormRequest, delega para Service, retorna Resource.
+**Fluxo:** Controller recebe Request validado → busca dados via Model → aplica regras via Service → persiste/transaciona → dispara eventos → retorna Resource.
 
-**Service:** Contém regras de negócio, usa Strategies para comportamentos variáveis.
+### Responsabilidades por Camada
 
-**Model:** Property Hooks, Scopes reutilizáveis (`scopeOf*`), Relationships, Traits.
+| Camada | Responsabilidade |
+|--------|------------------|
+| **Controller** | Orquestração: busca dados, chama Service, transações, eventos, retorna Resource |
+| **FormRequest** | Validação de entrada + Autorização via Policy |
+| **DTO** | Imutável, tipado, transferência entre camadas |
+| **Service** | Regras de negócio puras: entrada → processamento → saída |
+| **Model** | Property Hooks, Scopes `scopeOf{Entity}()`, Relationships, Traits, SoftDeletes |
+| **Resource** | Transforma Model em JSON com metadados |
+
+### Padrão de Scopes
+
+**Convenção obrigatória:** `scopeOf{Entity}($query, $value)` para filtros reutilizáveis.
+
+- `scopeOfProject($query, $projectId)`
+- `scopeOfStatus($query, $status)`
+- `scopeOfUser($query, $userId)`
+
+### Services (Regras de Negócio Puras)
+
+**Services recebem dados, aplicam regras, retornam resultados.** Nada de orquestração.
+
+- Não buscam dados do banco
+- Não disparam eventos
+- Não executam transações
+- Apenas: entrada → regras de negócio → saída
+
+### Controllers (Orquestração)
+
+Controllers fazem a orquestração completa:
+
+- Buscam dados via Model/Route Model Binding
+- Chamam Services para regras de negócio
+- Executam transações
+- Disparam eventos
+- Retornam Resources
+
+### Route Model Binding
+
+Usar Route Model Binding em todas as rotas que recebem IDs.
+
+### Soft Delete
+
+Todas as models que precisam de exclusão lógica devem usar SoftDeletes.
 
 ## Fases de Desenvolvimento
 
 ### Fase 1: Core & Infraestrutura
-- [ ] Setup Laravel 12 + PHP 8.4
+- [ ] Setup Laravel 13 + PHP 8.4
 - [ ] Configurar Octane, PostgreSQL, Redis, RabbitMQ
 - [ ] Setup Inertia.js + Vue 3 + shadcn-vue
 - [ ] Configurar Pennant + Spatie Permission
@@ -123,45 +166,29 @@ Model (Robusto com Scopes)
 
 ## Padrões e Convenções
 
+### Frontend (Vue 3 + TypeScript)
+
+- **TypeScript strict mode:** `strict: true` no tsconfig
+- **Composition API:** Usar `<script setup lang="ts">`
+- **Tipagem explícita:** Props, emits, refs, composables
+- **shadcn-vue:** Componentes UI copiáveis
+- **Ziggy:** Rotas tipadas (configurar para não expor no console)
+- **Validação:** Delegada ao FormRequest do Laravel
+- **Helper `__()`:** Util para JSON/formatting igual ao `__()` do Laravel
+
+### Helpers Laravel
+
+- **`__()`:** Usar para strings JSON/formatting (ex: `__('messages.welcome')`)
+
 ### Código PHP 8.4
 - **Property Hooks:** Usar para getters/setters
 - **Type Hints:** Obrigatório em todos os métodos
 - **Strict Types:** `declare(strict_types=1);` em todos os arquivos
 - **PSR-12:** Seguir padrão de codificação
 
-### Controllers (Enxutos)
-- Recebe Request
-- Valida com FormRequest
-- Delega para Service
-- Retorna Resource
-
-### Services (Lógica)
-- Contém regras de negócio
-- Usa Strategies para comportamentos variáveis
-- Retorna Resources para respostas
-
 ### Strategies (Comportamentos Variáveis)
 - FilterStrategy, SelectStrategy, OrderStrategy
 - Cada strategy implementa interface com método `apply()`
-
-### Models (Robustos)
-- Property Hooks para atributos
-- Scopes reutilizáveis: `scopeOfProject()`, `scopeOfStatus()`
-- Traits para comportamentos compartilhados
-
-### Requests (Validação)
-- FormRequest para validação
-- Método `authorize()` com Policy
-- Método `rules()` com validações
-
-### Policies (RBAC)
-- Integradas com Spatie Permission
-- Métodos: `viewAny`, `view`, `create`, `update`, `delete`
-- Usar `$user->hasPermissionTo()` e `$user->hasRole()`
-
-### Resources (Transformação)
-- Transformer para respostas JSON
-- Incluir `data` + `meta` (paginação)
 
 ### Enums (Type Safety)
 - Backed enums com métodos
@@ -173,16 +200,21 @@ Model (Robusto com Scopes)
 - `Cacheable` - Cache keys
 - `InteractsWithRedis` - Helpers Redis
 
-### Scopes (Queries Reutilizáveis)
-- Convenção: `scopeOf{Entity}($query, $value)`
-- Exemplo: `Table::ofProject($projectId)->ofStatus('active')->get()`
-
 ### Nomenclatura
 - **Tabelas de sistema:** Prefixo `system_`
 - **Tabelas de projeto:** Prefixo `{project_uuid}_`
 - **Models:** Domain-based (`App\Domain\Auth\Models\EndUser`)
 
+### IDs
+
+- **KSUID:** Padrão para entidades (string-based, compatível com JS, ordenável, distribuído)
+- **Incremental ID:** Apenas para coisas insignificantes (logs, pivot tables, etc)
+
 ## Testes
+
+### Metodologia
+
+**TDD + Extreme Programming** - Test-driven development com ciclos curtos de feedback.
 
 ### Princípios Fundamentais
 1. **Cada teste deve poder falhar** - Se remover a implementação, o teste DEVE falhar
@@ -209,12 +241,6 @@ Model (Robusto com Scopes)
 - Validação básica (Laravel já testa)
 - Getters/Setters simples
 
-### Anti-Padrões a Evitar
-- ❌ Teste que nunca falha (`$this->assertTrue(true)`)
-- ❌ Mockar tudo e não testar nada
-- ❌ Testar código do framework
-- ❌ Dados irreais
-
 ### Estrutura de Diretórios
 ```
 tests/
@@ -223,13 +249,6 @@ tests/
 │   └── Strategies/
 └── Feature/{Api,Auth,RLS}/
 ```
-
-### Checklist de Qualidade
-- [ ] O teste pode falhar se eu remover a implementação?
-- [ ] Dados de teste são realistas?
-- [ ] Nome do teste descreve claramente o que testa?
-- [ ] Não estou testando código do framework?
-- [ ] Não estou mockando o sistema sob teste?
 
 ## RBAC com Spatie Permission
 
@@ -247,14 +266,8 @@ tests/
 ### Permissões por Tabela
 Formato: `{tabela}.{operacao}` (ex: `posts.select`, `posts.insert`)
 
-### Sintaxe de Verificação
-- `$user->hasRole('admin')`
-- `$user->hasPermissionTo('posts.select')`
-- `$user->can('posts.insert')`
-
 ## Feature Flags (Laravel Pennant)
 
-### Features Disponíveis
 | Feature | Descrição |
 |---------|-----------|
 | `dynamic-api` | API REST dinâmica |
@@ -266,10 +279,6 @@ Formato: `{tabela}.{operacao}` (ex: `posts.select`, `posts.insert`)
 | `rls` | Row Level Security |
 | `advanced-rbac` | RBAC avançado |
 
-### Uso
-- `Feature::active('dynamic-api', $projectId)`
-- `Feature::activate()` / `Feature::deactivate()`
-
 ## RLS - Row Level Security
 
 ### Middleware
@@ -280,10 +289,6 @@ Formato: `{tabela}.{operacao}` (ex: `posts.select`, `posts.insert`)
 - **Admin:** Vê tudo
 - **Editor:** Vê dados do projeto
 - **User:** Vê apenas próprios dados
-
-### Integração com RBAC
-- Policies usam `$user->hasPermissionTo()` + verificação de projeto
-- RLS aplicado via Global Scope no Eloquent
 
 ## Query Syntax (API Dinâmica)
 
@@ -316,7 +321,6 @@ Segue sintaxe Supabase/PostgREST:
 - **Login sem senha:** Códigos de 6 dígitos
 - **Validade:** 5-15 minutos
 - **Rate limiting:** Prevenir abuso
-- **Lib:** Laravel OTP ou implementação com Notifications
 
 ### Storage
 - **Buckets:** Containers lógicos (pasta no MinIO)
@@ -329,7 +333,7 @@ Segue sintaxe Supabase/PostgREST:
 
 ## Próximos Passos
 
-1. Criar estrutura base do projeto Laravel 12
+1. Criar estrutura base do projeto Laravel 13
 2. Implementar DynamicController inicial
 3. Configurar Inertia.js com dashboard básico
 4. Implementar cache de schema com Redis

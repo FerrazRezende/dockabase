@@ -1,0 +1,200 @@
+# DockaBase - Context for LLMs
+
+## What is DockaBase?
+
+DockaBase is a Supabase clone built with Laravel 12 - a Backend-as-a-Service (BaaS) platform providing:
+- Database Manager (visual PostgreSQL table management)
+- Auth Provider (multi-tenant OTP-based authentication)
+- Dynamic REST API (auto-generated from database schema)
+- Realtime (WebSockets via PostgreSQL LISTEN/NOTIFY)
+- Storage (S3/MinIO abstraction with access policies)
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Backend | Laravel 13 / PHP 8.4 |
+| Performance | Laravel Octane (Swoole) |
+| Database | PostgreSQL 16+ |
+| Cache | Redis 7+ |
+| Queue | RabbitMQ 7+ |
+| Frontend | Inertia.js + Vue 3 + Pinia + TypeScript (strict) |
+| UI | shadcn-vue + Tailwind CSS 4.x |
+| Feature Flags | Laravel Pennant |
+| RBAC | Spatie Permission |
+| Storage | MinIO |
+| AI Tools | Laravel MCP Server |
+| Observability | Laravel Pulse |
+
+## Architecture
+
+### Route Prefixes
+- `/system/*` → Admin panel
+- `/api/v1/*` → Dynamic REST API
+- `/auth/v1/*` → OTP Authentication
+- `/realtime/v1/*` → WebSockets
+- `/storage/v1/*` → Storage endpoints
+
+### Layer Pattern
+```
+Controller (orchestration: DB queries, transactions, events)
+    → Service (pure business logic: input → rules → output)
+    → Model (fat with Scopes, SoftDeletes)
+```
+
+### Key Patterns
+- **Scopes:** `scopeOf{Entity}($query, $value)` convention
+- **Services:** Pure business logic only - no DB queries, no events, no transactions
+- **Controllers:** Full orchestration - fetch data, call services, handle transactions, dispatch events
+- **Route Model Binding:** Required for all ID-based routes
+- **Soft Delete:** For models requiring logical deletion
+
+### Directory Structure
+```
+app/
+├── Http/
+│   ├── Controllers/     # Thin controllers
+│   ├── Middleware/      # RLS, Features, Auth
+│   └── Requests/        # FormRequest validation
+├── Models/              # Scopes, Relationships
+├── Services/            # Business logic
+├── Strategies/          # Variable behaviors (filters, ordering)
+├── Policies/            # Authorization (RBAC)
+├── Resources/           # JSON transformation
+├── Enums/               # Type-safe enums with methods
+├── Traits/              # Shared behaviors
+└── Features/            # Laravel Pennant flags
+```
+
+## Coding Standards
+
+### PHP 8.4
+- Use Property Hooks for getters/setters
+- Strict types: `declare(strict_types=1);`
+- Type hints on all methods
+- PSR-12 formatting
+
+### Controller Pattern
+```php
+class ExampleController
+{
+    public function index(IndexRequest $request, ExampleService $service): JsonResponse
+    {
+        return $service->list($request->validated());
+    }
+}
+```
+
+### Service Pattern
+```php
+class ExampleService
+{
+    public function list(array $filters): JsonResponse
+    {
+        $query = Example::query()->ofProject($filters['project_id']);
+        return ExampleResource::collection($query->paginate());
+    }
+}
+```
+
+### Model Scopes
+```php
+// Convention: scopeOf{Entity}($query, $value)
+public function scopeOfProject(Builder $query, string $projectId): Builder
+{
+    return $query->where('project_id', $projectId);
+}
+```
+
+## Naming Conventions
+
+| Type | Convention |
+|------|------------|
+| System tables | `system_` prefix |
+| Project tables | `{project_uuid}_` prefix |
+| Models | Domain-based (`App\Domain\Auth\Models\EndUser`) |
+| Permissions | `{table}.{operation}` (e.g., `posts.select`) |
+| Primary Keys | **KSUID** (string-based, JS-safe) for entities; Incremental only for insignificant data |
+
+## Feature Flags (Pennant)
+
+Available flags:
+- `dynamic-api` - Dynamic REST API
+- `realtime` - WebSockets
+- `storage` - MinIO Storage
+- `otp-auth` - OTP Authentication
+- `database-encryption` - Data encryption
+- `automated-backups` - Auto backups
+- `rls` - Row Level Security
+- `advanced-rbac` - Advanced RBAC
+
+## RBAC (Spatie Permission)
+
+### Default Roles
+- `super-admin` - Full access
+- `admin` - Project management
+- `manager` - User management
+- `user` - Regular user
+
+### Permission Checks
+```php
+$user->hasRole('admin');
+$user->hasPermissionTo('posts.select');
+$user->can('posts.insert');
+```
+
+## API Query Syntax (PostgREST-style)
+
+```
+GET /api/v1/users?id=eq.1&select=id,name
+GET /api/v1/users?age=gte.18&order=created_at.desc
+POST /api/v1/users
+PATCH /api/v1/users?id=eq.1
+DELETE /api/v1/users?id=eq.1
+```
+
+## Testing Principles
+
+**Methodology:** TDD + Extreme Programming
+
+1. Each test MUST be able to fail
+2. Test behavior, not implementation
+3. Use realistic data (no "foo", "bar")
+4. Don't test framework code
+
+### What to Test (70-80% coverage)
+- Services (complex business logic)
+- Strategies (variable behaviors)
+- Policies (authorization rules)
+- Enums with methods
+- Complex scopes
+
+### What NOT to Test
+- Simple controllers (use Feature tests)
+- Eloquent relationships
+- Basic validation
+
+## Design System
+
+### Color Rule (10-30-60)
+- 10% Accent (Primary, buttons, links)
+- 30% Secondary (text, icons)
+- 60% Background (surfaces, cards)
+
+### Status Colors
+- Info: `#0ea5e9`
+- Success: `#22c55e`
+- Warning: `#f59e0b`
+- Error: `#ef4444`
+
+## Current Development Phase
+
+Phase 1: Core & Infrastructure (in progress)
+- [ ] Setup Laravel 12 + PHP 8.4
+- [ ] Configure Octane, PostgreSQL, Redis, RabbitMQ
+- [ ] Setup Inertia.js + Vue 3 + shadcn-vue
+- [ ] Configure Pennant + Spatie Permission
+
+---
+
+For detailed implementation guidelines, see CLAUDE.md
