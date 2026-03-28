@@ -6,22 +6,26 @@ namespace App\Http\Resources;
 
 use App\DTOs\FeatureConfigDTO;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 
-class FeatureCollection extends ResourceCollection
+class FeatureCollection extends JsonResource
 {
+    /**
+     * @param  iterable<FeatureConfigDTO>  $features
+     */
+    public function __construct($features)
+    {
+        parent::__construct($features);
+    }
+
     public function toArray(Request $request): array
     {
+        $collection = collect($this->resource);
+
         return [
-            'data' => $this->collection->map(fn (FeatureConfigDTO $feature) => [
-                'name' => $feature->name,
-                'display_name' => $feature->displayName,
-                'description' => $feature->description,
-                'is_active' => $feature->isActive,
-                'strategy' => $feature->strategy->value,
-                'strategy_label' => $feature->strategy->label(),
-                'percentage' => $feature->percentage,
-            ]),
+            'data' => $collection->map(
+                fn (FeatureConfigDTO $feature) => (new FeatureResource($feature))->toArray($request)
+            ),
         ];
     }
 }
