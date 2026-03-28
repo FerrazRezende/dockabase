@@ -1,30 +1,34 @@
-<script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+<script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+
+defineProps<{
+    auth: {
+        user: {
+            id: string;
+            name: string;
+            email: string;
+            is_admin: boolean;
+            avatar?: string;
+        };
+    };
+}>();
 </script>
 
 <template>
     <Head title="Dashboard" />
 
-    <AuthenticatedLayout>
+    <AuthenticatedLayout :auth="auth">
         <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
+            <h1 class="text-2xl font-semibold text-foreground">
                 Dashboard
-            </h2>
+            </h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
-                >
-                    <div class="p-6 text-gray-900">
-                        You're logged in!
-                    </div>
-                </div>
-            </div>
+        <div class="space-y-6">
+            <h2 class="text-3xl font-bold text-foreground">
+                Bem-vindo, {{ auth.user.name }}!
+            </h2>
         </div>
     </AuthenticatedLayout>
 </template>

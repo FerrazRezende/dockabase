@@ -4,11 +4,40 @@
 
 DockaBase é um clone funcional e simplificado do Supabase, construído com Laravel 13. O objetivo é criar uma plataforma BaaS que fornece:
 
-- **Database Manager** - Interface visual para gerenciar tabelas PostgreSQL
+- **Database Manager** - Interface visual para gerenciar múltiplos databases PostgreSQL
+- **Schema Builder** - Interface visual para criar tabelas e colunas
 - **Auth Provider** - Autenticação multi-tenant para usuários finais (OTP-based)
 - **Dynamic REST API** - API auto-gerada a partir do schema do banco
 - **Realtime** - Websockets com LISTEN/NOTIFY do PostgreSQL
 - **Storage** - Abstração S3/MinIO com políticas de acesso
+
+## Estratégia de Distribuição
+
+**Modelo: Single-Tenant Self-Hosted com Múltiplos Databases**
+
+Cada instância do DockaBase pode gerenciar **múltiplos databases PostgreSQL** na mesma instalação (ex: `dev`, `staging`, `prod`).
+
+### Opções de Deploy
+
+| Modalidade | Descrição |
+|------------|-----------|
+| **Self-Hosted (Free)** | Cliente roda localmente via Docker |
+| **Cloud Managed (Paid)** | Subimos em servidor dedicado para o cliente |
+
+### Implicações Arquiteturais
+
+- **Múltiplos databases por instância:** Uma instalação pode gerenciar N databases
+- **Features híbridas:** Features globais com override por database
+- **Rotas simplificadas:** `/system/features` ao invés de `/system/projects/{id}/features`
+- **Isolamento por database:** Cada database tem suas tabelas, schemas e dados
+
+### Comparação
+
+| Aspecto | DockaBase | Supabase |
+|---------|-----------|----------|
+| Modelo | Single-tenant, múltiplos databases | Multi-tenant |
+| Isolamento | Por database | Por projeto |
+| Features | Globais + override por database | Por projeto |
 
 ## Stack Tecnológica
 
@@ -26,6 +55,74 @@ DockaBase é um clone funcional e simplificado do Supabase, construído com Lara
 | Storage | MinIO (Self-hosted S3) |
 | AI Tools | Laravel MCP Server |
 | Observabilidade | Laravel Pulse |
+
+## Arquitetura de Acesso - Dois Níveis
+
+O DockaBase separa claramente dois níveis de acesso:
+
+### Nível 1: Aplicação (Spatie RBAC)
+
+Para **System Users** que acessam o painel administrativo do DockaBase.
+
+| Role | Descrição | Permissões |
+|------|-----------|------------|
+| `super-admin` | Acesso total | Todas as permissões |
+| `admin` | Gerencia instância | create-database, manage-credentials, manage-features |
+| `manager` | Gerencia usuários | manage-users, view-databases |
+| `user` | Usuário comum | view-databases |
+
+**Uso:** Controle de quem pode fazer o que no painel administrativo.
+
+### Nível 2: API (Credentials)
+
+Para **End Users** que consomem a API (frontend-only apps, DBeaver, etc).
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      CREDENTIAL                              │
+│  Name: "Dev Team"                                           │
+│  Permission: read-write                                     │
+├─────────────────────────────────────────────────────────────┤
+│  Users:              │  Databases:                          │
+│  • alice@company     │  • dev (read-write)                  │
+│  • bob@company       │  • staging (read-write)              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+| Permissão | Descrição | Operações |
+|-----------|-----------|-----------|
+| `read` | Apenas leitura | GET |
+| `write` | Apenas escrita | POST, PUT, PATCH, DELETE |
+| `read-write` | Leitura e escrita | Todas |
+
+**Fluxo de Criação:**
+1. Admin cria **Credential** com permissão (R, W, RW) e atrela usuários
+2. Admin cria **Database** e atrela credentials
+3. Usuários das credentials ganham acesso ao database
+
+**Importante:**
+- Usuários são atrelados à Credential na criação da Credential
+- Credentials são atreladas ao Database na criação do Database
+- Um usuário pode ter múltiplas credentials (access groups diferentes)
+- Uma credential pode ser atrelada a múltiplos databases
+
+### Modelo de Dados
+
+```
+users ──┐
+        ├── credential_user (pivot) ──► credentials
+        │                                    │
+        │                                    ├── permission: enum(read, write, read-write)
+        │                                    │
+        └────────────────────────────────────┴──► credential_database (pivot) ──► databases
+```
+
+### Endpoints por Nível
+
+| Nível | Prefixo | Autenticação | Uso |
+|-------|---------|--------------|-----|
+| Aplicação | `/system/*` | Session (web) | Painel admin |
+| API | `/api/v1/{database}/*` | Sanctum (token) | End users |
 
 ## Design System
 
@@ -134,35 +231,55 @@ Todas as models que precisam de exclusão lógica devem usar SoftDeletes.
 
 ## Fases de Desenvolvimento
 
-### Fase 1: Core & Infraestrutura
-- [ ] Setup Laravel 13 + PHP 8.4
-- [ ] Configurar Octane, PostgreSQL, Redis, RabbitMQ
-- [ ] Setup Inertia.js + Vue 3 + shadcn-vue
-- [ ] Configurar Pennant + Spatie Permission
+### Fase 1: Core & Infraestrutura ✅
+- [x] Setup Laravel 13 + PHP 8.4
+- [x] Configurar Octane, PostgreSQL, Redis, RabbitMQ
+- [x] Setup Inertia.js + Vue 3 + shadcn-vue
+- [x] Configurar Pennant + Spatie Permission
+- [x] Feature Flag Manager (UI + API)
 
-### Fase 2: Database & Schema Builder
+### Fase 2: Database Creator
+- [ ] Model `Database` e migrations
+- [ ] Model `Credential` e relacionamentos
+- [ ] UI para criar databases
+- [ ] UI para criar credentials e atrelar usuários
+- [ ] Atrelar credentials ao database na criação
+- [ ] Feature flag: `database-creator`
+
+### Fase 3: Schema Builder
 - [ ] Interface visual para criar tabelas
 - [ ] Migrations dinâmicas
 - [ ] Suporte a tipos PostgreSQL (UUID, JSONB, Arrays)
+- [ ] Feature flag: `schema-builder`
 
-### Fase 3: Autenticação Multi-tenant & RBAC
-- [ ] Separar System Users vs End Users
-- [ ] JWT para end users
-- [ ] OTP Auth (login sem senha)
-- [ ] Spatie Permission + RLS integrado
+### Fase 4: Table Manager
+- [ ] CRUD de dados com interface tipo planilha
+- [ ] Filtros e ordenação
+- [ ] Export/Import CSV
+- [ ] Feature flag: `table-manager`
 
-### Fase 4: API Dinâmica
-- [ ] Dynamic Router `/api/v1/{table}`
+### Fase 5: Dynamic REST API
+- [ ] Dynamic Router `/api/v1/{database}/{table}`
 - [ ] Query Parser (filtros tipo `?age=gte.18`)
 - [ ] Validação dinâmica baseada no schema
+- [ ] Autenticação via Credentials
+- [ ] Feature flag: `dynamic-api`
 
-### Fase 5: Realtime
+### Fase 6: Autenticação OTP
+- [ ] Login sem senha via código
+- [ ] JWT para end users
+- [ ] Rate limiting
+- [ ] Feature flag: `otp-auth`
+
+### Fase 7: Realtime
 - [ ] Laravel Echo + Redis
 - [ ] Postgres LISTEN/NOTIFY + Triggers
+- [ ] Feature flag: `realtime`
 
-### Fase 6: Storage
+### Fase 8: Storage
 - [ ] MinIO com Buckets
 - [ ] Políticas de acesso via RLS
+- [ ] Feature flag: `storage`
 
 ## Padrões e Convenções
 
@@ -268,16 +385,70 @@ Formato: `{tabela}.{operacao}` (ex: `posts.select`, `posts.insert`)
 
 ## Feature Flags (Laravel Pennant)
 
-| Feature | Descrição |
-|---------|-----------|
-| `dynamic-api` | API REST dinâmica |
-| `realtime` | Websockets |
-| `storage` | Storage MinIO |
-| `otp-auth` | Autenticação OTP |
-| `database-encryption` | Criptografia de dados |
-| `automated-backups` | Backups automáticos |
-| `rls` | Row Level Security |
-| `advanced-rbac` | RBAC avançado |
+### Modelo Híbrido
+
+Features são definidas globalmente, mas cada database pode ter overrides.
+
+```
+Features Globais (config/features.php)
+├── database-creator: available ✓
+├── schema-builder: available ✓
+├── dynamic-api: available ✓
+├── realtime: available ✓
+├── storage: available ✓
+├── otp-auth: available ✓
+├── database-encryption: available ✓
+├── automated-backups: available ✓
+├── rls: available ✓
+└── advanced-rbac: available ✓
+
+Database: prod
+├── dynamic-api: enabled (usa default)
+├── realtime: enabled (usa default)
+└── storage: disabled (override local)
+
+Database: dev
+├── dynamic-api: enabled (usa default)
+├── realtime: disabled (override local)
+└── storage: disabled (override local)
+```
+
+### Features Disponíveis
+
+| Feature | Descrição | Prioridade |
+|---------|-----------|------------|
+| `database-creator` | Interface para criar databases PostgreSQL | P0 |
+| `schema-builder` | Interface visual para criar tabelas/colunas | P0 |
+| `table-manager` | CRUD de dados com interface tipo planilha | P0 |
+| `dynamic-api` | API REST dinâmica auto-gerada | P0 |
+| `realtime` | Websockets com LISTEN/NOTIFY | P1 |
+| `storage` | Storage MinIO com buckets | P1 |
+| `otp-auth` | Autenticação OTP (login sem senha) | P1 |
+| `database-encryption` | Criptografia com pgcrypto | P2 |
+| `automated-backups` | Backups automáticos | P2 |
+| `rls` | Row Level Security | P2 |
+| `advanced-rbac` | RBAC avançado | P2 |
+
+### Estratégias de Rollout
+
+| Estratégia | Descrição | Uso |
+|------------|-----------|-----|
+| `inactive` | Feature desativada | Default |
+| `percentage` | X% dos usuários | Rollout gradual |
+| `users` | Lista específica | Beta testers |
+| `all` | 100% dos usuários | General Availability |
+
+### Integração com Pennant
+
+```php
+// FeatureServiceProvider define features dinamicamente
+Feature::define('realtime', function (User $user) use ($featureName) {
+    return $this->resolveFeature($user, $featureName);
+});
+
+// FeatureFlagService purga cache do Pennant ao atualizar settings
+Feature::purge($featureName);
+```
 
 ## RLS - Row Level Security
 
