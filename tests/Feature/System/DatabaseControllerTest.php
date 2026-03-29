@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature\System;
 
+use App\Jobs\CreateDatabaseJob;
 use App\Models\Credential;
 use App\Models\Database;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class DatabaseControllerTest extends TestCase
@@ -46,6 +48,8 @@ class DatabaseControllerTest extends TestCase
 
     public function test_store_creates_database(): void
     {
+        Queue::fake();
+
         $response = $this->actingAs($this->admin)
             ->postJson(route('app.databases.store'), [
                 'name' => 'dev',
@@ -122,5 +126,41 @@ class DatabaseControllerTest extends TestCase
         $response->assertNoContent();
 
         $this->assertFalse($database->fresh()->credentials->contains($credential));
+    }
+
+    public function test_store_dispatches_create_database_job(): void
+    {
+        Queue::fake();
+
+        $credential = Credential::factory()->create();
+
+        $response = $this->actingAs($this->admin)
+            ->postJson(route('app.databases.store'), [
+                'name' => 'testdb',
+                'database_name' => 'testdb',
+                'credential_ids' => [$credential->id],
+            ]);
+
+        $response->assertCreated();
+
+        Queue::assertPushed(CreateDatabaseJob::class);
+    }
+
+    public function test_store_creates_database_with_pending_status(): void
+    {
+        Queue::fake();
+
+        $response = $this->actingAs($this->admin)
+            ->postJson(route('app.databases.store'), [
+                'name' => 'pending_db',
+                'database_name' => 'pending_db',
+            ]);
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('databases', [
+            'name' => 'pending_db',
+            'status' => 'pending',
+        ]);
     }
 }

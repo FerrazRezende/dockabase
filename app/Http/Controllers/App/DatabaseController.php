@@ -9,6 +9,7 @@ use App\Http\Requests\System\CreateDatabaseRequest;
 use App\Http\Requests\System\UpdateDatabaseRequest;
 use App\Http\Resources\DatabaseCollection;
 use App\Http\Resources\DatabaseResource;
+use App\Jobs\CreateDatabaseJob;
 use App\Models\Credential;
 use App\Models\Database;
 use App\Services\DatabaseService;
@@ -47,11 +48,14 @@ class DatabaseController extends Controller
         return Inertia::render('App/Databases/Create');
     }
 
-    public function store(CreateDatabaseRequest $request): DatabaseResource
+    public function store(CreateDatabaseRequest $request): JsonResponse
     {
         $this->authorize('create', Database::class);
 
-        $database = $this->databaseService->create($request->validated());
+        $database = $this->databaseService->create(array_merge(
+            $request->validated(),
+            ['status' => 'pending']
+        ));
 
         if ($request->has('credential_ids')) {
             foreach ($request->validated('credential_ids') as $credentialId) {
@@ -62,7 +66,12 @@ class DatabaseController extends Controller
             }
         }
 
-        return new DatabaseResource($database);
+        // Dispatch async job
+        CreateDatabaseJob::dispatch($database);
+
+        return response()->json([
+            'data' => (new DatabaseResource($database->fresh()))->toArray($request),
+        ], 201);
     }
 
     public function show(Request $request, Database $database): DatabaseResource|Response
