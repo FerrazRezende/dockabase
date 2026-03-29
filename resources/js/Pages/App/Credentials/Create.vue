@@ -22,14 +22,7 @@ const form = useForm({
 });
 
 const submit = (): void => {
-    form.post(route('app.credentials.store'), {
-        onSuccess: (page) => {
-            const credentialId = (page.props.credential as { id: string })?.id;
-            if (credentialId) {
-                router.visit(route('app.credentials.show', credentialId));
-            }
-        },
-    });
+    form.post(route('app.credentials.store'));
 };
 </script>
 

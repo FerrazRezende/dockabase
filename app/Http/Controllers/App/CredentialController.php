@@ -13,6 +13,7 @@ use App\Models\Credential;
 use App\Models\User;
 use App\Services\CredentialService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,7 +28,7 @@ class CredentialController extends Controller
     {
         $this->authorize('viewAny', Credential::class);
 
-        $credentials = Credential::withCount(['users', 'databases'])
+        $credentials = Credential::withCount('users')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -47,13 +48,22 @@ class CredentialController extends Controller
         return Inertia::render('App/Credentials/Create');
     }
 
-    public function store(CreateCredentialRequest $request): CredentialResource
+    public function store(CreateCredentialRequest $request): RedirectResponse
     {
         $this->authorize('create', Credential::class);
 
         $credential = $this->credentialService->create($request->validated());
 
-        return new CredentialResource($credential->load(['users']));
+        if ($request->has('user_ids')) {
+            foreach ($request->validated('user_ids') as $userId) {
+                $user = User::find($userId);
+                if ($user) {
+                    $this->credentialService->attachUser($credential, (string) $user->id);
+                }
+            }
+        }
+
+        return to_route('app.credentials.show', $credential);
     }
 
     public function show(Request $request, Credential $credential): CredentialResource|Response
@@ -77,7 +87,7 @@ class CredentialController extends Controller
 
         $credential = $this->credentialService->update($credential, $request->validated());
 
-        return new CredentialResource($credential->load(['users']));
+        return new CredentialResource($credential);
     }
 
     public function destroy(Credential $credential): JsonResponse

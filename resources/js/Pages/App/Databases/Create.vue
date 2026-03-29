@@ -26,14 +26,7 @@ const form = useForm({
 });
 
 const submit = (): void => {
-    form.post(route('app.databases.store'), {
-        onSuccess: (page) => {
-            const databaseId = (page.props.database as { id: string })?.id;
-            if (databaseId) {
-                router.visit(route('app.databases.show', databaseId));
-            }
-        },
-    });
+    form.post(route('app.databases.store'));
 };
 </script>
 
