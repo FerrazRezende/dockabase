@@ -65,4 +65,38 @@ class DatabaseTest extends TestCase
 
         $this->assertEquals(27, strlen($database->id));
     }
+
+    public function test_status_defaults_to_pending(): void
+    {
+        $database = Database::factory()->create();
+
+        // Refresh to get database defaults
+        $database->refresh();
+
+        $this->assertEquals('pending', $database->status);
+    }
+
+    public function test_current_step_is_nullable(): void
+    {
+        $database = Database::factory()->create();
+        $database->refresh();
+
+        $this->assertNull($database->current_step);
+    }
+
+    public function test_progress_defaults_to_zero(): void
+    {
+        $database = Database::factory()->create();
+        $database->refresh();
+
+        $this->assertEquals(0, $database->progress);
+    }
+
+    public function test_error_message_is_nullable(): void
+    {
+        $database = Database::factory()->create();
+        $database->refresh();
+
+        $this->assertNull($database->error_message);
+    }
 }
