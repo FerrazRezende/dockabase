@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,17 +13,12 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CreationTimeline from '@/components/CreationTimeline.vue';
-import { Toaster } from '@/components/ui/toast';
-import { useToast } from '@/composables/useToast';
-import type { Database, StepUpdatePayload, DatabaseCreatedPayload, DatabaseFailedPayload, DatabaseStatus, CreationStep } from '@/types/database';
+import type { Database, DatabaseStatus, CreationStep } from '@/types/database';
 import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, Link2, AlertCircle, CheckCircle2, Loader2 } from 'lucide-vue-next';
-import echo from '@/composables/echo';
 
 const props = defineProps<{
     database: Database;
 }>();
-
-const { success, error } = useToast();
 
 const currentStep = ref<CreationStep | null>(props.database.current_step);
 const progress = ref(props.database.progress);
@@ -44,41 +39,10 @@ const getStatusBadge = () => {
             return { variant: 'outline', class: '', label: status.value };
     }
 };
-
-let channel: ReturnType<typeof echo['private']>;
-
-onMounted(() => {
-    channel = echo.private(`database.${props.database.id}`);
-
-    channel.listen('.step.updated', (data: StepUpdatePayload) => {
-        currentStep.value = data.step;
-        progress.value = data.progress;
-        status.value = data.database.status;
-    });
-
-    channel.listen('.database.created', (data: DatabaseCreatedPayload) => {
-        status.value = 'ready';
-        progress.value = 100;
-        success('Database criado!', `O database ${data.database.name} está pronto para uso.`);
-    });
-
-    channel.listen('.database.failed', (data: DatabaseFailedPayload) => {
-        status.value = 'failed';
-        errorMessage.value = data.error;
-        error('Falha na criação', data.error);
-    });
-});
-
-onUnmounted(() => {
-    if (channel) {
-        echo.leave(`database.${props.database.id}`);
-    }
-});
 </script>
 
 <template>
     <Head :title="`Database: ${database.name}`" />
-    <Toaster />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
@@ -109,7 +73,7 @@ onUnmounted(() => {
                         Criação do Database
                     </CardTitle>
                     <CardDescription>
-                        Acompanhe o progresso da criação em tempo real
+                        Acompanhe o progresso da criação
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

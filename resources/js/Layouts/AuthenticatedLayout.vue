@@ -23,7 +23,6 @@ import {
 } from 'lucide-vue-next';
 import { useDarkMode } from '@/composables/useDarkMode';
 import { ref } from 'vue';
-import NotificationCenter from '@/components/NotificationCenter.vue';
 
 defineProps<{
     auth: {
@@ -223,7 +222,6 @@ const initials = (name: string): string => {
                     <slot name="header" />
                 </div>
                 <div class="flex items-center gap-2">
-                    <NotificationCenter />
                     <Button variant="ghost" size="icon" @click="toggleDark">
                         <Sun v-if="isDark" class="h-5 w-5" />
                         <Moon v-else class="h-5 w-5" />
