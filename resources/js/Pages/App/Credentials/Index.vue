@@ -75,15 +75,16 @@ const getPermissionBadgeClass = (permission: string): string => {
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-semibold text-foreground">
-                        Credentials
-                    </h2>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        Gerencie as credenciais de acesso aos databases
-                    </p>
-                </div>
+            <h2 class="text-2xl font-semibold text-foreground">
+                Credentials
+            </h2>
+            <p class="text-sm text-muted-foreground mt-1">
+                Gerencie as credenciais de acesso aos databases
+            </p>
+        </template>
+
+        <div class="space-y-4">
+            <div class="flex justify-end">
                 <Link :href="route('app.credentials.create')">
                     <Button>
                         <Plus class="h-4 w-4 mr-2" />
@@ -91,10 +92,9 @@ const getPermissionBadgeClass = (permission: string): string => {
                     </Button>
                 </Link>
             </div>
-        </template>
 
-        <div class="bg-card shadow-sm rounded-lg border border-border">
-            <Table>
+            <div class="bg-card shadow-sm rounded-lg border border-border">
+                <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead class="w-[250px]">Nome</TableHead>
@@ -174,6 +174,7 @@ const getPermissionBadgeClass = (permission: string): string => {
                     </TableRow>
                 </TableBody>
             </Table>
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

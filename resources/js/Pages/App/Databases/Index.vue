@@ -63,15 +63,16 @@ const deleteDatabase = async (databaseId: string): Promise<void> => {
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-semibold text-foreground">
-                        Databases
-                    </h2>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        Gerencie os databases PostgreSQL da sua instância
-                    </p>
-                </div>
+            <h2 class="text-2xl font-semibold text-foreground">
+                Databases
+            </h2>
+            <p class="text-sm text-muted-foreground mt-1">
+                Gerencie os databases PostgreSQL da sua instância
+            </p>
+        </template>
+
+        <div class="space-y-4">
+            <div class="flex justify-end">
                 <Link :href="route('app.databases.create')">
                     <Button>
                         <Plus class="h-4 w-4 mr-2" />
@@ -79,10 +80,9 @@ const deleteDatabase = async (databaseId: string): Promise<void> => {
                     </Button>
                 </Link>
             </div>
-        </template>
 
-        <div class="bg-card shadow-sm rounded-lg border border-border">
-            <Table>
+            <div class="bg-card shadow-sm rounded-lg border border-border">
+                <Table>
                 <TableHeader>
                     <TableRow>
                         <TableHead class="w-[200px]">Nome</TableHead>
@@ -167,6 +167,7 @@ const deleteDatabase = async (databaseId: string): Promise<void> => {
                     </TableRow>
                 </TableBody>
             </Table>
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>
