@@ -80,7 +80,7 @@ const getLineColor = (index: number): string => {
       <div class="h-2 bg-muted rounded-full overflow-hidden">
         <div
           class="h-full bg-primary transition-all duration-500 ease-out"
-          :style="{ width: \`\${progress}%\` }"
+          :style="{ width: progress + '%' }"
         />
       </div>
     </div>
