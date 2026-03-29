@@ -16,6 +16,7 @@ import {
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { CredentialCollection } from '@/types/credential';
 import { ArrowLeft, Loader2 } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
 
 const props = defineProps<{
     credentials?: CredentialCollection;
@@ -34,6 +35,8 @@ const form = ref({
 
 const loading = ref(false);
 const errors = ref<Record<string, string>>({});
+
+const { info } = useToast();
 
 const getCsrfToken = (): string => {
     const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
@@ -63,6 +66,8 @@ const submit = async (): Promise<void> => {
             }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        info('Criando database...', 'Voce sera redirecionado para acompanhar o progresso.');
 
         router.visit(route('app.databases.show', data.data.id));
     } catch (error) {
