@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,51 +14,22 @@ import {
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ArrowLeft, Loader2 } from 'lucide-vue-next';
 
-const form = ref({
+const form = useForm({
     name: '',
     permission: 'read-write',
     description: '',
     user_ids: [] as number[],
 });
 
-const loading = ref(false);
-const errors = ref<Record<string, string>>({});
-
-const getCsrfToken = (): string => {
-    const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-    return meta?.content || '';
-};
-
-const submit = async (): Promise<void> => {
-    loading.value = true;
-    errors.value = {};
-
-    try {
-        const response = await fetch(route('app.credentials.store'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-            },
-            body: JSON.stringify(form.value),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            if (response.status === 422) {
-                errors.value = data.errors || {};
+const submit = (): void => {
+    form.post(route('app.credentials.store'), {
+        onSuccess: (page) => {
+            const credentialId = (page.props.credential as { id: string })?.id;
+            if (credentialId) {
+                router.visit(route('app.credentials.show', credentialId));
             }
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        router.visit(route('app.credentials.show', data.data.id));
-    } catch (error) {
-        console.error('Failed to create credential:', error);
-    } finally {
-        loading.value = false;
-    }
+        },
+    });
 };
 </script>
 
@@ -93,9 +63,9 @@ const submit = async (): Promise<void> => {
                         id="name"
                         v-model="form.name"
                         placeholder="ex: Dev Team"
-                        :class="{ 'border-destructive': errors.name }"
+                        :class="{ 'border-destructive': form.errors.name }"
                     />
-                    <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
+                    <p v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</p>
                 </div>
 
                 <div class="space-y-2">
@@ -110,7 +80,7 @@ const submit = async (): Promise<void> => {
                             <SelectItem value="read-write">Read & Write</SelectItem>
                         </SelectContent>
                     </Select>
-                    <p v-if="errors.permission" class="text-sm text-destructive">{{ errors.permission }}</p>
+                    <p v-if="form.errors.permission" class="text-sm text-destructive">{{ form.errors.permission }}</p>
                 </div>
 
                 <div class="space-y-2">
@@ -127,8 +97,8 @@ const submit = async (): Promise<void> => {
                     <Link :href="route('app.credentials.index')">
                         <Button variant="outline" type="button">Cancelar</Button>
                     </Link>
-                    <Button type="submit" :disabled="loading">
-                        <Loader2 v-if="loading" class="h-4 w-4 mr-2 animate-spin" />
+                    <Button type="submit" :disabled="form.processing">
+                        <Loader2 v-if="form.processing" class="h-4 w-4 mr-2 animate-spin" />
                         Criar Credencial
                     </Button>
                 </div>

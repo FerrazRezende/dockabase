@@ -1,28 +1,20 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { CredentialCollection } from '@/types/credential';
 import { ArrowLeft, Loader2 } from 'lucide-vue-next';
-import { useToast } from '@/composables/useToast';
 
 const props = defineProps<{
     credentials?: CredentialCollection;
 }>();
 
-const form = ref({
+const form = useForm({
     name: '',
     display_name: '',
     description: '',
@@ -33,48 +25,15 @@ const form = ref({
     credential_ids: [] as string[],
 });
 
-const loading = ref(false);
-const errors = ref<Record<string, string>>({});
-
-const { info } = useToast();
-
-const getCsrfToken = (): string => {
-    const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-    return meta?.content || '';
-};
-
-const submit = async (): Promise<void> => {
-    loading.value = true;
-    errors.value = {};
-
-    try {
-        const response = await fetch(route('app.databases.store'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-            },
-            body: JSON.stringify(form.value),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            if (response.status === 422) {
-                errors.value = data.errors || {};
+const submit = (): void => {
+    form.post(route('app.databases.store'), {
+        onSuccess: (page) => {
+            const databaseId = (page.props.database as { id: string })?.id;
+            if (databaseId) {
+                router.visit(route('app.databases.show', databaseId));
             }
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        info('Criando database...', 'Voce sera redirecionado para acompanhar o progresso.');
-
-        router.visit(route('app.databases.show', data.data.id));
-    } catch (error) {
-        console.error('Failed to create database:', error);
-    } finally {
-        loading.value = false;
-    }
+        },
+    });
 };
 </script>
 
@@ -109,9 +68,9 @@ const submit = async (): Promise<void> => {
                             id="name"
                             v-model="form.name"
                             placeholder="ex: dev"
-                            :class="{ 'border-destructive': errors.name }"
+                            :class="{ 'border-destructive': form.errors.name }"
                         />
-                        <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
+                        <p v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</p>
                         <p class="text-xs text-muted-foreground">Apenas letras minúsculas, números, underline e hífen</p>
                     </div>
 
@@ -121,9 +80,9 @@ const submit = async (): Promise<void> => {
                             id="database_name"
                             v-model="form.database_name"
                             placeholder="ex: dockabase_dev"
-                            :class="{ 'border-destructive': errors.database_name }"
+                            :class="{ 'border-destructive': form.errors.database_name }"
                         />
-                        <p v-if="errors.database_name" class="text-sm text-destructive">{{ errors.database_name }}</p>
+                        <p v-if="form.errors.database_name" class="text-sm text-destructive">{{ form.errors.database_name }}</p>
                     </div>
                 </div>
 
@@ -179,8 +138,8 @@ const submit = async (): Promise<void> => {
                     <Link :href="route('app.databases.index')">
                         <Button variant="outline" type="button">Cancelar</Button>
                     </Link>
-                    <Button type="submit" :disabled="loading">
-                        <Loader2 v-if="loading" class="h-4 w-4 mr-2 animate-spin" />
+                    <Button type="submit" :disabled="form.processing">
+                        <Loader2 v-if="form.processing" class="h-4 w-4 mr-2 animate-spin" />
                         Criar Database
                     </Button>
                 </div>
