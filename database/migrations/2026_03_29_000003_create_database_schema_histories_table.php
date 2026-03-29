@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('database_schema_histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('database_id')->constrained()->cascadeOnDelete();
+            $table->char('database_id', 27);
+            $table->foreign('database_id')->references('id')->on('databases')->cascadeOnDelete();
             $table->string('action', 50);
             $table->string('table_name', 255)->nullable();
             $table->string('column_name', 255)->nullable();
