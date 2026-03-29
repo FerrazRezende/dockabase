@@ -239,12 +239,58 @@ Todas as models que precisam de exclusão lógica devem usar SoftDeletes.
 - [x] Feature Flag Manager (UI + API)
 
 ### Fase 2: Database Creator
-- [ ] Model `Database` e migrations
-- [ ] Model `Credential` e relacionamentos
-- [ ] UI para criar databases
-- [ ] UI para criar credentials e atrelar usuários
-- [ ] Atrelar credentials ao database na criação
-- [ ] Feature flag: `database-creator`
+- [x] Model `Database` e migrations
+- [x] Model `Credential` e relacionamentos
+- [x] UI para criar databases
+- [x] UI para criar credentials e atrelar usuários
+- [x] Atrelar credentials ao database na criação
+- [x] Feature flag: `database-creator`
+- [x] Async database creation com real-time progress
+
+### Async Database Creation
+
+Sistema de criação assíncrona de databases com feedback em tempo real.
+
+| Componente | Arquivo | Descrição |
+|------------|---------|-----------|
+| Job | `app/Jobs/CreateDatabaseJob.php` | Executa criação do database |
+| Events | `app/Events/DatabaseStepUpdated.php` | Broadcast step update |
+| Events | `app/Events/DatabaseCreated.php` | Broadcast completion |
+| Events | `app/Events/DatabaseFailed.php` | Broadcast failure |
+| Service | `app/Services/DatabaseProvisioningService.php` | Lógica de provisioning |
+| Enum | `app/Enums/DatabaseCreationStepEnum.php` | 7 steps de criação |
+| Notification | `app/Notifications/DatabaseCreatedNotification.php` | Notificação persistente |
+| Model | `app/Models/Notification.php` | Sistema de notificações |
+| Model | `app/Models/DatabaseSchemaHistory.php` | Histórico de schema |
+
+#### Database Creation Steps
+
+| Step | Valor | Progress |
+|------|-------|----------|
+| 1 | `validating` | 14% |
+| 2 | `creating` | 28% |
+| 3 | `configuring` | 42% |
+| 4 | `migrating` | 56% |
+| 5 | `permissions` | 71% |
+| 6 | `testing` | 85% |
+| 7 | `ready` | 100% |
+
+#### WebSocket Events
+
+| Canal | Event | Payload |
+|-------|-------|---------|
+| `database.{id}` | `step.updated` | `{ step, progress, database }` |
+| `database.{id}` | `database.created` | `{ database }` |
+| `database.{id}` | `database.failed` | `{ status, error, database }` |
+
+#### Frontend Components
+
+| Componente | Arquivo | Descrição |
+|------------|---------|-----------|
+| Timeline | `resources/js/components/CreationTimeline.vue` | Steps horizontais |
+| NotificationCenter | `resources/js/components/NotificationCenter.vue` | Bell + dropdown |
+| Toast | `resources/js/composables/useToast.ts` | Sonner wrapper |
+| Echo | `resources/js/composables/echo.ts` | WebSocket client |
 
 ### Fase 3: Schema Builder
 - [ ] Interface visual para criar tabelas
