@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Routes for the system administration panel (/system/*).
-| Single-tenant: features are global per instance.
+| Only accessible by God Admin (is_admin = true).
+| Features, System Settings, etc.
 |
 */
 
@@ -19,6 +20,7 @@ Route::middleware(['web', 'auth'])
     ->prefix('system')
     ->name('system.')
     ->group(function (): void {
+        // Features - God Admin only
         Route::get('/features', [FeatureFlagController::class, 'index'])->name('features.index');
         Route::get('/features/{feature}', [FeatureFlagController::class, 'show'])->name('features.show');
         Route::post('/features/{feature}/activate', [FeatureFlagController::class, 'activate'])->name('features.activate');
