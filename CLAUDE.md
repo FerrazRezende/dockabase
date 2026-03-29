@@ -512,6 +512,105 @@ Segue sintaxe Supabase/PostgREST:
 6. Configurar Spatie Permission para RBAC
 7. Implementar RLS integrado com roles e permissões
 
+## Roadmap Futuro (P3+)
+
+### MCP Server Integration
+
+**Model Context Protocol (MCP)** é um protocolo para conectar AI assistants com fontes de dados externas. O DockaBase terá um MCP Server nativo.
+
+#### Objetivo
+Permitir que AI assistants (Claude, GPT, etc.) se conectem diretamente ao DockaBase para:
+- Consultar schema do database
+- Executar queries (com permissões adequadas)
+- Gerenciar dados via linguagem natural
+- Automação de tarefas
+
+#### Arquitetura Planejada
+```
+┌─────────────────┐     MCP Protocol      ┌─────────────────┐
+│  Claude / AI    │ ◄───────────────────► │  DockaBase MCP  │
+│  Assistant      │                       │     Server      │
+└─────────────────┘                       └────────┬────────┘
+                                                   │
+                                          ┌────────▼────────┐
+                                          │   DockaBase     │
+                                          │   PostgreSQL    │
+                                          └─────────────────┘
+```
+
+#### Recursos do MCP Server
+| Recurso | Descrição |
+|---------|-----------|
+| `database://schema` | Lista tabelas, colunas e tipos |
+| `database://query` | Executa queries SELECT (read-only) |
+| `database://credentials` | Lista credenciais do usuário |
+| `database://features` | Status das feature flags |
+
+#### Ferramentas do MCP Server
+| Tool | Descrição |
+|------|-----------|
+| `query` | Executa SQL com validação de permissão |
+| `insert` | Insere dados em tabela |
+| `update` | Atualiza dados com filtros |
+| `delete` | Remove dados com filtros |
+| `describe_table` | Retorna schema de uma tabela |
+
+#### Implementação
+- Pacote: `laravel-mcp-server` ou custom
+- Endpoint: `/mcp` (protocolo JSON-RPC)
+- Autenticação: Via API Key da Credential
+- Rate Limiting: Por credential/user
+
+### Claude Plugin / Extension
+
+**Objetivo:** Criar uma integração nativa com Claude (similar ao Supabase MCP ou Firebase Extension).
+
+#### Funcionalidades Planejadas
+1. **Conexão Direta**: Configurar DockaBase como data source no Claude
+2. **Schema Awareness**: Claude entende a estrutura do database
+3. **Query Generation**: Gerar queries SQL a partir de linguagem natural
+4. **Data Exploration**: Explorar dados via conversação
+5. **Migration Suggestion**: Sugerir alterações de schema
+
+#### Fluxo de Uso
+```
+User: "Mostre os últimos 10 pedidos do cliente X"
+
+Claude: [Conecta ao DockaBase MCP]
+        [Consulta schema da tabela pedidos]
+        [Executa query segura]
+
+Response:
+| id | cliente | valor | status | criado_em |
+|----|---------|-------|--------|-----------|
+| 42 | X       | R$ 99 | paid   | 2024-01-15|
+...
+```
+
+#### Configuração no Claude
+```json
+{
+  "mcpServers": {
+    "dockabase": {
+      "command": "dockabase-mcp",
+      "args": ["--url", "https://your-dockabase.com", "--key", "db_xxx"]
+    }
+  }
+}
+```
+
+### Comparação com Concorrentes
+
+| Feature | DockaBase | Supabase | Firebase |
+|---------|-----------|----------|----------|
+| MCP Server | Planejado | ✅ Disponível | Extension |
+| Claude Plugin | Planejado | ✅ Disponível | ❌ |
+| Natural Language Queries | Planejado | ✅ | ❌ |
+| Schema Awareness | Planejado | ✅ | Parcial |
+
+### Prioridade
+**P3** - Implementar após features core (API, Auth, Realtime, Storage) estarem estáveis.
+
 ---
 
 *Este arquivo serve como contexto central para o desenvolvimento do DockaBase.*

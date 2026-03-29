@@ -28,7 +28,7 @@ readonly class FeatureConfigDTO
         int $percentage = 0,
         ?array $userIds = null
     ): self {
-        if (!isset($definition['name']) || !isset($definition['description'])) {
+        if (! isset($definition['name']) || ! isset($definition['description'])) {
             throw new InvalidArgumentException('Definition must contain name and description');
         }
 

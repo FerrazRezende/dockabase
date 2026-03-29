@@ -14,14 +14,16 @@ class FeaturePolicyTest extends TestCase
     use RefreshDatabase;
 
     private FeaturePolicy $policy;
+
     private User $admin;
+
     private User $user;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->policy = new FeaturePolicy();
+        $this->policy = new FeaturePolicy;
 
         // God Admin
         $this->admin = User::factory()->create(['is_admin' => true]);
