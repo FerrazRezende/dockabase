@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\App\CredentialController;
 use App\Http\Controllers\App\DatabaseController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +21,9 @@ Route::middleware(['web', 'auth'])
     ->prefix('app')
     ->name('app.')
     ->group(function (): void {
+        // Users (API only)
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+
         // Databases - requires 'view-databases' permission
         Route::get('/databases', [DatabaseController::class, 'index'])->name('databases.index');
         Route::post('/databases', [DatabaseController::class, 'store'])->name('databases.store');

@@ -18,43 +18,43 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import type { CredentialCollection } from '@/types/credential';
-import { MoreHorizontal, Plus, Key, Users, Database, Eye, Trash2 } from 'lucide-vue-next';
+import { MoreHorizontal, Plus, Key, Eye, Trash2 } from 'lucide-vue-next';
+import { useToast } from 'vue-toastification';
 
 defineProps<{
     credentials: CredentialCollection;
 }>();
 
+const toast = useToast();
 const deleting = ref<string | null>(null);
+const deleteDialogOpen = ref(false);
+const credentialToDelete = ref<{ id: string; name: string } | null>(null);
 
-const getCsrfToken = (): string => {
-    const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-    return meta?.content || '';
+const openDeleteDialog = (credential: { id: string; name: string }) => {
+    credentialToDelete.value = credential;
+    deleteDialogOpen.value = true;
 };
 
-const deleteCredential = async (credentialId: string): Promise<void> => {
-    if (!confirm('Tem certeza que deseja excluir esta credencial?')) return;
+const confirmDelete = () => {
+    if (!credentialToDelete.value) return;
 
-    deleting.value = credentialId;
-    try {
-        const response = await fetch(route('app.credentials.destroy', credentialId), {
-            method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        router.reload({ only: ['credentials'] });
-    } catch (error) {
-        console.error('Failed to delete credential:', error);
-    } finally {
-        deleting.value = null;
-    }
+    deleting.value = credentialToDelete.value.id;
+    router.delete(route('app.credentials.destroy', credentialToDelete.value.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Credencial excluída com sucesso!');
+            deleteDialogOpen.value = false;
+            credentialToDelete.value = null;
+        },
+        onError: (errors) => {
+            toast.error('Erro ao excluir credencial');
+        },
+        onFinish: () => {
+            deleting.value = null;
+        },
+    });
 };
 
 const getPermissionBadgeVariant = (permission: string): 'default' | 'secondary' | 'outline' => {
@@ -127,14 +127,12 @@ const getPermissionBadgeClass = (permission: string): string => {
                             </Badge>
                         </TableCell>
                         <TableCell>
-                            <span class="flex items-center gap-1">
-                                <Users class="h-3 w-3 text-muted-foreground" />
+                            <span class="text-sm">
                                 {{ credential.users_count ?? 0 }}
                             </span>
                         </TableCell>
                         <TableCell>
-                            <span class="flex items-center gap-1">
-                                <Database class="h-3 w-3 text-muted-foreground" />
+                            <span class="text-sm">
                                 {{ credential.databases_count ?? 0 }}
                             </span>
                         </TableCell>
@@ -156,9 +154,9 @@ const getPermissionBadgeClass = (permission: string): string => {
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        @click="deleteCredential(credential.id)"
+                                        @click="openDeleteDialog(credential)"
                                         :disabled="deleting === credential.id"
-                                        class="text-destructive"
+                                        class="text-destructive focus:text-destructive"
                                     >
                                         <Trash2 class="mr-2 h-4 w-4" />
                                         Excluir
@@ -176,5 +174,17 @@ const getPermissionBadgeClass = (permission: string): string => {
             </Table>
             </div>
         </div>
+
+        <!-- Delete Confirmation Dialog -->
+        <ConfirmDialog
+            v-model:open="deleteDialogOpen"
+            title="Excluir Credencial"
+            :description="`Esta ação não pode ser desfeita. Isso excluirá permanentemente a credencial '${credentialToDelete?.name}'.`"
+            confirm-text="Excluir Credencial"
+            :confirm-name="credentialToDelete?.name"
+            :loading="deleting === credentialToDelete?.id"
+            variant="danger"
+            @confirm="confirmDelete"
+        />
     </AuthenticatedLayout>
 </template>

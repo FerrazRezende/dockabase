@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,9 @@ import {
 } from '@/components/ui/select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ArrowLeft, Loader2 } from 'lucide-vue-next';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
 
 const form = useForm({
     name: '',
@@ -22,7 +25,14 @@ const form = useForm({
 });
 
 const submit = (): void => {
-    form.post(route('app.credentials.store'));
+    form.post(route('app.credentials.store'), {
+        onSuccess: () => {
+            toast.success('Credencial criada com sucesso!');
+        },
+        onError: () => {
+            toast.error('Erro ao criar credencial');
+        },
+    });
 };
 </script>
 

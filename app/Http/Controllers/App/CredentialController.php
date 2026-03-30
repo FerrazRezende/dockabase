@@ -28,7 +28,7 @@ class CredentialController extends Controller
     {
         $this->authorize('viewAny', Credential::class);
 
-        $credentials = Credential::withCount('users')
+        $credentials = Credential::withCount(['users', 'databases'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -37,7 +37,7 @@ class CredentialController extends Controller
         }
 
         return Inertia::render('App/Credentials/Index', [
-            'credentials' => (new CredentialCollection($credentials))->toArray($request),
+            'credentials' => json_decode((new CredentialCollection($credentials))->toJson(), true),
         ]);
     }
 
@@ -48,7 +48,7 @@ class CredentialController extends Controller
         return Inertia::render('App/Credentials/Create');
     }
 
-    public function store(CreateCredentialRequest $request): RedirectResponse
+    public function store(CreateCredentialRequest $request): CredentialResource|RedirectResponse
     {
         $this->authorize('create', Credential::class);
 
@@ -61,6 +61,10 @@ class CredentialController extends Controller
                     $this->credentialService->attachUser($credential, (string) $user->id);
                 }
             }
+        }
+
+        if ($request->wantsJson()) {
+            return new CredentialResource($credential);
         }
 
         return to_route('app.credentials.show', $credential);
@@ -90,13 +94,17 @@ class CredentialController extends Controller
         return new CredentialResource($credential);
     }
 
-    public function destroy(Credential $credential): JsonResponse
+    public function destroy(Request $request, Credential $credential): JsonResponse|RedirectResponse
     {
         $this->authorize('delete', $credential);
 
         $this->credentialService->delete($credential->id);
 
-        return response()->json(null, 204);
+        if ($request->wantsJson()) {
+            return response()->json(null, 204);
+        }
+
+        return to_route('app.credentials.index');
     }
 
     public function attachUser(Request $request, Credential $credential): CredentialResource

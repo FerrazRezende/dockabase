@@ -18,43 +18,43 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import type { DatabaseCollection } from '@/types/database';
 import { MoreHorizontal, Plus, Database, Server, Eye, Trash2 } from 'lucide-vue-next';
+import { useToast } from 'vue-toastification';
 
 defineProps<{
     databases: DatabaseCollection;
 }>();
 
+const toast = useToast();
 const deleting = ref<string | null>(null);
+const deleteDialogOpen = ref(false);
+const databaseToDelete = ref<{ id: string; name: string } | null>(null);
 
-const getCsrfToken = (): string => {
-    const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-    return meta?.content || '';
+const openDeleteDialog = (database: { id: string; name: string }) => {
+    databaseToDelete.value = database;
+    deleteDialogOpen.value = true;
 };
 
-const deleteDatabase = async (databaseId: string): Promise<void> => {
-    if (!confirm('Tem certeza que deseja excluir este database?')) return;
+const confirmDelete = () => {
+    if (!databaseToDelete.value) return;
 
-    deleting.value = databaseId;
-    try {
-        const response = await fetch(route('app.databases.destroy', databaseId), {
-            method: 'DELETE',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        router.reload({ only: ['databases'] });
-    } catch (error) {
-        console.error('Failed to delete database:', error);
-    } finally {
-        deleting.value = null;
-    }
+    deleting.value = databaseToDelete.value.id;
+    router.delete(route('app.databases.destroy', databaseToDelete.value.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Database excluído com sucesso!');
+            deleteDialogOpen.value = false;
+            databaseToDelete.value = null;
+        },
+        onError: (errors) => {
+            toast.error('Erro ao excluir database');
+        },
+        onFinish: () => {
+            deleting.value = null;
+        },
+    });
 };
 </script>
 
@@ -149,9 +149,9 @@ const deleteDatabase = async (databaseId: string): Promise<void> => {
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                        @click="deleteDatabase(database.id)"
+                                        @click="openDeleteDialog(database)"
                                         :disabled="deleting === database.id"
-                                        class="text-destructive"
+                                        class="text-destructive focus:text-destructive"
                                     >
                                         <Trash2 class="mr-2 h-4 w-4" />
                                         Excluir
@@ -169,5 +169,17 @@ const deleteDatabase = async (databaseId: string): Promise<void> => {
             </Table>
             </div>
         </div>
+
+        <!-- Delete Confirmation Dialog -->
+        <ConfirmDialog
+            v-model:open="deleteDialogOpen"
+            title="Excluir Database"
+            :description="`Esta ação não pode ser desfeita. Isso excluirá permanentemente o database '${databaseToDelete?.name}' e todos os dados associados.`"
+            confirm-text="Excluir Database"
+            :confirm-name="databaseToDelete?.name"
+            :loading="deleting === databaseToDelete?.id"
+            variant="danger"
+            @confirm="confirmDelete"
+        />
     </AuthenticatedLayout>
 </template>

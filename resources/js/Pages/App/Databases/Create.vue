@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,10 +8,13 @@ import { Switch } from '@/components/ui/switch';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { CredentialCollection } from '@/types/credential';
 import { ArrowLeft, Loader2 } from 'lucide-vue-next';
+import { useToast } from 'vue-toastification';
 
 const props = defineProps<{
     credentials?: CredentialCollection;
 }>();
+
+const toast = useToast();
 
 const form = useForm({
     name: '',

@@ -33,6 +33,9 @@ class CreateDatabaseJob implements ShouldQueue
             $steps = $service->getSteps();
 
             foreach ($steps as $step) {
+                // Add delay so user can see the progress
+                sleep(1); // 1 second per step
+
                 $this->executeStep($service, $step);
 
                 $this->database->update([

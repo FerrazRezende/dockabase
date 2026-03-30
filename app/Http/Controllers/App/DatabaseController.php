@@ -49,7 +49,7 @@ class DatabaseController extends Controller
         return Inertia::render('App/Databases/Create');
     }
 
-    public function store(CreateDatabaseRequest $request): RedirectResponse
+    public function store(CreateDatabaseRequest $request): DatabaseResource|RedirectResponse
     {
         $this->authorize('create', Database::class);
 
@@ -70,7 +70,13 @@ class DatabaseController extends Controller
         // Dispatch async job
         CreateDatabaseJob::dispatch($database);
 
-        return to_route('app.databases.show', $database);
+        if ($request->wantsJson()) {
+            return new DatabaseResource($database);
+        }
+
+        return to_route('app.databases.show', $database)
+            ->with('message', 'Solicitação para criar database enviada com sucesso!')
+            ->with('messageType', 'warning');
     }
 
     public function show(Request $request, Database $database): DatabaseResource|Response
@@ -79,12 +85,18 @@ class DatabaseController extends Controller
 
         $database->load(['credentials.users']);
 
+        // Get available credentials (not attached to this database)
+        $availableCredentials = Credential::whereDoesntHave('databases', function ($query) use ($database) {
+            $query->where('databases.id', $database->id);
+        })->get(['id', 'name', 'permission']);
+
         if ($request->wantsJson()) {
             return new DatabaseResource($database);
         }
 
         return Inertia::render('App/Databases/Show', [
             'database' => (new DatabaseResource($database))->toArray($request),
+            'availableCredentials' => $availableCredentials,
         ]);
     }
 
@@ -97,13 +109,17 @@ class DatabaseController extends Controller
         return new DatabaseResource($database);
     }
 
-    public function destroy(Database $database): JsonResponse
+    public function destroy(Request $request, Database $database): JsonResponse|RedirectResponse
     {
         $this->authorize('delete', $database);
 
         $this->databaseService->delete($database->id);
 
-        return response()->json(null, 204);
+        if ($request->wantsJson()) {
+            return response()->json(null, 204);
+        }
+
+        return to_route('app.databases.index');
     }
 
     public function attachCredential(Request $request, Database $database): DatabaseResource

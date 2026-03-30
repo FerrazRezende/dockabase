@@ -31,6 +31,14 @@ class DatabaseProvisioningService
             throw new \InvalidArgumentException("Database name too long: {$name}");
         }
 
+        // Check if database already exists
+        $exists = DB::connection('pgsql')
+            ->select("SELECT 1 FROM pg_database WHERE datname = ?", [$name]);
+
+        if (! empty($exists)) {
+            throw new \RuntimeException("Database \"{$name}\" already exists");
+        }
+
         return true;
     }
 
