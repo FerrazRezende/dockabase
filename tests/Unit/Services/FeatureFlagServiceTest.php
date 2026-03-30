@@ -6,6 +6,7 @@ namespace Tests\Unit\Services;
 
 use App\DTOs\FeatureConfigDTO;
 use App\Enums\RolloutStrategyEnum;
+use App\Models\User;
 use App\Services\FeatureFlagService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -87,5 +88,14 @@ class FeatureFlagServiceTest extends TestCase
         config()->set('features.first_deploy_date', '2026-03-30');
 
         $this->assertFalse($this->service->isFeatureActiveByDefault('unknown-feature'));
+    }
+
+    public function test_is_active_for_user_uses_default_when_no_setting_exists(): void
+    {
+        config()->set('app.env', 'local');
+        $user = User::factory()->create(['is_admin' => false]);
+
+        // No FeatureSetting in database - should use environment default
+        $this->assertTrue($this->service->isActiveForUser('database-creator', $user));
     }
 }
