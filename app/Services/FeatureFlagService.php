@@ -9,6 +9,7 @@ use App\Enums\RolloutStrategyEnum;
 use App\Models\FeatureHistory;
 use App\Models\FeatureSetting;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Laravel\Pennant\Feature;
 
@@ -206,10 +207,17 @@ class FeatureFlagService
 
         $setting = FeatureSetting::where('feature_name', $featureName)->first();
 
-        if (! $setting || ! $setting->is_active) {
+        // Se não há setting no banco, usa o default por ambiente
+        if (! $setting) {
+            return $this->isFeatureActiveByDefault($featureName);
+        }
+
+        // Se há setting mas está inativo, feature desativada
+        if (! $setting->is_active) {
             return false;
         }
 
+        // Se há setting ativo, segue a estratégia definida
         return match ($setting->strategy) {
             RolloutStrategyEnum::All => true,
             RolloutStrategyEnum::Percentage => $this->checkPercentage($user->id, $setting->percentage),
@@ -256,6 +264,30 @@ class FeatureFlagService
                 'new_state' => $history->new_state,
                 'created_at' => $history->created_at->toISOString(),
             ]);
+    }
+
+    /**
+     * Check if a feature is active by default based on environment.
+     */
+    public function isFeatureActiveByDefault(string $featureName): bool
+    {
+        $env = config('app.env');
+
+        // Dev/Local/Testing: todas as features implementadas ativas
+        if (in_array($env, ['local', 'development', 'dev', 'testing'])) {
+            return true;
+        }
+
+        // Production: features até FIRST_DEPLOY_DATE ativas
+        $feature = config("features.definitions.{$featureName}");
+        $deployDate = config('features.first_deploy_date');
+
+        if (! ($feature['implemented_at'] ?? null) || ! $deployDate) {
+            return false;
+        }
+
+        return Carbon::parse($feature['implemented_at'])
+            ->lte(Carbon::parse($deployDate));
     }
 
     /**

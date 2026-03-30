@@ -26,17 +26,18 @@ class FeatureFlagServiceTest extends TestCase
     {
         $features = $this->service->getAllFeatures();
 
-        $this->assertCount(8, $features);
+        $this->assertCount(2, $features); // Apenas database-creator e credentials-manager
         $this->assertContainsOnlyInstancesOf(FeatureConfigDTO::class, $features);
     }
 
     public function test_get_all_features_defaults_to_inactive(): void
     {
         $features = $this->service->getAllFeatures();
-        $realtime = $features->first(fn ($f) => $f->name === 'realtime');
+        $databaseCreator = $features->first(fn ($f) => $f->name === 'database-creator');
 
-        $this->assertFalse($realtime->isActive);
-        $this->assertEquals(RolloutStrategyEnum::Inactive, $realtime->strategy);
+        // Sem setting no banco, estratégia é Inactive
+        $this->assertFalse($databaseCreator->isActive);
+        $this->assertEquals(RolloutStrategyEnum::Inactive, $databaseCreator->strategy);
     }
 
     public function test_get_feature_returns_null_for_unknown(): void
@@ -48,10 +49,43 @@ class FeatureFlagServiceTest extends TestCase
 
     public function test_get_feature_returns_dto_for_known(): void
     {
-        $feature = $this->service->getFeature('dynamic-api');
+        $feature = $this->service->getFeature('database-creator');
 
         $this->assertInstanceOf(FeatureConfigDTO::class, $feature);
-        $this->assertEquals('dynamic-api', $feature->name);
-        $this->assertEquals('Dynamic REST API', $feature->displayName);
+        $this->assertEquals('database-creator', $feature->name);
+        $this->assertEquals('Database Creator', $feature->displayName);
+    }
+
+    public function test_is_feature_active_by_default_returns_true_in_dev_environment(): void
+    {
+        config()->set('app.env', 'local');
+
+        $this->assertTrue($this->service->isFeatureActiveByDefault('database-creator'));
+    }
+
+    public function test_is_feature_active_by_default_returns_true_in_production_when_before_deploy_date(): void
+    {
+        config()->set('app.env', 'production');
+        config()->set('features.first_deploy_date', '2026-03-30');
+
+        // database-creator tem implemented_at = 2026-03-15 (antes do deploy)
+        $this->assertTrue($this->service->isFeatureActiveByDefault('database-creator'));
+    }
+
+    public function test_is_feature_active_by_default_returns_false_in_production_when_after_deploy_date(): void
+    {
+        config()->set('app.env', 'production');
+        config()->set('features.first_deploy_date', '2026-03-01');
+
+        // database-creator tem implemented_at = 2026-03-15 (depois do deploy)
+        $this->assertFalse($this->service->isFeatureActiveByDefault('database-creator'));
+    }
+
+    public function test_is_feature_active_by_default_returns_false_for_unknown_feature(): void
+    {
+        config()->set('app.env', 'production');
+        config()->set('features.first_deploy_date', '2026-03-30');
+
+        $this->assertFalse($this->service->isFeatureActiveByDefault('unknown-feature'));
     }
 }
