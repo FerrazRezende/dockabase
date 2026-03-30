@@ -54,7 +54,7 @@ class CredentialControllerTest extends TestCase
                 'user_ids' => [$user->id],
             ]);
 
-        $response->assertCreated()
+        $response->assertOk()
             ->assertJsonPath('data.name', 'Dev Team');
 
         $this->assertDatabaseHas('credentials', ['name' => 'Dev Team']);

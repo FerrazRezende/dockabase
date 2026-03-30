@@ -293,9 +293,9 @@ class FeatureFlagService
     /**
      * Deterministic percentage check based on user ID hash.
      */
-    private function checkPercentage(string $userId, int $percentage): bool
+    private function checkPercentage(string|int $userId, int $percentage): bool
     {
-        $hash = crc32($userId);
+        $hash = crc32((string) $userId);
 
         return ($hash % 100) < $percentage;
     }
