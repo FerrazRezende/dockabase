@@ -47,7 +47,7 @@ class FeatureFlagService
     {
         $definition = config("features.definitions.{$featureName}");
 
-        if (!$definition) {
+        if (! $definition) {
             return null;
         }
 
@@ -142,7 +142,7 @@ class FeatureFlagService
             'user_ids' => $options['user_ids'] ?? null,
         ], fn ($v) => $v !== null);
 
-        if (!empty($updateData)) {
+        if (! empty($updateData)) {
             $setting->update($updateData);
             $this->recordHistory($setting, 'updated', $actor, $previousState, $setting->fresh()->toArray());
 
@@ -162,7 +162,7 @@ class FeatureFlagService
         $previousState = $setting->toArray();
 
         $userIds = $setting->user_ids ?? [];
-        if (!in_array($userId, $userIds)) {
+        if (! in_array($userId, $userIds)) {
             $userIds[] = $userId;
             $setting->update(['user_ids' => $userIds]);
             $this->recordHistory($setting, 'updated', $actor, $previousState, $setting->fresh()->toArray());
@@ -206,7 +206,7 @@ class FeatureFlagService
 
         $setting = FeatureSetting::where('feature_name', $featureName)->first();
 
-        if (!$setting || !$setting->is_active) {
+        if (! $setting || ! $setting->is_active) {
             return false;
         }
 
@@ -239,7 +239,7 @@ class FeatureFlagService
     {
         $setting = FeatureSetting::where('feature_name', $featureName)->first();
 
-        if (!$setting) {
+        if (! $setting) {
             return collect();
         }
 
@@ -264,6 +264,7 @@ class FeatureFlagService
     private function checkPercentage(string $userId, int $percentage): bool
     {
         $hash = crc32($userId);
+
         return ($hash % 100) < $percentage;
     }
 

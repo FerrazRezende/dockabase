@@ -48,7 +48,7 @@ class FeatureServiceProvider extends ServiceProvider
         $setting = FeatureSetting::where('feature_name', $featureName)->first();
 
         // No setting or inactive = feature is off
-        if (!$setting || !$setting->is_active) {
+        if (! $setting || ! $setting->is_active) {
             return false;
         }
 
@@ -67,6 +67,7 @@ class FeatureServiceProvider extends ServiceProvider
     protected function checkPercentage(string $userId, int $percentage): bool
     {
         $hash = crc32($userId);
+
         return ($hash % 100) < $percentage;
     }
 }

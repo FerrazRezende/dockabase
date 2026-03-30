@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "label": "Home",
+      "icon": "Home",
+      "route": "dashboard",
+      "permission": null
+    },
+    {
+      "label": "Databases",
+      "icon": "Database",
+      "route": "system.databases.index",
+      "permission": "is_admin"
+    },
+    {
+      "label": "Credentials",
+      "icon": "Key",
+      "route": "system.credentials.index",
+      "permission": "is_admin"
+    },
+    {
+      "label": "Features",
+      "icon": "Flag",
+      "route": "system.features.index",
+      "permission": "is_admin"
+    }
+  ]
+}

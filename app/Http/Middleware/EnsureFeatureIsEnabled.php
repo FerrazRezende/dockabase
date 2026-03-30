@@ -20,7 +20,7 @@ class EnsureFeatureIsEnabled
     public function handle(Request $request, Closure $next, string $feature): mixed
     {
         // Check if feature is active (uses FeatureServiceProvider's resolve logic)
-        if (!Feature::active($feature)) {
+        if (! Feature::active($feature)) {
             if ($request->wantsJson()) {
                 return new JsonResponse([
                     'error' => 'feature_disabled',

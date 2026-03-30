@@ -12,10 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
+        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
         then: fn () => collect([
             __DIR__.'/../routes/system.php',
             __DIR__.'/../routes/api_v1.php',
+            __DIR__.'/../routes/api.php',
         ])->each(fn ($path) => require $path),
     )
     ->withMiddleware(function (Middleware $middleware): void {

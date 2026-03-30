@@ -9,6 +9,7 @@ use App\Http\Requests\System\ActivateFeatureRequest;
 use App\Http\Requests\System\UpdateFeatureRequest;
 use App\Http\Resources\FeatureCollection;
 use App\Http\Resources\FeatureResource;
+use App\Models\User;
 use App\Services\FeatureFlagService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -53,10 +54,14 @@ class FeatureFlagController extends Controller
         }
 
         $history = $this->featureService->getHistory($feature);
+        $users = User::select(['id', 'name', 'email'])
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('System/Features/Show', [
             'feature' => (new FeatureResource($featureDto))->toArray($request),
             'history' => $history,
+            'users' => $users,
         ]);
     }
 

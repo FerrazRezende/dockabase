@@ -28,10 +28,17 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { ArrowLeft, Play, Square, History, Settings } from 'lucide-vue-next';
+import { ArrowLeft, Play, Square, History, UserPlus, X } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
-import type { Feature, FeatureCollection } from '@/types/feature';
+import type { Feature } from '@/types/feature';
 
 interface HistoryItem {
     id: string;
@@ -42,9 +49,16 @@ interface HistoryItem {
     created_at: string;
 }
 
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
 interface Props {
     feature: Feature;
     history: HistoryItem[];
+    users: User[];
 }
 
 const props = defineProps<Props>();
@@ -56,6 +70,7 @@ const activating = ref(false);
 // Form state for activation
 const strategy = ref<'all' | 'percentage' | 'users'>('all');
 const percentage = ref(50);
+const selectedUserIds = ref<number[]>([]);
 
 const actionLabel = computed(() => {
     switch (props.feature.strategy) {
@@ -70,6 +85,24 @@ const actionLabel = computed(() => {
     }
 });
 
+// Get selected users details
+const selectedUsers = computed(() => {
+    return props.users.filter(u => selectedUserIds.value.includes(u.id));
+});
+
+// Remove user from selection
+const removeUser = (userId: number) => {
+    selectedUserIds.value = selectedUserIds.value.filter(id => id !== userId);
+};
+
+// Add user to selection
+const addUser = (userId: string) => {
+    const id = parseInt(userId);
+    if (!selectedUserIds.value.includes(id)) {
+        selectedUserIds.value.push(id);
+    }
+};
+
 const activateFeature = async () => {
     activating.value = true;
     try {
@@ -79,6 +112,10 @@ const activateFeature = async () => {
 
         if (strategy.value === 'percentage') {
             body.percentage = percentage.value;
+        }
+
+        if (strategy.value === 'users') {
+            body.user_ids = selectedUserIds.value;
         }
 
         const response = await fetch(route('system.features.activate', props.feature.name), {
@@ -147,6 +184,14 @@ const getActionBadge = (action: string) => {
             return { variant: 'outline', label: action, class: '' };
     }
 };
+
+// Reset form when dialog opens
+const openActivateDialog = () => {
+    strategy.value = 'all';
+    percentage.value = 50;
+    selectedUserIds.value = [];
+    showActivateDialog.value = true;
+};
 </script>
 
 <template>
@@ -172,190 +217,232 @@ const getActionBadge = (action: string) => {
         </template>
 
         <div class="space-y-6">
-                <!-- Status Card -->
-                <Card class="mb-6">
-                    <CardHeader>
-                        <CardTitle>Status</CardTitle>
-                        <CardDescription>Configuração atual da feature</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-4">
-                                <Badge
-                                    :variant="feature.is_active ? 'default' : 'outline'"
-                                    :class="feature.is_active ? 'bg-green-500/10 text-green-500' : ''"
-                                    class="text-base px-4 py-1"
-                                >
-                                    {{ feature.is_active ? 'Ativo' : 'Inativo' }}
-                                </Badge>
-                                <span class="text-muted-foreground">{{ actionLabel }}</span>
-                            </div>
+            <!-- Status Card -->
+            <Card class="mb-6">
+                <CardHeader>
+                    <CardTitle>Status</CardTitle>
+                    <CardDescription>Configuração atual da feature</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <Badge
+                                :variant="feature.is_active ? 'default' : 'outline'"
+                                :class="feature.is_active ? 'bg-green-500/10 text-green-500' : ''"
+                                class="text-base px-4 py-1"
+                            >
+                                {{ feature.is_active ? 'Ativo' : 'Inativo' }}
+                            </Badge>
+                            <span class="text-muted-foreground">{{ actionLabel }}</span>
+                        </div>
 
-                            <div class="flex gap-2">
-                                <!-- Activate Dialog -->
-                                <Dialog v-model:open="showActivateDialog">
-                                    <DialogTrigger as-child>
-                                        <Button
-                                            v-if="!feature.is_active"
-                                            variant="default"
-                                            class="gap-2"
-                                        >
-                                            <Play class="h-4 w-4" />
-                                            Ativar
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Ativar Feature</DialogTitle>
-                                            <DialogDescription>
-                                                Escolha como deseja liberar esta feature.
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <div class="space-y-4 py-4">
-                                            <div class="space-y-2">
-                                                <Label>Estratégia de Rollout</Label>
-                                                <div class="grid grid-cols-3 gap-2">
-                                                    <Button
-                                                        :variant="strategy === 'all' ? 'default' : 'outline'"
-                                                        @click="strategy = 'all'"
-                                                        class="h-auto py-3 flex-col"
-                                                    >
-                                                        <span class="font-semibold">Todos</span>
-                                                        <span class="text-xs opacity-70">100%</span>
-                                                    </Button>
-                                                    <Button
-                                                        :variant="strategy === 'percentage' ? 'default' : 'outline'"
-                                                        @click="strategy = 'percentage'"
-                                                        class="h-auto py-3 flex-col"
-                                                    >
-                                                        <span class="font-semibold">Percentual</span>
-                                                        <span class="text-xs opacity-70">Gradual</span>
-                                                    </Button>
-                                                    <Button
-                                                        :variant="strategy === 'users' ? 'default' : 'outline'"
-                                                        @click="strategy = 'users'"
-                                                        class="h-auto py-3 flex-col"
-                                                    >
-                                                        <span class="font-semibold">Usuários</span>
-                                                        <span class="text-xs opacity-70">Específicos</span>
-                                                    </Button>
-                                                </div>
-                                            </div>
-
-                                            <div v-if="strategy === 'percentage'" class="space-y-2">
-                                                <Label>Percentual</Label>
-                                                <Input
-                                                    type="number"
-                                                    v-model="percentage"
-                                                    min="0"
-                                                    max="100"
-                                                    placeholder="50"
-                                                />
-                                                <p class="text-xs text-muted-foreground">
-                                                    Usuários serão selecionados de forma determinística baseada no ID.
-                                                </p>
+                        <div class="flex gap-2">
+                            <!-- Activate Dialog -->
+                            <Dialog v-model:open="showActivateDialog">
+                                <DialogTrigger as-child>
+                                    <Button
+                                        v-if="!feature.is_active"
+                                        variant="default"
+                                        class="gap-2"
+                                        @click="openActivateDialog"
+                                    >
+                                        <Play class="h-4 w-4" />
+                                        Ativar
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent class="max-w-lg">
+                                    <DialogHeader>
+                                        <DialogTitle>Ativar Feature</DialogTitle>
+                                        <DialogDescription>
+                                            Escolha como deseja liberar esta feature.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div class="space-y-4 py-4">
+                                        <div class="space-y-2">
+                                            <Label>Estratégia de Rollout</Label>
+                                            <div class="grid grid-cols-3 gap-2">
+                                                <Button
+                                                    :variant="strategy === 'all' ? 'default' : 'outline'"
+                                                    @click="strategy = 'all'"
+                                                    class="h-auto py-3 flex-col"
+                                                >
+                                                    <span class="font-semibold">Todos</span>
+                                                    <span class="text-xs opacity-70">100%</span>
+                                                </Button>
+                                                <Button
+                                                    :variant="strategy === 'percentage' ? 'default' : 'outline'"
+                                                    @click="strategy = 'percentage'"
+                                                    class="h-auto py-3 flex-col"
+                                                >
+                                                    <span class="font-semibold">Percentual</span>
+                                                    <span class="text-xs opacity-70">Gradual</span>
+                                                </Button>
+                                                <Button
+                                                    :variant="strategy === 'users' ? 'default' : 'outline'"
+                                                    @click="strategy = 'users'"
+                                                    class="h-auto py-3 flex-col"
+                                                >
+                                                    <span class="font-semibold">Usuários</span>
+                                                    <span class="text-xs opacity-70">Específicos</span>
+                                                </Button>
                                             </div>
                                         </div>
-                                        <DialogFooter>
-                                            <Button variant="outline" @click="showActivateDialog = false">
-                                                Cancelar
-                                            </Button>
-                                            <Button @click="activateFeature" :disabled="activating">
-                                                {{ activating ? 'Ativando...' : 'Ativar' }}
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
 
-                                <!-- Deactivate Dialog -->
-                                <Dialog v-model:open="showDeactivateDialog">
-                                    <DialogTrigger as-child>
-                                        <Button
-                                            v-if="feature.is_active"
-                                            variant="destructive"
-                                            class="gap-2"
-                                        >
-                                            <Square class="h-4 w-4" />
-                                            Desativar
+                                        <div v-if="strategy === 'percentage'" class="space-y-2">
+                                            <Label>Percentual</Label>
+                                            <Input
+                                                type="number"
+                                                v-model="percentage"
+                                                min="0"
+                                                max="100"
+                                                placeholder="50"
+                                            />
+                                            <p class="text-xs text-muted-foreground">
+                                                Usuários serão selecionados de forma determinística baseada no ID.
+                                            </p>
+                                        </div>
+
+                                        <div v-if="strategy === 'users'" class="space-y-3">
+                                            <Label>Selecionar Usuários</Label>
+
+                                            <!-- User Select -->
+                                            <Select @update:model-value="addUser">
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Selecione um usuário" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem
+                                                        v-for="user in users.filter(u => !selectedUserIds.includes(u.id))"
+                                                        :key="user.id"
+                                                        :value="String(user.id)"
+                                                    >
+                                                        {{ user.name }} ({{ user.email }})
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+
+                                            <!-- Selected Users Tags -->
+                                            <div v-if="selectedUsers.length > 0" class="flex flex-wrap gap-2">
+                                                <Badge
+                                                    v-for="user in selectedUsers"
+                                                    :key="user.id"
+                                                    variant="secondary"
+                                                    class="gap-1 pr-1"
+                                                >
+                                                    {{ user.name }}
+                                                    <button
+                                                        @click="removeUser(user.id)"
+                                                        class="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                                                    >
+                                                        <X class="h-3 w-3" />
+                                                    </button>
+                                                </Badge>
+                                            </div>
+                                            <p v-else class="text-xs text-muted-foreground">
+                                                Nenhum usuário selecionado
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" @click="showActivateDialog = false">
+                                            Cancelar
                                         </Button>
-                                    </DialogTrigger>
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>Desativar Feature</DialogTitle>
-                                            <DialogDescription>
-                                                Tem certeza que deseja desativar esta feature? Todos os usuários perderão acesso.
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <DialogFooter>
-                                            <Button variant="outline" @click="showDeactivateDialog = false">
-                                                Cancelar
-                                            </Button>
-                                            <Button
-                                                variant="destructive"
-                                                @click="deactivateFeature"
-                                                :disabled="activating"
-                                            >
-                                                {{ activating ? 'Desativando...' : 'Desativar' }}
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
+                                        <Button @click="activateFeature" :disabled="activating">
+                                            {{ activating ? 'Ativando...' : 'Ativar' }}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
 
-                <!-- History Card -->
-                <Card>
-                    <CardHeader>
-                        <div class="flex items-center gap-2">
-                            <History class="h-5 w-5 text-muted-foreground" />
-                            <CardTitle>Histórico</CardTitle>
-                        </div>
-                        <CardDescription>Histórico de mudanças desta feature</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Table v-if="history.length > 0">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Data</TableHead>
-                                    <TableHead>Ação</TableHead>
-                                    <TableHead>Responsável</TableHead>
-                                    <TableHead>Detalhes</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow v-for="item in history" :key="item.id">
-                                    <TableCell class="text-muted-foreground">
-                                        {{ formatDate(item.created_at) }}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            :variant="getActionBadge(item.action).variant"
-                                            :class="getActionBadge(item.action).class"
+                            <!-- Deactivate Dialog -->
+                            <Dialog v-model:open="showDeactivateDialog">
+                                <DialogTrigger as-child>
+                                    <Button
+                                        v-if="feature.is_active"
+                                        variant="destructive"
+                                        class="gap-2"
+                                    >
+                                        <Square class="h-4 w-4" />
+                                        Desativar
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Desativar Feature</DialogTitle>
+                                        <DialogDescription>
+                                            Tem certeza que deseja desativar esta feature? Todos os usuários perderão acesso.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DialogFooter>
+                                        <Button variant="outline" @click="showDeactivateDialog = false">
+                                            Cancelar
+                                        </Button>
+                                        <Button
+                                            variant="destructive"
+                                            @click="deactivateFeature"
+                                            :disabled="activating"
                                         >
-                                            {{ getActionBadge(item.action).label }}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>{{ item.actor }}</TableCell>
-                                    <TableCell class="text-muted-foreground text-sm">
-                                        <template v-if="item.new_state">
-                                            <span v-if="item.new_state.strategy">
-                                                Estratégia: {{ item.new_state.strategy }}
-                                            </span>
-                                            <span v-if="item.new_state.percentage">
-                                                · {{ item.new_state.percentage }}%
-                                            </span>
-                                        </template>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                        <div v-else class="text-center py-8 text-muted-foreground">
-                            Nenhum histórico disponível
+                                            {{ activating ? 'Desativando...' : 'Desativar' }}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- History Card -->
+            <Card>
+                <CardHeader>
+                    <div class="flex items-center gap-2">
+                        <History class="h-5 w-5 text-muted-foreground" />
+                        <CardTitle>Histórico</CardTitle>
+                    </div>
+                    <CardDescription>Histórico de mudanças desta feature</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table v-if="history.length > 0">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Data</TableHead>
+                                <TableHead>Ação</TableHead>
+                                <TableHead>Responsável</TableHead>
+                                <TableHead>Detalhes</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="item in history" :key="item.id">
+                                <TableCell class="text-muted-foreground">
+                                    {{ formatDate(item.created_at) }}
+                                </TableCell>
+                                <TableCell>
+                                    <Badge
+                                        :variant="getActionBadge(item.action).variant"
+                                        :class="getActionBadge(item.action).class"
+                                    >
+                                        {{ getActionBadge(item.action).label }}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>{{ item.actor }}</TableCell>
+                                <TableCell class="text-muted-foreground text-sm">
+                                    <template v-if="item.new_state">
+                                        <span v-if="item.new_state.strategy">
+                                            Estratégia: {{ item.new_state.strategy }}
+                                        </span>
+                                        <span v-if="item.new_state.percentage">
+                                            · {{ item.new_state.percentage }}%
+                                        </span>
+                                    </template>
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                    <div v-else class="text-center py-8 text-muted-foreground">
+                        Nenhum histórico disponível
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     </AuthenticatedLayout>
 </template>

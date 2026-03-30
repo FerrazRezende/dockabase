@@ -401,12 +401,83 @@ protected function resolveFeature(User $user, string $featureName): bool
 - Index/Create/Show para Databases
 - Index/Create/Show para Credentials
 
-### Fase 2.5: API Middleware
+### Fase 2.5: Sidebar Navigation (JSON)
+- Refatorar `AuthenticatedLayout.vue` para usar configuração JSON
+- Criar `resources/js/config/navigation.json`
+- Suporte a feature flags nos itens de navegação
+- Testes
+
+### Fase 2.6: API Middleware
 - EnsureDatabaseAccess middleware
 - Integração com Dynamic API (fase 5)
 
 ---
 
-## 13. Questões Abertas
+## 13. Sidebar Navigation (JSON)
+
+Atualmente a sidebar está hardcoded em `AuthenticatedLayout.vue`. Vamos refatorar para usar configuração JSON.
+
+### 13.1 Estrutura do JSON
+
+```json
+// resources/js/config/navigation.json
+{
+  "items": [
+    {
+      "label": "Home",
+      "icon": "Home",
+      "route": "dashboard",
+      "permission": null
+    },
+    {
+      "label": "Databases",
+      "icon": "Database",
+      "route": "system.databases.index",
+      "permission": "is_admin"
+    },
+    {
+      "label": "Credentials",
+      "icon": "Key",
+      "route": "system.credentials.index",
+      "permission": "is_admin"
+    },
+    {
+      "label": "Features",
+      "icon": "Flag",
+      "route": "system.features.index",
+      "permission": "is_admin"
+    }
+  ]
+}
+```
+
+### 13.2 Uso no AuthenticatedLayout
+
+```vue
+<script setup lang="ts">
+import navigationConfig from '@/config/navigation.json';
+import * as icons from 'lucide-vue-next';
+
+const navigationItems = navigationConfig.items;
+</script>
+
+<template>
+  <nav>
+    <Link
+      v-for="item in navigationItems"
+      :key="item.route"
+      v-if="!item.permission || auth.user[item.permission]"
+      :href="route(item.route)"
+    >
+      <component :is="icons[item.icon]" />
+      <span>{{ item.label }}</span>
+    </Link>
+  </nav>
+</template>
+```
+
+---
+
+## 14. Questões Abertas
 
 Nenhuma. Design aprovado pelo usuário em 2026-03-28.
