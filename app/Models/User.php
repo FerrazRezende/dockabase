@@ -23,6 +23,8 @@ class User extends Authenticatable
         'email',
         'password',
         'is_admin',
+        'password_changed_at',
+        'active',
     ];
 
     /**
@@ -46,6 +48,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'password_changed_at' => 'datetime',
+            'active' => 'boolean',
         ];
     }
 
