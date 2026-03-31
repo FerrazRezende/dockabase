@@ -36,7 +36,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { ArrowLeft, Play, Square, History, UserPlus, X } from 'lucide-vue-next';
+import { ArrowLeft, Play, Square, History, UserPlus, X, Users } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import type { Feature } from '@/types/feature';
 
@@ -50,7 +50,7 @@ interface HistoryItem {
 }
 
 interface User {
-    id: number;
+    id: string;
     name: string;
     email: string;
 }
@@ -70,7 +70,7 @@ const activating = ref(false);
 // Form state for activation
 const strategy = ref<'all' | 'percentage' | 'users'>('all');
 const percentage = ref(50);
-const selectedUserIds = ref<number[]>([]);
+const selectedUserIds = ref<string[]>([]);
 
 const actionLabel = computed(() => {
     switch (props.feature.strategy) {
@@ -91,15 +91,14 @@ const selectedUsers = computed(() => {
 });
 
 // Remove user from selection
-const removeUser = (userId: number) => {
+const removeUser = (userId: string) => {
     selectedUserIds.value = selectedUserIds.value.filter(id => id !== userId);
 };
 
 // Add user to selection
 const addUser = (userId: string) => {
-    const id = parseInt(userId);
-    if (!selectedUserIds.value.includes(id)) {
-        selectedUserIds.value.push(id);
+    if (!selectedUserIds.value.includes(userId)) {
+        selectedUserIds.value.push(userId);
     }
 };
 
@@ -169,6 +168,56 @@ const openActivateDialog = () => {
     selectedUserIds.value = [];
     showActivateDialog.value = true;
 };
+
+// Deterministic percentage check (same as backend)
+const checkPercentage = (userId: string, percentage: number): boolean => {
+    // Simple hash function similar to crc32
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+        const char = userId.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash) % 100 < percentage;
+};
+
+// Get users who can see this feature
+const usersWithAccess = computed(() => {
+    if (!props.feature.is_active) {
+        return [];
+    }
+
+    switch (props.feature.strategy) {
+        case 'all':
+            return props.users; // All users
+        case 'percentage':
+            // Use deterministic selection based on user ID
+            return props.users.filter(u => checkPercentage(u.id, props.feature.percentage));
+        case 'users':
+            // Only selected users
+            return props.users.filter(u => (props.feature.user_ids || []).includes(u.id));
+        default:
+            return [];
+    }
+});
+
+// Get display info for access
+const accessDisplay = computed(() => {
+    if (!props.feature.is_active) {
+        return { type: 'none', message: 'Nenhum usuário tem acesso' };
+    }
+
+    switch (props.feature.strategy) {
+        case 'all':
+            return { type: 'all', message: 'Todos os usuários estão vendo a feature' };
+        case 'percentage':
+            return { type: 'percentage', message: `${props.feature.percentage}% dos usuários (${usersWithAccess.value.length} de ${props.users.length})` };
+        case 'users':
+            return { type: 'users', message: `${usersWithAccess.value.length} usuário(s) selecionado(s)` };
+        default:
+            return { type: 'none', message: 'Nenhum usuário tem acesso' };
+    }
+});
 </script>
 
 <template>
@@ -365,6 +414,53 @@ const openActivateDialog = () => {
                                 </DialogContent>
                             </Dialog>
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Users with Access Card -->
+            <Card>
+                <CardHeader>
+                    <div class="flex items-center gap-2">
+                        <Users class="h-5 w-5 text-muted-foreground" />
+                        <CardTitle>Usuários com Acesso</CardTitle>
+                    </div>
+                    <CardDescription>{{ accessDisplay.message }}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <!-- All users message -->
+                    <div v-if="accessDisplay.type === 'all'" class="text-center py-8">
+                        <div class="text-green-500 font-semibold text-lg mb-2">
+                            TODOS OS USUÁRIOS ESTÃO VENDO A FEATURE
+                        </div>
+                        <p class="text-muted-foreground text-sm">
+                            Total de {{ users.length }} usuário(s) no sistema
+                        </p>
+                    </div>
+
+                    <!-- Users table for percentage and users strategies -->
+                    <Table v-else-if="usersWithAccess.length > 0">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nome</TableHead>
+                                <TableHead>Email</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="user in usersWithAccess" :key="user.id">
+                                <TableCell class="font-medium">
+                                    {{ user.name }}
+                                </TableCell>
+                                <TableCell class="text-muted-foreground">
+                                    {{ user.email }}
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+
+                    <!-- No users message -->
+                    <div v-else class="text-center py-8 text-muted-foreground">
+                        Nenhum usuário tem acesso a esta feature
                     </div>
                 </CardContent>
             </Card>

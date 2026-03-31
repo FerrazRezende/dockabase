@@ -26,6 +26,7 @@ class FeatureResource extends JsonResource
             'strategy' => $this->feature->strategy->value,
             'strategy_label' => $this->feature->strategy->label(),
             'percentage' => $this->feature->percentage,
+            'user_ids' => $this->feature->userIds?->toArray(),
         ];
     }
 }
