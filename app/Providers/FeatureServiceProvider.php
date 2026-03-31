@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Enums\RolloutStrategyEnum;
 use App\Models\FeatureSetting;
 use App\Models\User;
 use Carbon\Carbon;
@@ -59,10 +60,10 @@ class FeatureServiceProvider extends ServiceProvider
         }
 
         return match ($setting->strategy) {
-            'all' => true,
-            'percentage' => $this->checkPercentage((string) $user->id, $setting->percentage),
-            'users' => in_array((string) $user->id, $setting->user_ids ?? []),
-            default => false,
+            RolloutStrategyEnum::All => true,
+            RolloutStrategyEnum::Percentage => $this->checkPercentage((string) $user->id, $setting->percentage),
+            RolloutStrategyEnum::Users => in_array((string) $user->id, $setting->user_ids ?? []),
+            RolloutStrategyEnum::Inactive => false,
         };
     }
 

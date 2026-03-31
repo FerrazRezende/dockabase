@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\FeatureFlagService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
@@ -30,11 +31,20 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $activeFeatures = [];
+
+        if ($user) {
+            $featureService = app(FeatureFlagService::class);
+            $activeFeatures = $featureService->getActiveFeaturesForUser($user);
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
             ],
+            'activeFeatures' => $activeFeatures,
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

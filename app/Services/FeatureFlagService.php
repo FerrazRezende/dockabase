@@ -29,11 +29,21 @@ class FeatureFlagService
             ->map(function (array $definition, string $name) use ($settings) {
                 $setting = $settings->get($name);
 
+                // Se há setting, usa o status do banco
+                // Se não há setting, usa o default por ambiente
+                $isActive = $setting
+                    ? $setting->is_active
+                    : $this->isFeatureActiveByDefault($name);
+
+                // Se está ativo por padrão (sem setting), estratégia é "all"
+                $strategy = $setting?->strategy ??
+                    ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
+
                 return FeatureConfigDTO::fromDefinition(
                     name: $name,
                     definition: $definition,
-                    strategy: $setting?->strategy,
-                    isActive: $setting?->is_active ?? false,
+                    strategy: $strategy,
+                    isActive: $isActive,
                     percentage: $setting?->percentage ?? 0,
                     userIds: $setting?->user_ids
                 );

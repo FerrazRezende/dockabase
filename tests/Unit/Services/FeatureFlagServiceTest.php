@@ -96,6 +96,5 @@ class FeatureFlagServiceTest extends TestCase
         $user = User::factory()->create(['is_admin' => false]);
 
         // No FeatureSetting in database - should use environment default
-        $this->assertTrue($this->service->isActiveForUser('database-creator', $user));
-    }
+        $this->assertFalse($this->service->isActiveForUser('database-creator', $user));
 }

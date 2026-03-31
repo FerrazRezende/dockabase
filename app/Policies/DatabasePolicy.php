@@ -7,34 +7,41 @@ namespace App\Policies;
 use App\Models\Database;
 use App\Models\User;
 
+/**
+ * Database Policy - RBAC permissions within the database-creator feature.
+ *
+ * Feature flag access is controlled by middleware.
+ * This policy handles fine-grained permissions (create, update, delete).
+ */
 class DatabasePolicy
 {
-    /**
-     * Databases - Admin only
-     * Apenas administradores podem gerenciar databases
-     */
     public function viewAny(User $user): bool
     {
-        return $user->is_admin === true;
+        // All users with feature access can view databases
+        return true;
     }
 
     public function view(User $user, Database $database): bool
     {
-        return $user->is_admin === true;
+        // All users with feature access can view databases
+        return true;
     }
 
     public function create(User $user): bool
     {
+        // Only admins can create databases
         return $user->is_admin === true;
     }
 
     public function update(User $user, Database $database): bool
     {
+        // Only admins can update databases
         return $user->is_admin === true;
     }
 
     public function delete(User $user, Database $database): bool
     {
+        // Only admins can delete databases
         return $user->is_admin === true;
     }
 }

@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ArrowLeft, Play, Square, History, UserPlus, X, Users } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import type { Feature } from '@/types/feature';
 
 interface HistoryItem {
@@ -72,6 +72,18 @@ const activating = ref(false);
 const strategy = ref<'all' | 'percentage' | 'users'>('all');
 const percentage = ref(50);
 const selectedUserIds = ref<string[]>([]);
+const selectedUserId = ref<string>(''); // Temporary for Select v-model
+
+// Watch for Select changes
+watch(selectedUserId, (newId) => {
+    if (newId && !selectedUserIds.value.includes(newId)) {
+        selectedUserIds.value.push(newId);
+    }
+    // Reset to allow selecting another
+    nextTick(() => {
+        selectedUserId.value = '';
+    });
+});
 
 const actionLabel = computed(() => {
     switch (props.feature.strategy) {
@@ -94,14 +106,6 @@ const selectedUsers = computed(() => {
 // Remove user from selection
 const removeUser = (userId: string) => {
     selectedUserIds.value = selectedUserIds.value.filter(id => id !== userId);
-};
-
-// Add user to selection
-const handleUserSelect = (userId: string | number) => {
-    const id = String(userId);
-    if (id && !selectedUserIds.value.includes(id)) {
-        selectedUserIds.value.push(id);
-    }
 };
 
 const activateFeature = () => {
@@ -170,6 +174,7 @@ const openActivateDialog = () => {
     strategy.value = 'all';
     percentage.value = 50;
     selectedUserIds.value = [];
+    selectedUserId.value = '';
     showActivateDialog.value = true;
 };
 
@@ -304,7 +309,7 @@ const accessDisplay = computed(() => {
                                             <Label>Selecionar Usuários</Label>
 
                                             <!-- User Select -->
-                                            <Select @update:model-value="handleUserSelect">
+                                            <Select v-model="selectedUserId">
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Selecione um usuário" />
                                                 </SelectTrigger>
