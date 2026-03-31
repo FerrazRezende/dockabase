@@ -59,6 +59,7 @@ interface Props {
     feature: Feature;
     history: HistoryItem[];
     users: User[];
+    usersWithAccess: User[];
 }
 
 const props = defineProps<Props>();
@@ -169,50 +170,8 @@ const openActivateDialog = () => {
     strategy.value = 'all';
     percentage.value = 50;
     selectedUserIds.value = [];
-    selectedUserId.value = '';
     showActivateDialog.value = true;
 };
-
-// Deterministic percentage check (same as backend - crc32)
-const checkPercentage = (userId: string, percentage: number): boolean => {
-    // CRC32 implementation matching PHP's crc32
-    const crc32Table: number[] = [];
-    for (let i = 0; i < 256; i++) {
-        let c = i;
-        for (let j = 0; j < 8; j++) {
-            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-        }
-        crc32Table[i] = c;
-    }
-
-    let crc = 0xFFFFFFFF;
-    for (let i = 0; i < userId.length; i++) {
-        crc = crc32Table[(crc ^ userId.charCodeAt(i)) & 0xFF] ^ (crc >>> 8);
-    }
-    const hash = (crc ^ 0xFFFFFFFF) >>> 0;
-
-    return (hash % 100) < percentage;
-};
-
-// Get users who can see this feature
-const usersWithAccess = computed(() => {
-    if (!props.feature.is_active) {
-        return [];
-    }
-
-    switch (props.feature.strategy) {
-        case 'all':
-            return props.users; // All users
-        case 'percentage':
-            // Use deterministic selection based on user ID
-            return props.users.filter(u => checkPercentage(u.id, props.feature.percentage));
-        case 'users':
-            // Only selected users
-            return props.users.filter(u => (props.feature.user_ids || []).includes(u.id));
-        default:
-            return [];
-    }
-});
 
 // Get display info for access
 const accessDisplay = computed(() => {
@@ -224,9 +183,9 @@ const accessDisplay = computed(() => {
         case 'all':
             return { type: 'all', message: 'Todos os usuários estão vendo a feature' };
         case 'percentage':
-            return { type: 'percentage', message: `${props.feature.percentage}% dos usuários (${usersWithAccess.value.length} de ${props.users.length})` };
+            return { type: 'percentage', message: `${props.feature.percentage}% dos usuários (${props.usersWithAccess.length} de ${props.users.length})` };
         case 'users':
-            return { type: 'users', message: `${usersWithAccess.value.length} usuário(s) selecionado(s)` };
+            return { type: 'users', message: `${props.usersWithAccess.length} usuário(s) selecionado(s)` };
         default:
             return { type: 'none', message: 'Nenhum usuário tem acesso' };
     }

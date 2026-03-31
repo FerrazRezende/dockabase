@@ -60,8 +60,8 @@ class FeatureServiceProvider extends ServiceProvider
 
         return match ($setting->strategy) {
             'all' => true,
-            'percentage' => $this->checkPercentage($user->id, $setting->percentage),
-            'users' => in_array($user->id, $setting->user_ids ?? []),
+            'percentage' => $this->checkPercentage((string) $user->id, $setting->percentage),
+            'users' => in_array((string) $user->id, $setting->user_ids ?? []),
             default => false,
         };
     }

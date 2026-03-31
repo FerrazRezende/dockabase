@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\System;
 
+use App\DTOs\FeatureConfigDTO;
+use App\Enums\RolloutStrategyEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\System\ActivateFeatureRequest;
 use App\Http\Requests\System\UpdateFeatureRequest;
@@ -58,11 +60,48 @@ class FeatureFlagController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Calculate which users have access to this feature
+        $usersWithAccess = $this->getUsersWithAccess($featureDto, $users);
+
         return Inertia::render('System/Features/Show', [
             'feature' => (new FeatureResource($featureDto))->toArray($request),
             'history' => $history,
             'users' => $users,
+            'usersWithAccess' => $usersWithAccess,
         ]);
+    }
+
+    /**
+     * Get users who have access to the feature based on strategy.
+     */
+    private function getUsersWithAccess(FeatureConfigDTO $feature, $allUsers): array
+    {
+        if (! $feature->isActive) {
+            return [];
+        }
+
+        return match ($feature->strategy) {
+            RolloutStrategyEnum::All => $allUsers->toArray(),
+            RolloutStrategyEnum::Percentage => $allUsers
+                ->filter(fn ($user) => $this->checkPercentage((string) $user->id, $feature->percentage))
+                ->values()
+                ->toArray(),
+            RolloutStrategyEnum::Users => $allUsers
+                ->filter(fn ($user) => ($feature->userIds?->contains((string) $user->id) ?? false))
+                ->values()
+                ->toArray(),
+            default => [],
+        };
+    }
+
+    /**
+     * Deterministic percentage check matching FeatureFlagService.
+     */
+    private function checkPercentage(string $userId, int $percentage): bool
+    {
+        $hash = crc32($userId);
+
+        return ($hash % 100) < $percentage;
     }
 
     /**

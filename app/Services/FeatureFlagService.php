@@ -221,7 +221,7 @@ class FeatureFlagService
         return match ($setting->strategy) {
             RolloutStrategyEnum::All => true,
             RolloutStrategyEnum::Percentage => $this->checkPercentage($user->id, $setting->percentage),
-            RolloutStrategyEnum::Users => in_array($user->id, $setting->user_ids ?? []),
+            RolloutStrategyEnum::Users => in_array((string) $user->id, $setting->user_ids ?? []),
             RolloutStrategyEnum::Inactive => false,
         };
     }
