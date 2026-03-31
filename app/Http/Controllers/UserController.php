@@ -8,6 +8,8 @@ use App\Http\Resources\SystemUserCollection;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController extends Controller
 {
@@ -23,12 +25,14 @@ class UserController extends Controller
     /**
      * List all users for admin panel.
      */
-    public function indexForAdmin(Request $request): SystemUserCollection
+    public function indexForAdmin(Request $request): Response
     {
         $users = User::select(['id', 'name', 'email', 'is_admin', 'created_at', 'updated_at'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return new SystemUserCollection($users);
+        return Inertia::render('System/Users/Index', [
+            'users' => json_decode((new SystemUserCollection($users))->toJson(), true),
+        ]);
     }
 }

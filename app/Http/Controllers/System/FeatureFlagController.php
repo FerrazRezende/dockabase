@@ -82,7 +82,11 @@ class FeatureFlagController extends Controller
             $request->user()
         );
 
-        return new FeatureResource($featureDto);
+        if ($request->wantsJson()) {
+            return new FeatureResource($featureDto);
+        }
+
+        return redirect()->back();
     }
 
     /**
@@ -94,7 +98,11 @@ class FeatureFlagController extends Controller
 
         $featureDto = $this->featureService->deactivate($feature, $request->user());
 
-        return new FeatureResource($featureDto);
+        if ($request->wantsJson()) {
+            return new FeatureResource($featureDto);
+        }
+
+        return redirect()->back();
     }
 
     /**

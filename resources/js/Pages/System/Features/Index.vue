@@ -20,38 +20,20 @@ defineProps<{
 
 const toggling = ref<string | null>(null);
 
-const getCsrfToken = (): string => {
-    const meta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
-    return meta?.content || '';
-};
-
-const toggleFeature = async (featureName: string, currentlyActive: boolean): Promise<void> => {
+const toggleFeature = (featureName: string, currentlyActive: boolean): void => {
     toggling.value = featureName;
-    try {
-        const url = currentlyActive
-            ? route('system.features.deactivate', featureName)
-            : route('system.features.activate', featureName);
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-            },
-            body: JSON.stringify({ strategy: 'all' }),
-        });
+    const url = currentlyActive
+        ? route('system.features.deactivate', featureName)
+        : route('system.features.activate', featureName);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        router.reload({ only: ['features'] });
-    } catch (error) {
-        console.error('Failed to toggle feature:', error);
-    } finally {
-        toggling.value = null;
-    }
+    router.post(url, { strategy: 'all' }, {
+        preserveScroll: true,
+        only: ['features'],
+        onFinish: () => {
+            toggling.value = null;
+        },
+    });
 };
 
 const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'outline' => {
