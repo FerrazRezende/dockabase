@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ArrowLeft, Play, Square, History, UserPlus, X, Users } from 'lucide-vue-next';
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import type { Feature } from '@/types/feature';
 
 interface HistoryItem {
@@ -71,7 +71,6 @@ const activating = ref(false);
 const strategy = ref<'all' | 'percentage' | 'users'>('all');
 const percentage = ref(50);
 const selectedUserIds = ref<string[]>([]);
-const selectedUserId = ref<string>(''); // For the select component
 
 const actionLabel = computed(() => {
     switch (props.feature.strategy) {
@@ -96,14 +95,13 @@ const removeUser = (userId: string) => {
     selectedUserIds.value = selectedUserIds.value.filter(id => id !== userId);
 };
 
-// Add user to selection when select changes
-watch(selectedUserId, (newUserId) => {
-    if (newUserId && !selectedUserIds.value.includes(newUserId)) {
-        selectedUserIds.value.push(newUserId);
+// Add user to selection
+const handleUserSelect = (userId: string | number) => {
+    const id = String(userId);
+    if (id && !selectedUserIds.value.includes(id)) {
+        selectedUserIds.value.push(id);
     }
-    // Reset select after adding
-    selectedUserId.value = '';
-});
+};
 
 const activateFeature = () => {
     activating.value = true;
@@ -175,16 +173,25 @@ const openActivateDialog = () => {
     showActivateDialog.value = true;
 };
 
-// Deterministic percentage check (same as backend)
+// Deterministic percentage check (same as backend - crc32)
 const checkPercentage = (userId: string, percentage: number): boolean => {
-    // Simple hash function similar to crc32
-    let hash = 0;
-    for (let i = 0; i < userId.length; i++) {
-        const char = userId.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+    // CRC32 implementation matching PHP's crc32
+    const crc32Table: number[] = [];
+    for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let j = 0; j < 8; j++) {
+            c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        }
+        crc32Table[i] = c;
     }
-    return Math.abs(hash) % 100 < percentage;
+
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < userId.length; i++) {
+        crc = crc32Table[(crc ^ userId.charCodeAt(i)) & 0xFF] ^ (crc >>> 8);
+    }
+    const hash = (crc ^ 0xFFFFFFFF) >>> 0;
+
+    return (hash % 100) < percentage;
 };
 
 // Get users who can see this feature
@@ -338,7 +345,7 @@ const accessDisplay = computed(() => {
                                             <Label>Selecionar Usuários</Label>
 
                                             <!-- User Select -->
-                                            <Select v-model="selectedUserId">
+                                            <Select @update:model-value="handleUserSelect">
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Selecione um usuário" />
                                                 </SelectTrigger>
