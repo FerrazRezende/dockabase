@@ -71,6 +71,7 @@ const activating = ref(false);
 const strategy = ref<'all' | 'percentage' | 'users'>('all');
 const percentage = ref(50);
 const selectedUserIds = ref<string[]>([]);
+const selectKey = ref(0); // Used to reset the select component
 
 const actionLabel = computed(() => {
     switch (props.feature.strategy) {
@@ -97,9 +98,11 @@ const removeUser = (userId: string) => {
 
 // Add user to selection
 const addUser = (userId: string) => {
-    if (!selectedUserIds.value.includes(userId)) {
+    if (userId && !selectedUserIds.value.includes(userId)) {
         selectedUserIds.value.push(userId);
     }
+    // Reset select by incrementing key
+    selectKey.value++;
 };
 
 const activateFeature = () => {
@@ -119,9 +122,11 @@ const activateFeature = () => {
 
     router.post(route('system.features.activate', props.feature.name), body, {
         preserveScroll: true,
+        onSuccess: () => {
+            showActivateDialog.value = false;
+        },
         onFinish: () => {
             activating.value = false;
-            showActivateDialog.value = false;
         },
     });
 };
@@ -166,6 +171,7 @@ const openActivateDialog = () => {
     strategy.value = 'all';
     percentage.value = 50;
     selectedUserIds.value = [];
+    selectKey.value++;
     showActivateDialog.value = true;
 };
 
@@ -332,7 +338,7 @@ const accessDisplay = computed(() => {
                                             <Label>Selecionar Usuários</Label>
 
                                             <!-- User Select -->
-                                            <Select @update:model-value="addUser">
+                                            <Select :key="selectKey" @update:model-value="addUser">
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Selecione um usuário" />
                                                 </SelectTrigger>
