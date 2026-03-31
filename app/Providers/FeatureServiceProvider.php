@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Enums\RolloutStrategyEnum;
 use App\Models\FeatureSetting;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pennant\Feature;
 
@@ -47,17 +49,46 @@ class FeatureServiceProvider extends ServiceProvider
 
         $setting = FeatureSetting::where('feature_name', $featureName)->first();
 
-        // No setting or inactive = feature is off
-        if (! $setting || ! $setting->is_active) {
+        // Se não há setting, usa default por ambiente
+        if (! $setting) {
+            return $this->isFeatureActiveByDefault($featureName);
+        }
+
+        // Se há setting inativo, feature desativada
+        if (! $setting->is_active) {
             return false;
         }
 
         return match ($setting->strategy) {
-            'all' => true,
-            'percentage' => $this->checkPercentage($user->id, $setting->percentage),
-            'users' => in_array($user->id, $setting->user_ids ?? []),
-            default => false,
+            RolloutStrategyEnum::All => true,
+            RolloutStrategyEnum::Percentage => $this->checkPercentage((string) $user->id, $setting->percentage),
+            RolloutStrategyEnum::Users => in_array((string) $user->id, $setting->user_ids ?? []),
+            RolloutStrategyEnum::Inactive => false,
         };
+    }
+
+    /**
+     * Check if a feature is active by default based on environment.
+     */
+    protected function isFeatureActiveByDefault(string $featureName): bool
+    {
+        $env = config('app.env');
+
+        // Dev/Local/Testing: todas as features implementadas ativas
+        if (in_array($env, ['local', 'development', 'dev', 'testing'])) {
+            return true;
+        }
+
+        // Production: features até FIRST_DEPLOY_DATE ativas
+        $feature = config("features.definitions.{$featureName}");
+        $deployDate = config('features.first_deploy_date');
+
+        if (! ($feature['implemented_at'] ?? null) || ! $deployDate) {
+            return false;
+        }
+
+        return Carbon::parse($feature['implemented_at'])
+            ->lte(Carbon::parse($deployDate));
     }
 
     /**

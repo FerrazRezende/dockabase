@@ -36,8 +36,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { ArrowLeft, Play, Square, History, UserPlus, X } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { ArrowLeft, Play, Square, History, UserPlus, X, Users } from 'lucide-vue-next';
+import { ref, computed, watch, nextTick } from 'vue';
 import type { Feature } from '@/types/feature';
 
 interface HistoryItem {
@@ -50,7 +50,7 @@ interface HistoryItem {
 }
 
 interface User {
-    id: number;
+    id: string;
     name: string;
     email: string;
 }
@@ -59,6 +59,7 @@ interface Props {
     feature: Feature;
     history: HistoryItem[];
     users: User[];
+    usersWithAccess: User[];
 }
 
 const props = defineProps<Props>();
@@ -70,7 +71,19 @@ const activating = ref(false);
 // Form state for activation
 const strategy = ref<'all' | 'percentage' | 'users'>('all');
 const percentage = ref(50);
-const selectedUserIds = ref<number[]>([]);
+const selectedUserIds = ref<string[]>([]);
+const selectedUserId = ref<string>(''); // Temporary for Select v-model
+
+// Watch for Select changes
+watch(selectedUserId, (newId) => {
+    if (newId && !selectedUserIds.value.includes(newId)) {
+        selectedUserIds.value.push(newId);
+    }
+    // Reset to allow selecting another
+    nextTick(() => {
+        selectedUserId.value = '';
+    });
+});
 
 const actionLabel = computed(() => {
     switch (props.feature.strategy) {
@@ -91,75 +104,46 @@ const selectedUsers = computed(() => {
 });
 
 // Remove user from selection
-const removeUser = (userId: number) => {
+const removeUser = (userId: string) => {
     selectedUserIds.value = selectedUserIds.value.filter(id => id !== userId);
 };
 
-// Add user to selection
-const addUser = (userId: string) => {
-    const id = parseInt(userId);
-    if (!selectedUserIds.value.includes(id)) {
-        selectedUserIds.value.push(id);
-    }
-};
-
-const activateFeature = async () => {
+const activateFeature = () => {
     activating.value = true;
-    try {
-        const body: Record<string, unknown> = {
-            strategy: strategy.value,
-        };
 
-        if (strategy.value === 'percentage') {
-            body.percentage = percentage.value;
-        }
+    const body: Record<string, unknown> = {
+        strategy: strategy.value,
+    };
 
-        if (strategy.value === 'users') {
-            body.user_ids = selectedUserIds.value;
-        }
+    if (strategy.value === 'percentage') {
+        body.percentage = percentage.value;
+    }
 
-        const response = await fetch(route('system.features.activate', props.feature.name), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-            },
-            body: JSON.stringify(body),
-        });
+    if (strategy.value === 'users') {
+        body.user_ids = selectedUserIds.value;
+    }
 
-        if (response.ok) {
+    router.post(route('system.features.activate', props.feature.name), body, {
+        preserveScroll: true,
+        onSuccess: () => {
             showActivateDialog.value = false;
-            router.reload();
-        }
-    } catch (error) {
-        console.error('Failed to activate feature:', error);
-    } finally {
-        activating.value = false;
-    }
+        },
+        onFinish: () => {
+            activating.value = false;
+        },
+    });
 };
 
-const deactivateFeature = async () => {
+const deactivateFeature = () => {
     activating.value = true;
-    try {
-        const response = await fetch(route('system.features.deactivate', props.feature.name), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-            },
-        });
 
-        if (response.ok) {
+    router.post(route('system.features.deactivate', props.feature.name), {}, {
+        preserveScroll: true,
+        onFinish: () => {
+            activating.value = false;
             showDeactivateDialog.value = false;
-            router.reload();
-        }
-    } catch (error) {
-        console.error('Failed to deactivate feature:', error);
-    } finally {
-        activating.value = false;
-    }
+        },
+    });
 };
 
 const formatDate = (dateString: string) => {
@@ -190,8 +174,27 @@ const openActivateDialog = () => {
     strategy.value = 'all';
     percentage.value = 50;
     selectedUserIds.value = [];
+    selectedUserId.value = '';
     showActivateDialog.value = true;
 };
+
+// Get display info for access
+const accessDisplay = computed(() => {
+    if (!props.feature.is_active) {
+        return { type: 'none', message: 'Nenhum usuário tem acesso' };
+    }
+
+    switch (props.feature.strategy) {
+        case 'all':
+            return { type: 'all', message: 'Todos os usuários estão vendo a feature' };
+        case 'percentage':
+            return { type: 'percentage', message: `${props.feature.percentage}% dos usuários (${props.usersWithAccess.length} de ${props.users.length})` };
+        case 'users':
+            return { type: 'users', message: `${props.usersWithAccess.length} usuário(s) selecionado(s)` };
+        default:
+            return { type: 'none', message: 'Nenhum usuário tem acesso' };
+    }
+});
 </script>
 
 <template>
@@ -306,7 +309,7 @@ const openActivateDialog = () => {
                                             <Label>Selecionar Usuários</Label>
 
                                             <!-- User Select -->
-                                            <Select @update:model-value="addUser">
+                                            <Select v-model="selectedUserId">
                                                 <SelectTrigger>
                                                     <SelectValue placeholder="Selecione um usuário" />
                                                 </SelectTrigger>
@@ -388,6 +391,53 @@ const openActivateDialog = () => {
                                 </DialogContent>
                             </Dialog>
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <!-- Users with Access Card -->
+            <Card>
+                <CardHeader>
+                    <div class="flex items-center gap-2">
+                        <Users class="h-5 w-5 text-muted-foreground" />
+                        <CardTitle>Usuários com Acesso</CardTitle>
+                    </div>
+                    <CardDescription>{{ accessDisplay.message }}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <!-- All users message -->
+                    <div v-if="accessDisplay.type === 'all'" class="text-center py-8">
+                        <div class="text-green-500 font-semibold text-lg mb-2">
+                            TODOS OS USUÁRIOS ESTÃO VENDO A FEATURE
+                        </div>
+                        <p class="text-muted-foreground text-sm">
+                            Total de {{ users.length }} usuário(s) no sistema
+                        </p>
+                    </div>
+
+                    <!-- Users table for percentage and users strategies -->
+                    <Table v-else-if="usersWithAccess.length > 0">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nome</TableHead>
+                                <TableHead>Email</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow v-for="user in usersWithAccess" :key="user.id">
+                                <TableCell class="font-medium">
+                                    {{ user.name }}
+                                </TableCell>
+                                <TableCell class="text-muted-foreground">
+                                    {{ user.email }}
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+
+                    <!-- No users message -->
+                    <div v-else class="text-center py-8 text-muted-foreground">
+                        Nenhum usuário tem acesso a esta feature
                     </div>
                 </CardContent>
             </Card>

@@ -6,6 +6,7 @@ export interface Feature {
     strategy: 'inactive' | 'percentage' | 'users' | 'all';
     strategy_label: string;
     percentage: number;
+    user_ids?: string[];
 }
 
 export interface FeatureCollection {

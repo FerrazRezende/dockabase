@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -21,9 +21,10 @@ import {
     ChevronDown,
     Flag,
     Key,
+    Users,
 } from 'lucide-vue-next';
 import { useDarkMode } from '@/composables/useDarkMode';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 defineProps<{
     auth: {
@@ -37,6 +38,9 @@ defineProps<{
     };
     title?: string;
 }>();
+
+const page = usePage();
+const activeFeatures = computed(() => page.props.activeFeatures as string[] | undefined);
 
 const { isDark, toggleDark } = useDarkMode();
 const collapsed = ref(false);
@@ -99,8 +103,9 @@ const initials = (name: string): string => {
 
             <!-- Navigation -->
             <nav class="flex-1 space-y-1 p-2">
-                <!-- App Section -->
+                <!-- Home for non-admin users -->
                 <Link
+                    v-if="!auth.user.is_admin"
                     :href="route('dashboard')"
                     :class="[
                         'flex items-center rounded-lg text-sm font-medium transition-colors',
@@ -116,7 +121,9 @@ const initials = (name: string): string => {
                     <span v-if="!collapsed">Home</span>
                 </Link>
 
+                <!-- Databases - requires database-creator feature -->
                 <Link
+                    v-if="!auth.user.is_admin && activeFeatures?.includes('database-creator')"
                     :href="route('app.databases.index')"
                     :class="[
                         'flex items-center rounded-lg text-sm font-medium transition-colors',
@@ -132,7 +139,9 @@ const initials = (name: string): string => {
                     <span v-if="!collapsed">Databases</span>
                 </Link>
 
+                <!-- Credentials - requires credentials-manager feature -->
                 <Link
+                    v-if="!auth.user.is_admin && activeFeatures?.includes('credentials-manager')"
                     :href="route('app.credentials.index')"
                     :class="[
                         'flex items-center rounded-lg text-sm font-medium transition-colors',
@@ -148,8 +157,26 @@ const initials = (name: string): string => {
                     <span v-if="!collapsed">Credentials</span>
                 </Link>
 
-                <!-- System Section (Admin Only) -->
-                <div v-if="auth.user.is_admin" class="pt-4 mt-4 border-t border-border">
+                <!-- Admin Section -->
+                <template v-if="auth.user.is_admin">
+                    <Link
+                        :href="route('dashboard')"
+                        :class="[
+                            'flex items-center rounded-lg text-sm font-medium transition-colors',
+                            collapsed
+                                ? 'justify-center p-3'
+                                : 'gap-3 px-3 py-2',
+                            route().current('dashboard')
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                        ]"
+                    >
+                        <Home class="h-5 w-5 shrink-0" />
+                        <span v-if="!collapsed">Home</span>
+                    </Link>
+
+                    <!-- System Section -->
+                    <div class="pt-4 mt-4 border-t border-border">
                     <p v-if="!collapsed" class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Sistema
                     </p>
@@ -168,7 +195,23 @@ const initials = (name: string): string => {
                         <Flag class="h-5 w-5 shrink-0" />
                         <span v-if="!collapsed">Features</span>
                     </Link>
+                    <Link
+                        :href="route('system.users.index')"
+                        :class="[
+                            'flex items-center rounded-lg text-sm font-medium transition-colors',
+                            collapsed
+                                ? 'justify-center p-3'
+                                : 'gap-3 px-3 py-2',
+                            route().current('system.users.*')
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                        ]"
+                    >
+                        <Users class="h-5 w-5 shrink-0" />
+                        <span v-if="!collapsed">Usuários</span>
+                    </Link>
                 </div>
+                </template>
             </nav>
 
             <!-- Footer -->

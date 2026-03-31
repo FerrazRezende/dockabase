@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\System\FeatureFlagController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,4 +30,7 @@ Route::middleware(['web', 'auth'])
         Route::get('/features/{feature}/history', [FeatureFlagController::class, 'history'])->name('features.history');
         Route::post('/features/{feature}/users', [FeatureFlagController::class, 'addUser'])->name('features.users.add');
         Route::delete('/features/{feature}/users/{userId}', [FeatureFlagController::class, 'removeUser'])->name('features.users.remove');
+
+        // Users - God Admin only
+        Route::get('/users', [UserController::class, 'indexForAdmin'])->name('users.index');
     });

@@ -47,7 +47,7 @@ class FeatureFlagControllerTest extends TestCase
                 ],
             ]);
 
-        $this->assertCount(8, $response->json('data'));
+        $this->assertCount(2, $response->json('data'));
     }
 
     public function test_index_forbidden_for_non_admin(): void
@@ -68,11 +68,11 @@ class FeatureFlagControllerTest extends TestCase
     public function test_show_returns_feature_details(): void
     {
         $response = $this->actingAs($this->admin)
-            ->getJson(route('system.features.show', 'dynamic-api'));
+            ->getJson(route('system.features.show', 'database-creator'));
 
         $response->assertOk()
-            ->assertJsonPath('data.name', 'dynamic-api')
-            ->assertJsonPath('data.display_name', 'Dynamic REST API');
+            ->assertJsonPath('data.name', 'database-creator')
+            ->assertJsonPath('data.display_name', 'Database Creator');
     }
 
     public function test_show_returns_404_for_unknown_feature(): void
@@ -86,7 +86,7 @@ class FeatureFlagControllerTest extends TestCase
     public function test_activate_enables_feature(): void
     {
         $response = $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'realtime'), [
+            ->postJson(route('system.features.activate', 'database-creator'), [
                 'strategy' => 'all',
             ]);
 
@@ -95,7 +95,7 @@ class FeatureFlagControllerTest extends TestCase
             ->assertJsonPath('data.strategy', 'all');
 
         $this->assertDatabaseHas('feature_settings', [
-            'feature_name' => 'realtime',
+            'feature_name' => 'database-creator',
             'is_active' => true,
         ]);
     }
@@ -103,7 +103,7 @@ class FeatureFlagControllerTest extends TestCase
     public function test_activate_with_percentage(): void
     {
         $response = $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'realtime'), [
+            ->postJson(route('system.features.activate', 'database-creator'), [
                 'strategy' => 'percentage',
                 'percentage' => 25,
             ]);
@@ -119,7 +119,7 @@ class FeatureFlagControllerTest extends TestCase
         $userIds = ['user-1', 'user-2', 'user-3'];
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'otp-auth'), [
+            ->postJson(route('system.features.activate', 'credentials-manager'), [
                 'strategy' => 'users',
                 'user_ids' => $userIds,
             ]);
@@ -132,7 +132,7 @@ class FeatureFlagControllerTest extends TestCase
     public function test_activate_requires_strategy(): void
     {
         $response = $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'realtime'), []);
+            ->postJson(route('system.features.activate', 'database-creator'), []);
 
         $response->assertUnprocessable()
             ->assertJsonValidationErrors(['strategy']);
@@ -141,7 +141,7 @@ class FeatureFlagControllerTest extends TestCase
     public function test_activate_percentage_requires_percentage_value(): void
     {
         $response = $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'realtime'), [
+            ->postJson(route('system.features.activate', 'database-creator'), [
                 'strategy' => 'percentage',
             ]);
 
@@ -153,10 +153,10 @@ class FeatureFlagControllerTest extends TestCase
     {
         // Activate first
         $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'realtime'), ['strategy' => 'all']);
+            ->postJson(route('system.features.activate', 'database-creator'), ['strategy' => 'all']);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('system.features.deactivate', 'realtime'));
+            ->postJson(route('system.features.deactivate', 'database-creator'));
 
         $response->assertOk()
             ->assertJsonPath('data.is_active', false)
@@ -167,13 +167,13 @@ class FeatureFlagControllerTest extends TestCase
     {
         // Activate first with percentage
         $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'realtime'), [
+            ->postJson(route('system.features.activate', 'database-creator'), [
                 'strategy' => 'percentage',
                 'percentage' => 25,
             ]);
 
         $response = $this->actingAs($this->admin)
-            ->patchJson(route('system.features.update', 'realtime'), [
+            ->patchJson(route('system.features.update', 'database-creator'), [
                 'percentage' => 75,
             ]);
 
@@ -185,10 +185,10 @@ class FeatureFlagControllerTest extends TestCase
     {
         // Make some changes
         $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'realtime'), ['strategy' => 'all']);
+            ->postJson(route('system.features.activate', 'database-creator'), ['strategy' => 'all']);
 
         $response = $this->actingAs($this->admin)
-            ->getJson(route('system.features.history', 'realtime'));
+            ->getJson(route('system.features.history', 'database-creator'));
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -203,7 +203,7 @@ class FeatureFlagControllerTest extends TestCase
     public function test_non_admin_cannot_activate(): void
     {
         $response = $this->actingAs($this->user)
-            ->postJson(route('system.features.activate', 'realtime'), ['strategy' => 'all']);
+            ->postJson(route('system.features.activate', 'database-creator'), ['strategy' => 'all']);
 
         $response->assertForbidden();
     }
@@ -211,7 +211,7 @@ class FeatureFlagControllerTest extends TestCase
     public function test_non_admin_cannot_deactivate(): void
     {
         $response = $this->actingAs($this->user)
-            ->postJson(route('system.features.deactivate', 'realtime'));
+            ->postJson(route('system.features.deactivate', 'database-creator'));
 
         $response->assertForbidden();
     }
@@ -220,13 +220,13 @@ class FeatureFlagControllerTest extends TestCase
     {
         // Activate with users strategy
         $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'otp-auth'), [
+            ->postJson(route('system.features.activate', 'credentials-manager'), [
                 'strategy' => 'users',
                 'user_ids' => ['user-1'],
             ]);
 
         $response = $this->actingAs($this->admin)
-            ->postJson(route('system.features.users.add', 'otp-auth'), [
+            ->postJson(route('system.features.users.add', 'credentials-manager'), [
                 'user_id' => 'user-2',
             ]);
 
@@ -237,13 +237,13 @@ class FeatureFlagControllerTest extends TestCase
     {
         // Activate with users strategy
         $this->actingAs($this->admin)
-            ->postJson(route('system.features.activate', 'otp-auth'), [
+            ->postJson(route('system.features.activate', 'credentials-manager'), [
                 'strategy' => 'users',
                 'user_ids' => ['user-1', 'user-2'],
             ]);
 
         $response = $this->actingAs($this->admin)
-            ->deleteJson(route('system.features.users.remove', ['feature' => 'otp-auth', 'userId' => 'user-1']));
+            ->deleteJson(route('system.features.users.remove', ['feature' => 'credentials-manager', 'userId' => 'user-1']));
 
         $response->assertOk();
     }

@@ -7,34 +7,41 @@ namespace App\Policies;
 use App\Models\Credential;
 use App\Models\User;
 
+/**
+ * Credential Policy - RBAC permissions within the credentials-manager feature.
+ *
+ * Feature flag access is controlled by middleware.
+ * This policy handles fine-grained permissions (create, update, delete).
+ */
 class CredentialPolicy
 {
-    /**
-     * Credentials - RBAC (quando implementado)
-     * Por enquanto, qualquer usuário autenticado pode acessar
-     */
     public function viewAny(User $user): bool
     {
-        return true; // TODO: Implementar RBAC
+        // All users with feature access can view credentials
+        return true;
     }
 
     public function view(User $user, Credential $credential): bool
     {
-        return true; // TODO: Implementar RBAC
+        // All users with feature access can view credentials
+        return true;
     }
 
     public function create(User $user): bool
     {
-        return true; // TODO: Implementar RBAC
+        // Only admins can create credentials
+        return $user->is_admin === true;
     }
 
     public function update(User $user, Credential $credential): bool
     {
-        return true; // TODO: Implementar RBAC
+        // Only admins can update credentials
+        return $user->is_admin === true;
     }
 
     public function delete(User $user, Credential $credential): bool
     {
-        return true; // TODO: Implementar RBAC
+        // Only admins can delete credentials
+        return $user->is_admin === true;
     }
 }

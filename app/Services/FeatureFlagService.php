@@ -9,6 +9,7 @@ use App\Enums\RolloutStrategyEnum;
 use App\Models\FeatureHistory;
 use App\Models\FeatureSetting;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Laravel\Pennant\Feature;
 
@@ -28,11 +29,21 @@ class FeatureFlagService
             ->map(function (array $definition, string $name) use ($settings) {
                 $setting = $settings->get($name);
 
+                // Se há setting, usa o status do banco
+                // Se não há setting, usa o default por ambiente
+                $isActive = $setting
+                    ? $setting->is_active
+                    : $this->isFeatureActiveByDefault($name);
+
+                // Se está ativo por padrão (sem setting), estratégia é "all"
+                $strategy = $setting?->strategy ??
+                    ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
+
                 return FeatureConfigDTO::fromDefinition(
                     name: $name,
                     definition: $definition,
-                    strategy: $setting?->strategy,
-                    isActive: $setting?->is_active ?? false,
+                    strategy: $strategy,
+                    isActive: $isActive,
                     percentage: $setting?->percentage ?? 0,
                     userIds: $setting?->user_ids
                 );
@@ -206,14 +217,21 @@ class FeatureFlagService
 
         $setting = FeatureSetting::where('feature_name', $featureName)->first();
 
-        if (! $setting || ! $setting->is_active) {
+        // Se não há setting no banco, usa o default por ambiente
+        if (! $setting) {
+            return $this->isFeatureActiveByDefault($featureName);
+        }
+
+        // Se há setting mas está inativo, feature desativada
+        if (! $setting->is_active) {
             return false;
         }
 
+        // Se há setting ativo, segue a estratégia definida
         return match ($setting->strategy) {
             RolloutStrategyEnum::All => true,
             RolloutStrategyEnum::Percentage => $this->checkPercentage($user->id, $setting->percentage),
-            RolloutStrategyEnum::Users => in_array($user->id, $setting->user_ids ?? []),
+            RolloutStrategyEnum::Users => in_array((string) $user->id, $setting->user_ids ?? []),
             RolloutStrategyEnum::Inactive => false,
         };
     }
@@ -259,11 +277,35 @@ class FeatureFlagService
     }
 
     /**
+     * Check if a feature is active by default based on environment.
+     */
+    public function isFeatureActiveByDefault(string $featureName): bool
+    {
+        $env = config('app.env');
+
+        // Dev/Local/Testing: todas as features implementadas ativas
+        if (in_array($env, ['local', 'development', 'dev', 'testing'])) {
+            return true;
+        }
+
+        // Production: features até FIRST_DEPLOY_DATE ativas
+        $feature = config("features.definitions.{$featureName}");
+        $deployDate = config('features.first_deploy_date');
+
+        if (! ($feature['implemented_at'] ?? null) || ! $deployDate) {
+            return false;
+        }
+
+        return Carbon::parse($feature['implemented_at'])
+            ->lte(Carbon::parse($deployDate));
+    }
+
+    /**
      * Deterministic percentage check based on user ID hash.
      */
-    private function checkPercentage(string $userId, int $percentage): bool
+    private function checkPercentage(string|int $userId, int $percentage): bool
     {
-        $hash = crc32($userId);
+        $hash = crc32((string) $userId);
 
         return ($hash % 100) < $percentage;
     }
