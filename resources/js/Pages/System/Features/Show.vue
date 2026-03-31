@@ -103,63 +103,40 @@ const addUser = (userId: string) => {
     }
 };
 
-const activateFeature = async () => {
+const activateFeature = () => {
     activating.value = true;
-    try {
-        const body: Record<string, unknown> = {
-            strategy: strategy.value,
-        };
 
-        if (strategy.value === 'percentage') {
-            body.percentage = percentage.value;
-        }
+    const body: Record<string, unknown> = {
+        strategy: strategy.value,
+    };
 
-        if (strategy.value === 'users') {
-            body.user_ids = selectedUserIds.value;
-        }
-
-        const response = await fetch(route('system.features.activate', props.feature.name), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-            },
-            body: JSON.stringify(body),
-        });
-
-        if (response.ok) {
-            showActivateDialog.value = false;
-            router.reload();
-        }
-    } catch (error) {
-        console.error('Failed to activate feature:', error);
-    } finally {
-        activating.value = false;
+    if (strategy.value === 'percentage') {
+        body.percentage = percentage.value;
     }
+
+    if (strategy.value === 'users') {
+        body.user_ids = selectedUserIds.value;
+    }
+
+    router.post(route('system.features.activate', props.feature.name), body, {
+        preserveScroll: true,
+        onFinish: () => {
+            activating.value = false;
+            showActivateDialog.value = false;
+        },
+    });
 };
 
-const deactivateFeature = async () => {
+const deactivateFeature = () => {
     activating.value = true;
-    try {
-        const response = await fetch(route('system.features.deactivate', props.feature.name), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-            },
-        });
 
-        if (response.ok) {
+    router.post(route('system.features.deactivate', props.feature.name), {}, {
+        preserveScroll: true,
+        onFinish: () => {
+            activating.value = false;
             showDeactivateDialog.value = false;
-            router.reload();
-        }
-    } catch (error) {
-        console.error('Failed to deactivate feature:', error);
-    } finally {
-        activating.value = false;
-    }
+        },
+    });
 };
 
 const formatDate = (dateString: string) => {
