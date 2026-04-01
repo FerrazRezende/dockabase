@@ -22,7 +22,9 @@ import {
     Flag,
     Key,
     Users,
+    Shield,
 } from 'lucide-vue-next';
+import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
 import { ref, computed } from 'vue';
 
@@ -41,6 +43,7 @@ defineProps<{
 
 const page = usePage();
 const activeFeatures = computed(() => page.props.activeFeatures as string[] | undefined);
+const impersonating = computed(() => page.props.impersonating as { is_impersonating: boolean; original_user_id: number | null } | undefined);
 
 const { isDark, toggleDark } = useDarkMode();
 const collapsed = ref(false);
@@ -196,6 +199,21 @@ const initials = (name: string): string => {
                         <span v-if="!collapsed">Features</span>
                     </Link>
                     <Link
+                        :href="route('system.permissions.index')"
+                        :class="[
+                            'flex items-center rounded-lg text-sm font-medium transition-colors',
+                            collapsed
+                                ? 'justify-center p-3'
+                                : 'gap-3 px-3 py-2',
+                            route().current('system.permissions.*') || route().current('system.roles.*')
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                        ]"
+                    >
+                        <Shield class="h-5 w-5 shrink-0" />
+                        <span v-if="!collapsed">Permissões</span>
+                    </Link>
+                    <Link
                         :href="route('system.users.index')"
                         :class="[
                             'flex items-center rounded-lg text-sm font-medium transition-colors',
@@ -259,7 +277,12 @@ const initials = (name: string): string => {
         </aside>
 
         <!-- Main Content -->
-        <main :class="['flex-1 transition-all duration-300', collapsed ? 'ml-16' : 'ml-64']">
+        <main :class="['flex-1 transition-all duration-300 flex flex-col', collapsed ? 'ml-16' : 'ml-64']">
+            <!-- Impersonate Banner -->
+            <ImpersonateBanner
+                v-if="impersonating?.is_impersonating"
+                :user-name="auth.user.name"
+            />
             <!-- Header -->
             <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-6">
                 <div>

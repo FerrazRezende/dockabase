@@ -40,8 +40,7 @@ Route::middleware(['web', 'auth'])
         Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
         Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
 
-        // Roles - God Admin only
-        Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+        // Roles - God Admin only (API endpoints for internal use)
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
         Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
         Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');

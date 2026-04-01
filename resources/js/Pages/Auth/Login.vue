@@ -125,13 +125,6 @@ const { isDark, toggleDark } = useDarkMode();
                             <span v-else>Entrar</span>
                         </Button>
                     </form>
-
-                    <div class="mt-6 text-center text-sm text-muted-foreground">
-                        Não tem uma conta?
-                        <Link :href="route('register')" class="text-primary hover:underline">
-                            Criar conta
-                        </Link>
-                    </div>
                 </CardContent>
             </Card>
         </main>

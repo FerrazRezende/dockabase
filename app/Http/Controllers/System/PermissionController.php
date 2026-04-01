@@ -22,6 +22,10 @@ class PermissionController extends Controller
         abort_unless($request->user()->is_admin, 403);
 
         $permissions = Permission::orderBy('name')->paginate(50);
+        $roles = \Spatie\Permission\Models\Role::with('permissions')
+            ->withCount('users')
+            ->orderBy('name')
+            ->paginate(50);
 
         if ($request->wantsJson()) {
             return PermissionResource::collection($permissions);
@@ -29,6 +33,7 @@ class PermissionController extends Controller
 
         return Inertia::render('System/Permissions/Index', [
             'permissions' => PermissionResource::collection($permissions)->toArray($request),
+            'roles' => \App\Http\Resources\RoleResource::collection($roles)->toArray($request),
         ]);
     }
 

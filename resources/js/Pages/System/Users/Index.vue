@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {
     Table,
@@ -54,27 +54,31 @@ interface User {
     email: string;
     is_admin: boolean;
     active: boolean;
-    roles: string[];
-    permissions: string[];
+    roles?: string[];
+    permissions?: string[];
     password_changed_at: string | null;
     created_at: string;
 }
 
 interface Props {
-    users: {
+    users?: {
         data: User[];
         links: { url: string | null; label: string; active: boolean }[];
         current_page: number;
         last_page: number;
     };
-    roles: Role[];
-    permissions: Permission[];
-    filters: { search: string | null };
+    roles?: Role[];
+    permissions?: Permission[];
+    filters?: { search: string | null };
 }
 
 const props = defineProps<Props>();
 
-const search = ref(props.filters.search || '');
+// Safe defaults for optional props
+const roles = computed(() => props.roles ?? []);
+const permissions = computed(() => props.permissions ?? []);
+
+const search = ref(props.filters?.search || '');
 const showCreateDialog = ref(false);
 const showPermissionsDialog = ref(false);
 const selectedUser = ref<User | null>(null);
@@ -124,11 +128,11 @@ const createUser = (): void => {
 const openPermissionsDialog = (user: User): void => {
     selectedUser.value = user;
     permissionsForm.value = {
-        roles: props.roles
-            .filter((r) => user.roles.includes(r.name))
+        roles: roles.value
+            .filter((r) => user.roles?.includes(r.name) ?? false)
             .map((r) => r.id),
-        permissions: props.permissions
-            .filter((p) => user.permissions.includes(p.name))
+        permissions: permissions.value
+            .filter((p) => user.permissions?.includes(p.name) ?? false)
             .map((p) => p.id),
     };
     showPermissionsDialog.value = true;
@@ -205,7 +209,7 @@ const deactivateUser = (userId: number): void => {
                 </TableHeader>
                 <TableBody>
                     <TableRow
-                        v-for="user in users.data"
+                        v-for="user in (users?.data ?? [])"
                         :key="user.id"
                     >
                         <TableCell class="font-medium">
@@ -231,7 +235,7 @@ const deactivateUser = (userId: number): void => {
                                     {{ role }}
                                 </Badge>
                                 <span
-                                    v-if="!user.is_admin && user.roles.length === 0"
+                                    v-if="!user.is_admin && (!user.roles || user.roles.length === 0)"
                                     class="text-muted-foreground text-sm"
                                 >
                                     -

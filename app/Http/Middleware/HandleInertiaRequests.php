@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Services\FeatureFlagService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -45,6 +46,10 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
             ],
             'activeFeatures' => $activeFeatures,
+            'impersonating' => [
+                'is_impersonating' => Session::has('impersonating_id'),
+                'original_user_id' => Session::get('original_user_id'),
+            ],
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

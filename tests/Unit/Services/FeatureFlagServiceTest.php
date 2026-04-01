@@ -97,4 +97,5 @@ class FeatureFlagServiceTest extends TestCase
 
         // No FeatureSetting in database - should use environment default
         $this->assertFalse($this->service->isActiveForUser('database-creator', $user));
+    }
 }
