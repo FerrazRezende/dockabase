@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AlertCircle } from 'lucide-vue-next';
 
 const form = useForm({
-    current_password: '',
     password: '',
     password_confirmation: '',
 });
@@ -14,7 +13,7 @@ const form = useForm({
 const submit = (): void => {
     form.post(route('password.force-change'), {
         onFinish: () => {
-            form.reset('current_password', 'password', 'password_confirmation');
+            form.reset('password', 'password_confirmation');
         },
     });
 };
@@ -31,24 +30,11 @@ const submit = (): void => {
                 </div>
                 <CardTitle>Troque sua Senha</CardTitle>
                 <CardDescription>
-                    Por segurança, você precisa trocar sua senha antes de continuar.
+                    Por segurança, você precisa definir uma nova senha antes de continuar.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <form @submit.prevent="submit" class="space-y-4">
-                    <div class="space-y-2">
-                        <label class="text-sm font-medium">Senha atual</label>
-                        <Input
-                            v-model="form.current_password"
-                            type="password"
-                            placeholder="Digite a senha atual"
-                            required
-                        />
-                        <p v-if="form.errors.current_password" class="text-sm text-destructive">
-                            {{ form.errors.current_password }}
-                        </p>
-                    </div>
-
                     <div class="space-y-2">
                         <label class="text-sm font-medium">Nova senha</label>
                         <Input
@@ -56,6 +42,7 @@ const submit = (): void => {
                             type="password"
                             placeholder="Digite a nova senha"
                             required
+                            autofocus
                         />
                         <p v-if="form.errors.password" class="text-sm text-destructive">
                             {{ form.errors.password }}

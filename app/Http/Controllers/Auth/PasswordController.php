@@ -32,7 +32,7 @@ class PasswordController extends Controller
     /**
      * Show the force password change form.
      */
-    public function showForceChange(Request $request): Response
+    public function showForceChange(Request $request): RedirectResponse|Response
     {
         // If user already changed password, redirect to dashboard
         if ($request->user()->password_changed_at !== null) {
@@ -44,11 +44,11 @@ class PasswordController extends Controller
 
     /**
      * Force change the user's password (for new users).
+     * Skip current password check since user just logged in.
      */
     public function forceChange(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'current_password' => ['required', 'current_password'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
