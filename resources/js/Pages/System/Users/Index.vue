@@ -166,36 +166,33 @@ const deactivateUser = (userId: number): void => {
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-semibold text-foreground">
-                        Usuários
-                    </h2>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        Gerencie os usuários do sistema
-                    </p>
+            <h2 class="text-2xl font-semibold text-foreground">
+                Usuários
+            </h2>
+            <p class="text-sm text-muted-foreground mt-1">
+                Gerencie os usuários do sistema
+            </p>
+        </template>
+
+        <div class="space-y-4">
+            <div class="flex items-center gap-4">
+                <div class="relative flex-1 max-w-sm">
+                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        v-model="search"
+                        type="search"
+                        placeholder="Buscar usuários..."
+                        class="pl-9"
+                        @keyup.enter="searchUsers"
+                    />
                 </div>
                 <Button @click="openCreateDialog">
                     <Plus class="w-4 h-4 mr-2" />
                     Novo Usuário
                 </Button>
             </div>
-        </template>
 
-        <div class="mb-4">
-            <div class="relative max-w-sm">
-                <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                    v-model="search"
-                    type="search"
-                    placeholder="Buscar usuários..."
-                    class="pl-9"
-                    @keyup.enter="searchUsers"
-                />
-            </div>
-        </div>
-
-        <div class="bg-card shadow-sm rounded-lg border border-border">
+            <div class="bg-card shadow-sm rounded-lg border border-border">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -287,6 +284,7 @@ const deactivateUser = (userId: number): void => {
                     </TableRow>
                 </TableBody>
             </Table>
+            </div>
         </div>
 
         <!-- Create User Dialog -->

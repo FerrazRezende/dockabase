@@ -109,23 +109,23 @@ const deletePermission = (): void => {
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-2xl font-semibold text-foreground">
-                        Permissões
-                    </h2>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        Gerencie as permissões do sistema
-                    </p>
-                </div>
+            <h2 class="text-2xl font-semibold text-foreground">
+                Permissões
+            </h2>
+            <p class="text-sm text-muted-foreground mt-1">
+                Gerencie as permissões do sistema
+            </p>
+        </template>
+
+        <div class="space-y-4">
+            <div class="flex justify-end">
                 <Button @click="openCreateDialog">
                     <Plus class="w-4 h-4 mr-2" />
                     Nova Permissão
                 </Button>
             </div>
-        </template>
 
-        <div class="bg-card shadow-sm rounded-lg border border-border">
+            <div class="bg-card shadow-sm rounded-lg border border-border">
             <Table>
                 <TableHeader>
                     <TableRow>
