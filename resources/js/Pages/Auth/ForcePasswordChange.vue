@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-vue-next';
+import { useToast } from '@/composables/useToast';
+
+const toast = useToast();
 
 const form = useForm({
     password: '',
@@ -13,6 +16,10 @@ const form = useForm({
 const submit = (): void => {
     form.post(route('password.force-change.update'), {
         preserveScroll: true,
+        onError: (errors) => {
+            const errorMessage = errors.password || errors.password_confirmation || 'Erro ao alterar senha';
+            toast.error(errorMessage);
+        },
     });
 };
 </script>

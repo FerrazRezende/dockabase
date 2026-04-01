@@ -32,8 +32,8 @@ class EnsurePasswordChanged
 
         // Check if password_changed_at is null
         if ($user->password_changed_at === null) {
-            // Allow if already on the password force-change route
-            if ($request->routeIs('password.force-change')) {
+            // Allow if already on the password force-change routes
+            if ($request->routeIs('password.force-change', 'password.force-change.update')) {
                 return $next($request);
             }
 

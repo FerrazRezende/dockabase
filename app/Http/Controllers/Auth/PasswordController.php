@@ -49,7 +49,7 @@ class PasswordController extends Controller
     public function forceChange(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'password' => ['required', Password::defaults(), 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $request->user()->update([
