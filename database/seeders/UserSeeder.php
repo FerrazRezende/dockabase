@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
@@ -15,19 +14,17 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Create God Admin user (system owner)
-        $admin = User::create([
+        User::create([
             'name' => 'Admin',
             'email' => 'admin@dockabase.com',
             'password' => Hash::make('password'),
             'email_verified_at' => now(),
             'is_admin' => true,
+            'active' => true,
+            'password_changed_at' => now(),
         ]);
 
-        // Create super-admin role
-        $role = Role::create(['name' => 'super-admin', 'guard_name' => 'web']);
-
-        // Assign role to admin
-        $admin->assignRole($role);
+        // No default roles - admin creates them via UI
 
         // Create 10 test users
         $users = [
@@ -50,6 +47,8 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
                 'is_admin' => false,
+                'active' => true,
+                'password_changed_at' => now(),
             ]);
         }
     }
