@@ -11,10 +11,8 @@ const form = useForm({
 });
 
 const submit = (): void => {
-    form.post(route('password.force-change'), {
-        onFinish: () => {
-            form.reset('password', 'password_confirmation');
-        },
+    form.post(route('password.force-change.update'), {
+        preserveScroll: true,
     });
 };
 </script>

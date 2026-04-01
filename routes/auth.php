@@ -60,5 +60,6 @@ Route::middleware('auth')->group(function () {
     // Force password change for new users
     Route::get('force-password-change', [PasswordController::class, 'showForceChange'])
         ->name('password.force-change');
-    Route::post('force-password-change', [PasswordController::class, 'forceChange']);
+    Route::post('force-password-change', [PasswordController::class, 'forceChange'])
+        ->name('password.force-change.update');
 });
