@@ -30,10 +30,15 @@ class EnsurePasswordChanged
 
         $user = Auth::user();
 
+        // Admins are not required to change password
+        if ($user->is_admin) {
+            return $next($request);
+        }
+
         // Check if password_changed_at is null
         if ($user->password_changed_at === null) {
-            // Allow if already on the password force-change routes
-            if ($request->routeIs('password.force-change', 'password.force-change.update')) {
+            // Allow if already on the password force-change routes or updating password via profile
+            if ($request->routeIs('password.force-change', 'password.force-change.update', 'profile.password.update')) {
                 return $next($request);
             }
 
