@@ -57,4 +57,36 @@ class User extends Authenticatable
     {
         return $this->attributes['avatar'] ?? null;
     }
+
+    /**
+     * Check if user needs to change password
+     */
+    public function needsPasswordChange(): bool
+    {
+        return is_null($this->password_changed_at);
+    }
+
+    /**
+     * Check if user account is active
+     */
+    public function isActive(): bool
+    {
+        return $this->active === true;
+    }
+
+    /**
+     * Deactivate user account
+     */
+    public function deactivate(): void
+    {
+        $this->active = false;
+    }
+
+    /**
+     * Activate user account
+     */
+    public function activate(): void
+    {
+        $this->active = true;
+    }
 }
