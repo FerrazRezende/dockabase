@@ -17,7 +17,7 @@ class ImpersonateController extends Controller
      */
     public function start(Request $request, User $user)
     {
-        abort_unless($request->user()->is_admin, 403);
+        abort_unless($request->user()->is_admin, 403, 'Only admins can impersonate users.');
 
         // Cannot impersonate another admin
         if ($user->is_admin) {
@@ -26,9 +26,12 @@ class ImpersonateController extends Controller
             ]);
         }
 
-        // Store original user ID and impersonating ID in session
+        // Store original user ID and target ID in session
         Session::put('original_user_id', Auth::id());
         Session::put('impersonating_id', $user->id);
+
+        // Login as target user
+        Auth::login($user);
 
         return redirect()->route('dashboard')
             ->with('info', "You are now impersonating {$user->name}.");
@@ -50,10 +53,8 @@ class ImpersonateController extends Controller
         Session::forget(['original_user_id', 'impersonating_id']);
 
         // Log back in as original user
-        $originalUser = User::find($originalUserId);
-        if ($originalUser) {
-            Auth::setUser($originalUser);
-        }
+        $originalUser = User::findOrFail($originalUserId);
+        Auth::login($originalUser);
 
         return redirect()->route('system.users.index')
             ->with('success', 'You are no longer impersonating.');
