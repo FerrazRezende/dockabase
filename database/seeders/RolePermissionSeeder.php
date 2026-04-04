@@ -37,6 +37,11 @@ class RolePermissionSeeder extends Seeder
             'tables.create',
             'tables.update',
             'tables.delete',
+            // Users
+            'users.view',
+            'users.create',
+            'users.update',
+            'users.delete',
         ];
 
         // Create permissions
@@ -58,5 +63,26 @@ class RolePermissionSeeder extends Seeder
 
         $this->command->info('Created '.count($permissions).' permissions.');
         $this->command->info('Created "Full Access" role with all permissions.');
+
+        // Create "Read Only" role with view permissions only
+        $readOnlyRole = Role::firstOrCreate(
+            ['name' => 'Read Only'],
+            ['guard_name' => 'web']
+        );
+
+        // Get all view permissions
+        $viewPermissions = Permission::where('name', 'like', '%.view')->get();
+        $readOnlyRole->syncPermissions($viewPermissions);
+
+        $this->command->info('Created "Read Only" role with view permissions.');
+        $this->command->info('Assigning "Read Only" role to regular users...');
+
+        // Assign "Read Only" role to non-admin users
+        $nonAdminUsers = \App\Models\User::where('is_admin', false)->get();
+        foreach ($nonAdminUsers as $user) {
+            $user->assignRole('Read Only');
+        }
+
+        $this->command->info('Assigned "Read Only" role to '.$nonAdminUsers->count().' users.');
     }
 }

@@ -33,10 +33,10 @@ Sistema de RBAC usando Spatie Permission para controle de acesso ao painel do Do
 Formato: `{resource}.{action}` (ex: `databases.view`, `schemas.create`)
 
 ## Roles
-
-- **Sem roles padrão** - Admin cria roles customizadas
-- Cada role tem um conjunto de permissões
-- Usuários podem ter múltiplas roles
+- **Roles são gerenciáveis** - Admin cria roles e atribui permissões às roles
+- **Permissões são imutáveis** - Não podem criar, editar ou excluir permissões
+- **Permissões pré-definidas via seed** - Garantidas consistência e segurança
+- **UI simplific** - Menos tabs, menos dialogs, menos clutter
 
 ## Modelo de Permissões
 

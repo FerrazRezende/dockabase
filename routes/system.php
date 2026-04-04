@@ -34,11 +34,8 @@ Route::middleware(['web', 'auth'])
         Route::post('/features/{feature}/users', [FeatureFlagController::class, 'addUser'])->name('features.users.add');
         Route::delete('/features/{feature}/users/{userId}', [FeatureFlagController::class, 'removeUser'])->name('features.users.remove');
 
-        // Permissions - God Admin only
+        // Permissions - God Admin only (read-only)
         Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
-        Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
-        Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
-        Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
 
         // Roles - God Admin only (API endpoints for internal use)
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
