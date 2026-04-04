@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -88,5 +89,14 @@ class User extends Authenticatable
     public function activate(): void
     {
         $this->active = true;
+    }
+
+    /**
+     * Credentials that belong to the user.
+     */
+    public function credentials(): BelongsToMany
+    {
+        return $this->belongsToMany(Credential::class, 'credential_user', 'user_id', 'credential_id')
+            ->withTimestamps();
     }
 }
