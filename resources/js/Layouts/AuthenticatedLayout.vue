@@ -43,7 +43,12 @@ defineProps<{
 
 const page = usePage();
 const activeFeatures = computed(() => page.props.activeFeatures as string[] | undefined);
-const impersonating = computed(() => page.props.impersonating as { is_impersonating: boolean; original_user_id: number | null } | undefined);
+const impersonating = computed(() => page.props.impersonating as {
+    is_impersonating: boolean;
+    original_user_id?: number | null;
+    original_user?: { name: string; email: string } | null;
+    target_user?: { name: string; email: string };
+} | undefined);
 
 const { isDark, toggleDark } = useDarkMode();
 const collapsed = ref(false);

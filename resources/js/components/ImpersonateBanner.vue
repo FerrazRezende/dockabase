@@ -13,20 +13,20 @@ const stopImpersonating = (): void => {
 </script>
 
 <template>
-    <div class="bg-yellow-500 text-yellow-900 px-4 py-2 flex items-center justify-center gap-4">
+    <div class="border-b border-amber-500/20 bg-amber-500/10 px-4 py-3 flex items-center justify-center gap-4">
         <div class="flex items-center gap-2">
-            <AlertTriangle class="w-4 h-4" />
-            <span class="text-sm font-medium">
+            <AlertTriangle class="h-4 w-4 text-amber-600 dark:text-amber-500" />
+            <span class="text-sm font-medium text-amber-900 dark:text-amber-100">
                 Você está acessando como <strong>{{ userName }}</strong>.
             </span>
         </div>
         <Button
             variant="outline"
             size="sm"
-            class="bg-yellow-600 border-yellow-700 text-yellow-100 hover:bg-yellow-700"
+            class="border-amber-600 bg-amber-600 text-white hover:bg-amber-700 hover:border-amber-700 dark:bg-amber-700 dark:border-amber-700 dark:hover:bg-amber-800 dark:hover:border-amber-800"
             @click="stopImpersonating"
         >
-            <LogOut class="w-4 h-4 mr-2" />
+            <LogOut class="mr-2 h-4 w-4" />
             Sair
         </Button>
     </div>
