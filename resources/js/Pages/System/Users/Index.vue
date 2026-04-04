@@ -210,7 +210,7 @@ const deactivateUser = (userId: number): void => {
                 </TableHeader>
                 <TableBody>
                     <TableRow
-                        v-for="user in (users?.data ?? [])"
+                        v-for="user in (users ?? [])"
                         :key="user.id"
                     >
                         <TableCell class="font-medium">
