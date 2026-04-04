@@ -33,7 +33,7 @@ import {
     Pencil,
     Key,
     Users,
-    UserSwitch,
+    User,
     Trash2,
     Plus,
     Search,
@@ -273,7 +273,7 @@ const deactivateUser = (userId: number): void => {
                                     title="Impersonate"
                                     @click="impersonate(user.id)"
                                 >
-                                    <UserSwitch class="w-4 h-4" />
+                                    <User class="w-4 h-4" />
                                 </Button>
                                 <Button
                                     v-if="!user.is_admin"
