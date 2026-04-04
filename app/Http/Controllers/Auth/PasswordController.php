@@ -44,11 +44,12 @@ class PasswordController extends Controller
 
     /**
      * Force change the user's password (for new users).
-     * Skip current password check since user just logged in.
+     * Requires current password validation.
      */
     public function forceChange(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 

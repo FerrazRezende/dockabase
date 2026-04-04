@@ -9,6 +9,7 @@ import { useToast } from '@/composables/useToast';
 const toast = useToast();
 
 const form = useForm({
+    current_password: '',
     password: '',
     password_confirmation: '',
 });
@@ -17,7 +18,7 @@ const submit = (): void => {
     form.post(route('password.force-change.update'), {
         preserveScroll: true,
         onError: (errors) => {
-            const errorMessage = errors.password || errors.password_confirmation || 'Erro ao alterar senha';
+            const errorMessage = errors.current_password || errors.password || errors.password_confirmation || 'Erro ao alterar senha';
             toast.error(errorMessage);
         },
     });
@@ -41,13 +42,29 @@ const submit = (): void => {
             <CardContent>
                 <form @submit.prevent="submit" class="space-y-4">
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">Nova senha</label>
+                        <label for="current_password" class="text-sm font-medium">Senha atual</label>
                         <Input
+                            id="current_password"
+                            v-model="form.current_password"
+                            type="password"
+                            placeholder="Digite sua senha atual"
+                            required
+                            autocomplete="current-password"
+                        />
+                        <p v-if="form.errors.current_password" class="text-sm text-destructive">
+                            {{ form.errors.current_password }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="password" class="text-sm font-medium">Nova senha</label>
+                        <Input
+                            id="password"
                             v-model="form.password"
                             type="password"
-                            placeholder="Digite a nova senha"
+                            placeholder="Digite a nova senha (mínimo 8 caracteres)"
                             required
-                            autofocus
+                            autocomplete="new-password"
                         />
                         <p v-if="form.errors.password" class="text-sm text-destructive">
                             {{ form.errors.password }}
@@ -55,12 +72,14 @@ const submit = (): void => {
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-sm font-medium">Confirmar nova senha</label>
+                        <label for="password_confirmation" class="text-sm font-medium">Confirmar nova senha</label>
                         <Input
+                            id="password_confirmation"
                             v-model="form.password_confirmation"
                             type="password"
                             placeholder="Confirme a nova senha"
                             required
+                            autocomplete="new-password"
                         />
                         <p v-if="form.errors.password_confirmation" class="text-sm text-destructive">
                             {{ form.errors.password_confirmation }}
