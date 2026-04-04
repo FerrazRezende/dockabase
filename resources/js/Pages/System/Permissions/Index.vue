@@ -13,7 +13,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Dialog,
     DialogContent,
@@ -29,7 +28,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Plus, Pencil, Key, Trash2, Search } from 'lucide-vue-next';
+import { Plus, Pencil, Key, Trash2, Search, Info } from 'lucide-vue-next';
 
 interface Permission {
     id: number;
@@ -60,9 +59,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const activeTab = ref('roles');
 const searchRoles = ref('');
-const searchPermissions = ref('');
 
 // Dialogs - Roles
 const showCreateRoleDialog = ref(false);
@@ -75,15 +72,6 @@ const roleForm = ref({
     permissions: [] as number[],
 });
 
-// Dialogs - Permissions
-const showCreatePermissionDialog = ref(false);
-const showEditPermissionDialog = ref(false);
-const showDeletePermissionDialog = ref(false);
-const selectedPermission = ref<Permission | null>(null);
-const permissionForm = ref({
-    name: '',
-});
-
 const allPermissions = computed(() => props.permissions?.data ?? []);
 
 const filteredRoles = computed(() => {
@@ -94,20 +82,29 @@ const filteredRoles = computed(() => {
     );
 });
 
-const filteredPermissions = computed(() => {
-    const permissions = props.permissions?.data ?? [];
-    if (!searchPermissions.value) return permissions;
-    return permissions.filter((permission) =>
-        permission.name.toLowerCase().includes(searchPermissions.value.toLowerCase())
-    );
+const groupedPermissions = computed(() => {
+    const groups: Record<string, Permission[]> = {};
+
+    for (const permission of allPermissions.value) {
+        const category = permission.name.split('.')[0];
+        if (!groups[category]) {
+            groups[category] = [];
+        }
+        groups[category].push(permission);
+    }
+
+    return groups;
 });
 
-const formatDate = (date: string): string => {
-    return new Date(date).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-    });
+const getCategoryLabel = (category: string): string => {
+    const labels: Record<string, string> = {
+        databases: 'Databases',
+        schemas: 'Schemas',
+        credentials: 'Credentials',
+        tables: 'Tables',
+        users: 'Users',
+    };
+    return labels[category] || category.charAt(0).toUpperCase() + category.slice(1);
 };
 
 // Role actions
@@ -168,47 +165,6 @@ const deleteRole = (): void => {
         onSuccess: () => { showDeleteRoleDialog.value = false; },
     });
 };
-
-// Permission actions
-const openCreatePermissionDialog = (): void => {
-    permissionForm.value = { name: '' };
-    showCreatePermissionDialog.value = true;
-};
-
-const createPermission = (): void => {
-    router.post(route('system.permissions.store'), permissionForm.value, {
-        onSuccess: () => {
-            showCreatePermissionDialog.value = false;
-        },
-    });
-};
-
-const openEditPermissionDialog = (permission: Permission): void => {
-    selectedPermission.value = permission;
-    permissionForm.value = { name: permission.name };
-    showEditPermissionDialog.value = true;
-};
-
-const updatePermission = (): void => {
-    if (!selectedPermission.value) return;
-    router.put(
-        route('system.permissions.update', selectedPermission.value.id),
-        permissionForm.value,
-        { onSuccess: () => { showEditPermissionDialog.value = false; } }
-    );
-};
-
-const openDeletePermissionDialog = (permission: Permission): void => {
-    selectedPermission.value = permission;
-    showDeletePermissionDialog.value = true;
-};
-
-const deletePermission = (): void => {
-    if (!selectedPermission.value) return;
-    router.delete(route('system.permissions.destroy', selectedPermission.value.id), {
-        onSuccess: () => { showDeletePermissionDialog.value = false; },
-    });
-};
 </script>
 
 <template>
@@ -224,186 +180,144 @@ const deletePermission = (): void => {
             </p>
         </template>
 
-        <Tabs v-model="activeTab" class="space-y-4">
-            <TabsList>
-                <TabsTrigger value="roles">Roles</TabsTrigger>
-                <TabsTrigger value="permissions">Permissões</TabsTrigger>
-            </TabsList>
-
-            <!-- Roles Tab -->
-            <TabsContent value="roles">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4">
-                        <div class="relative flex-1 max-w-sm">
-                            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                                v-model="searchRoles"
-                                type="search"
-                                placeholder="Buscar roles..."
-                                class="pl-9"
-                            />
-                        </div>
-                        <Button @click="openCreateRoleDialog">
-                            <Plus class="w-4 h-4 mr-2" />
-                            Nova Role
-                        </Button>
+        <div class="space-y-6">
+            <!-- Roles Section -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="relative flex-1 max-w-sm">
+                        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            v-model="searchRoles"
+                            type="search"
+                            placeholder="Buscar roles..."
+                            class="pl-9"
+                        />
                     </div>
+                    <Button @click="openCreateRoleDialog">
+                        <Plus class="w-4 h-4 mr-2" />
+                        Nova Role
+                    </Button>
+                </div>
 
-                    <div class="bg-card shadow-sm rounded-lg border border-border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Nome</TableHead>
-                                    <TableHead>Permissões</TableHead>
-                                    <TableHead class="w-[100px]">Usuários</TableHead>
-                                    <TableHead class="w-[150px]">Ações</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow
-                                    v-for="role in filteredRoles"
-                                    :key="role.id"
-                                >
-                                    <TableCell class="font-medium">
-                                        {{ role.name }}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div class="flex flex-wrap gap-1 max-w-md">
-                                            <Badge
-                                                v-for="permission in role.permissions"
-                                                :key="permission.id"
-                                                variant="secondary"
-                                                class="text-xs"
-                                            >
-                                                {{ permission.name }}
-                                            </Badge>
-                                            <span
-                                                v-if="role.permissions.length === 0"
-                                                class="text-muted-foreground text-sm"
-                                            >
-                                                Nenhuma permissão
-                                            </span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell class="text-muted-foreground">
-                                        {{ role.users_count }}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div class="flex items-center gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                title="Editar"
-                                                @click="openEditRoleDialog(role)"
-                                            >
-                                                <Pencil class="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                title="Permissões"
-                                                @click="openRolePermissionsDialog(role)"
-                                            >
-                                                <Key class="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                title="Excluir"
-                                                :disabled="role.users_count > 0"
-                                                @click="openDeleteRoleDialog(role)"
-                                            >
-                                                <Trash2 class="w-4 h-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow v-if="filteredRoles.length === 0">
-                                    <TableCell colspan="4" class="text-center text-muted-foreground py-8">
-                                        Nenhuma role encontrada
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                <div class="bg-card shadow-sm rounded-lg border border-border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Nome</TableHead>
+                                <TableHead>Permissões</TableHead>
+                                <TableHead class="w-[100px]">Usuários</TableHead>
+                                <TableHead class="w-[150px]">Ações</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            <TableRow
+                                v-for="role in filteredRoles"
+                                :key="role.id"
+                            >
+                                <TableCell class="font-medium">
+                                    {{ role.name }}
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex flex-wrap gap-1 max-w-md">
+                                        <Badge
+                                            v-for="permission in role.permissions"
+                                            :key="permission.id"
+                                            variant="secondary"
+                                            class="text-xs"
+                                        >
+                                            {{ permission.name }}
+                                        </Badge>
+                                        <span
+                                            v-if="role.permissions.length === 0"
+                                            class="text-muted-foreground text-sm"
+                                        >
+                                            Nenhuma permissão
+                                        </span>
+                                    </div>
+                                </TableCell>
+                                <TableCell class="text-muted-foreground">
+                                    {{ role.users_count }}
+                                </TableCell>
+                                <TableCell>
+                                    <div class="flex items-center gap-1">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            title="Editar"
+                                            @click="openEditRoleDialog(role)"
+                                        >
+                                            <Pencil class="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            title="Permissões"
+                                            @click="openRolePermissionsDialog(role)"
+                                        >
+                                            <Key class="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            title="Excluir"
+                                            :disabled="role.users_count > 0"
+                                            @click="openDeleteRoleDialog(role)"
+                                        >
+                                            <Trash2 class="w-4 h-4 text-destructive" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow v-if="filteredRoles.length === 0">
+                                <TableCell colspan="4" class="text-center text-muted-foreground py-8">
+                                    Nenhuma role encontrada
+                                </TableCell>
+                            </TableRow>
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
+
+            <!-- Permissions Reference Section -->
+            <div class="space-y-4">
+                <div class="flex items-start gap-2">
+                    <div class="space-y-1">
+                        <h3 class="text-lg font-semibold text-foreground">
+                            Permissões Disponíveis
+                        </h3>
+                        <p class="text-sm text-muted-foreground">
+                            Essas permissões são predefinidas e não podem ser modificadas.
+                        </p>
+                    </div>
+                    <Info class="w-4 h-4 text-muted-foreground mt-1" />
+                </div>
+
+                <div class="bg-card shadow-sm rounded-lg border border-border p-6">
+                    <div
+                        v-for="(permissions, category) in groupedPermissions"
+                        :key="category"
+                        class="mb-6 last:mb-0"
+                    >
+                        <h4 class="text-sm font-semibold text-foreground mb-3">
+                            {{ getCategoryLabel(category) }}
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            <Badge
+                                v-for="permission in permissions"
+                                :key="permission.id"
+                                variant="outline"
+                                class="text-sm"
+                            >
+                                {{ permission.name }}
+                            </Badge>
+                        </div>
+                    </div>
+                    <div v-if="Object.keys(groupedPermissions).length === 0" class="text-center text-muted-foreground py-4">
+                        Nenhuma permissão disponível
                     </div>
                 </div>
-            </TabsContent>
-
-            <!-- Permissions Tab -->
-            <TabsContent value="permissions">
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4">
-                        <div class="relative flex-1 max-w-sm">
-                            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                                v-model="searchPermissions"
-                                type="search"
-                                placeholder="Buscar permissões..."
-                                class="pl-9"
-                            />
-                        </div>
-                        <Button @click="openCreatePermissionDialog">
-                            <Plus class="w-4 h-4 mr-2" />
-                            Nova Permissão
-                        </Button>
-                    </div>
-
-                    <div class="bg-card shadow-sm rounded-lg border border-border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Nome</TableHead>
-                                    <TableHead>Guard</TableHead>
-                                    <TableHead>Criado em</TableHead>
-                                    <TableHead class="w-[120px]">Ações</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow
-                                    v-for="permission in filteredPermissions"
-                                    :key="permission.id"
-                                >
-                                    <TableCell class="font-medium">
-                                        {{ permission.name }}
-                                    </TableCell>
-                                    <TableCell class="text-muted-foreground">
-                                        {{ permission.guard_name }}
-                                    </TableCell>
-                                    <TableCell class="text-muted-foreground">
-                                        {{ formatDate(permission.created_at) }}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div class="flex items-center gap-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                title="Editar"
-                                                @click="openEditPermissionDialog(permission)"
-                                            >
-                                                <Pencil class="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                title="Excluir"
-                                                @click="openDeletePermissionDialog(permission)"
-                                            >
-                                                <Trash2 class="w-4 h-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow v-if="filteredPermissions.length === 0">
-                                    <TableCell colspan="4" class="text-center text-muted-foreground py-8">
-                                        Nenhuma permissão encontrada
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </div>
-                </div>
-            </TabsContent>
-        </Tabs>
+            </div>
+        </div>
 
         <!-- Create Role Dialog -->
         <Dialog v-model:open="showCreateRoleDialog">
@@ -510,65 +424,6 @@ const deletePermission = (): void => {
                 <DialogFooter>
                     <Button variant="outline" @click="showDeleteRoleDialog = false">Cancelar</Button>
                     <Button variant="destructive" @click="deleteRole">Excluir</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Create Permission Dialog -->
-        <Dialog v-model:open="showCreatePermissionDialog">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Nova Permissão</DialogTitle>
-                    <DialogDescription>
-                        Crie uma nova permissão. Use o formato "resource.action" (ex: databases.view).
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="grid gap-4 py-4">
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Nome</label>
-                        <Input v-model="permissionForm.name" placeholder="ex: databases.view" />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" @click="showCreatePermissionDialog = false">Cancelar</Button>
-                    <Button @click="createPermission">Criar</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Edit Permission Dialog -->
-        <Dialog v-model:open="showEditPermissionDialog">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Editar Permissão</DialogTitle>
-                    <DialogDescription>Altere o nome da permissão.</DialogDescription>
-                </DialogHeader>
-                <div class="grid gap-4 py-4">
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Nome</label>
-                        <Input v-model="permissionForm.name" />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" @click="showEditPermissionDialog = false">Cancelar</Button>
-                    <Button @click="updatePermission">Salvar</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Delete Permission Dialog -->
-        <Dialog v-model:open="showDeletePermissionDialog">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Excluir Permissão</DialogTitle>
-                    <DialogDescription>
-                        Tem certeza que deseja excluir a permissão "{{ selectedPermission?.name }}"?
-                        Esta ação não pode ser desfeita.
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button variant="outline" @click="showDeletePermissionDialog = false">Cancelar</Button>
-                    <Button variant="destructive" @click="deletePermission">Excluir</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
