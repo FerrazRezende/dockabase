@@ -20,7 +20,7 @@ export function useLang() {
   ]
 
   const setLocale = (newLocale: string) => {
-    router.patch(route('profile.locale.update'), { locale })
+    router.patch(route('profile.locale.update'), { locale: newLocale })
   }
 
   const currentLocale = computed(() =>
