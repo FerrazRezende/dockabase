@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\System\FeatureFlagController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\System\ImpersonateController;
+use App\Http\Controllers\System\PermissionController;
+use App\Http\Controllers\System\RoleController;
+use App\Http\Controllers\System\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +34,27 @@ Route::middleware(['web', 'auth'])
         Route::post('/features/{feature}/users', [FeatureFlagController::class, 'addUser'])->name('features.users.add');
         Route::delete('/features/{feature}/users/{userId}', [FeatureFlagController::class, 'removeUser'])->name('features.users.remove');
 
+        // Permissions - God Admin only (read-only)
+        Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+
+        // Roles - God Admin only (API endpoints for internal use)
+        Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
+        Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+        Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+        Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+        Route::post('/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('roles.permissions.sync');
+
         // Users - God Admin only
-        Route::get('/users', [UserController::class, 'indexForAdmin'])->name('users.index');
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.role.update');
+        Route::post('/users/{user}/permissions', [UserController::class, 'syncPermissions'])->name('users.permissions.sync');
+        Route::post('/users/{user}/impersonate', [ImpersonateController::class, 'start'])->name('users.impersonate.start');
+
+        // Impersonate
+        Route::post('/stop-impersonating', [ImpersonateController::class, 'stop'])->name('impersonate.stop');
     });

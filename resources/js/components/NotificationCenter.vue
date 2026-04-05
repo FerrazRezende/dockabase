@@ -33,7 +33,7 @@ const fetchNotifications = async () => {
             notifications.value = data.data;
         }
     } catch (e) {
-        console.error('Failed to fetch notifications:', e);
+        // Silently fail
     } finally {
         loading.value = false;
     }
@@ -54,7 +54,7 @@ const fetchUnreadCount = async () => {
             unreadCount.value = data.count;
         }
     } catch (e) {
-        console.error('Failed to fetch unread count:', e);
+        // Silently fail
     }
 };
 
@@ -78,7 +78,7 @@ const markAsRead = async (notificationId: number) => {
         }
         unreadCount.value = Math.max(0, unreadCount.value - 1);
     } catch (e) {
-        console.error('Failed to mark notification as read:', e);
+        // Silently fail
     }
 };
 
@@ -99,7 +99,7 @@ const markAllAsRead = async () => {
         notifications.value.forEach(n => n.read = true);
         unreadCount.value = 0;
     } catch (e) {
-        console.error('Failed to mark all as read:', e);
+        // Silently fail
     }
 };
 

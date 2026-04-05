@@ -22,11 +22,13 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import type { DatabaseCollection } from '@/types/database';
 import { MoreHorizontal, Plus, Database, Server, Eye, Trash2 } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
+import { usePermissions } from '@/composables/usePermissions';
 
 defineProps<{
     databases: DatabaseCollection;
 }>();
 
+const { canCreate, canDelete } = usePermissions();
 const toast = useToast();
 const deleting = ref<string | null>(null);
 const deleteDialogOpen = ref(false);
@@ -73,7 +75,7 @@ const confirmDelete = () => {
 
         <div class="space-y-4">
             <div class="flex justify-end">
-                <Link :href="route('app.databases.create')">
+                <Link v-if="canCreate('databases')" :href="route('app.databases.create')">
                     <Button>
                         <Plus class="h-4 w-4 mr-2" />
                         Novo Database
@@ -149,6 +151,7 @@ const confirmDelete = () => {
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
+                                        v-if="canDelete('databases')"
                                         @click="openDeleteDialog(database)"
                                         :disabled="deleting === database.id"
                                         class="text-destructive focus:text-destructive"

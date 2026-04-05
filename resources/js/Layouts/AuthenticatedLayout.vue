@@ -22,8 +22,11 @@ import {
     Flag,
     Key,
     Users,
+    Shield,
 } from 'lucide-vue-next';
+import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
+import { usePermissions } from '@/composables/usePermissions';
 import { ref, computed } from 'vue';
 
 defineProps<{
@@ -41,8 +44,15 @@ defineProps<{
 
 const page = usePage();
 const activeFeatures = computed(() => page.props.activeFeatures as string[] | undefined);
+const impersonating = computed(() => page.props.impersonating as {
+    is_impersonating: boolean;
+    original_user_id?: number | null;
+    original_user?: { name: string; email: string } | null;
+    target_user?: { name: string; email: string };
+} | undefined);
 
 const { isDark, toggleDark } = useDarkMode();
+const { canView } = usePermissions();
 const collapsed = ref(false);
 
 const toggleSidebar = () => {
@@ -121,9 +131,9 @@ const initials = (name: string): string => {
                     <span v-if="!collapsed">Home</span>
                 </Link>
 
-                <!-- Databases - requires database-creator feature -->
+                <!-- Databases - requires database-creator feature AND databases.view permission -->
                 <Link
-                    v-if="!auth.user.is_admin && activeFeatures?.includes('database-creator')"
+                    v-if="!auth.user.is_admin && activeFeatures?.includes('database-creator') && canView('databases')"
                     :href="route('app.databases.index')"
                     :class="[
                         'flex items-center rounded-lg text-sm font-medium transition-colors',
@@ -139,9 +149,9 @@ const initials = (name: string): string => {
                     <span v-if="!collapsed">Databases</span>
                 </Link>
 
-                <!-- Credentials - requires credentials-manager feature -->
+                <!-- Credentials - requires credentials-manager feature AND credentials.view permission -->
                 <Link
-                    v-if="!auth.user.is_admin && activeFeatures?.includes('credentials-manager')"
+                    v-if="!auth.user.is_admin && activeFeatures?.includes('credentials-manager') && canView('credentials')"
                     :href="route('app.credentials.index')"
                     :class="[
                         'flex items-center rounded-lg text-sm font-medium transition-colors',
@@ -194,6 +204,21 @@ const initials = (name: string): string => {
                     >
                         <Flag class="h-5 w-5 shrink-0" />
                         <span v-if="!collapsed">Features</span>
+                    </Link>
+                    <Link
+                        :href="route('system.permissions.index')"
+                        :class="[
+                            'flex items-center rounded-lg text-sm font-medium transition-colors',
+                            collapsed
+                                ? 'justify-center p-3'
+                                : 'gap-3 px-3 py-2',
+                            route().current('system.permissions.*') || route().current('system.roles.*')
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                        ]"
+                    >
+                        <Shield class="h-5 w-5 shrink-0" />
+                        <span v-if="!collapsed">Permissões</span>
                     </Link>
                     <Link
                         :href="route('system.users.index')"
@@ -259,7 +284,12 @@ const initials = (name: string): string => {
         </aside>
 
         <!-- Main Content -->
-        <main :class="['flex-1 transition-all duration-300', collapsed ? 'ml-16' : 'ml-64']">
+        <main :class="['flex-1 transition-all duration-300 flex flex-col', collapsed ? 'ml-16' : 'ml-64']">
+            <!-- Impersonate Banner -->
+            <ImpersonateBanner
+                v-if="impersonating?.is_impersonating"
+                :user-name="auth.user.name"
+            />
             <!-- Header -->
             <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-6">
                 <div>

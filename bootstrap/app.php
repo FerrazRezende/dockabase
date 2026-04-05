@@ -24,10 +24,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\HandleImpersonation::class,
+            \App\Http\Middleware\EnsurePasswordChanged::class,
+            \App\Http\Middleware\CheckDeniedPermissions::class,
         ]);
 
         $middleware->alias([
             'feature' => \App\Http\Middleware\EnsureFeatureIsEnabled::class,
+            'password.changed' => \App\Http\Middleware\EnsurePasswordChanged::class,
+            'impersonate' => \App\Http\Middleware\HandleImpersonation::class,
+            'denied.check' => \App\Http\Middleware\CheckDeniedPermissions::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
