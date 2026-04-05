@@ -10,4 +10,6 @@ export interface PageProps {
         };
     };
     activeFeatures?: string[];
+    translations?: Record<string, string>;
+    locale?: string;
 }
