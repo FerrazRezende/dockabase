@@ -17,9 +17,10 @@ return new class extends Migration
             $table->string('column_name', 255)->nullable();
             $table->jsonb('old_value')->nullable();
             $table->jsonb('new_value')->nullable();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->char('user_id', 27)->nullable();
             $table->timestamps();
 
+            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
             $table->index(['database_id', 'created_at']);
             $table->index('action');
         });

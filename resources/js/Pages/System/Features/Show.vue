@@ -39,6 +39,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ArrowLeft, Play, Square, History, UserPlus, X, Users } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick } from 'vue';
 import type { Feature } from '@/types/feature';
+import { useToast } from '@/composables/useToast';
 
 interface HistoryItem {
     id: string;
@@ -63,6 +64,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const toast = useToast();
 
 const showActivateDialog = ref(false);
 const showDeactivateDialog = ref(false);
@@ -126,7 +128,11 @@ const activateFeature = () => {
     router.post(route('system.features.activate', props.feature.name), body, {
         preserveScroll: true,
         onSuccess: () => {
+            toast.success('Feature ativada com sucesso');
             showActivateDialog.value = false;
+        },
+        onError: () => {
+            toast.error('Erro ao ativar feature');
         },
         onFinish: () => {
             activating.value = false;
@@ -139,6 +145,12 @@ const deactivateFeature = () => {
 
     router.post(route('system.features.deactivate', props.feature.name), {}, {
         preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Feature desativada com sucesso');
+        },
+        onError: () => {
+            toast.error('Erro ao desativar feature');
+        },
         onFinish: () => {
             activating.value = false;
             showDeactivateDialog.value = false;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
+import { useToast } from 'vue-toastification';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {
     Table,
@@ -30,9 +31,6 @@ import {
 } from '@/components/ui/select';
 import {
     Eye,
-    Pencil,
-    Key,
-    Users,
     User,
     Trash2,
     Plus,
@@ -44,11 +42,6 @@ interface Role {
     name: string;
 }
 
-interface Permission {
-    id: number;
-    name: string;
-}
-
 interface User {
     id: number;
     name: string;
@@ -56,45 +49,31 @@ interface User {
     is_admin: boolean;
     active: boolean;
     roles?: string[];
-    permissions?: string[];
     password_changed_at: string | null;
     created_at: string;
 }
 
 interface Props {
-    users?: {
-        data: User[];
-        links: { url: string | null; label: string; active: boolean }[];
-        current_page: number;
-        last_page: number;
-    };
-    roles?: Role[];
-    permissions?: Permission[];
+    users?: User[];
+    allRoles?: Role[];
     filters?: { search: string | null };
 }
 
 const props = defineProps<Props>();
 
-// Safe defaults for optional props
-const roles = computed(() => props.roles ?? []);
-const permissions = computed(() => props.permissions ?? []);
-
+const toast = useToast();
 const search = ref(props.filters?.search || '');
 const showCreateDialog = ref(false);
-const showPermissionsDialog = ref(false);
-const selectedUser = ref<User | null>(null);
+const showImpersonateDialog = ref(false);
+const showDeactivateDialog = ref(false);
+const selectedUserId = ref<number | null>(null);
+const selectedUserName = ref('');
 
 // Form state
 const form = ref({
     name: '',
     email: '',
-    roles: [] as number[],
-    permissions: [] as number[],
-});
-
-const permissionsForm = ref({
-    roles: [] as number[],
-    permissions: [] as number[],
+    role_id: '' as number | string,
 });
 
 const formatDate = (date: string): string => {
@@ -114,54 +93,79 @@ const searchUsers = (): void => {
 };
 
 const openCreateDialog = (): void => {
-    form.value = { name: '', email: '', roles: [], permissions: [] };
+    // Verificar se há roles disponíveis
+    if (!props.allRoles || props.allRoles.length === 0) {
+        toast.error('Não é possível criar um usuário sem roles, crie uma role primeiro');
+        return;
+    }
+    form.value = { name: '', email: '', role_id: '' };
     showCreateDialog.value = true;
 };
 
 const createUser = (): void => {
-    router.post(route('system.users.store'), form.value, {
+    // Validar se uma role foi selecionada
+    if (!form.value.role_id) {
+        toast.error('Selecione uma role para o usuário');
+        return;
+    }
+
+    const payload = {
+        name: form.value.name,
+        email: form.value.email,
+        role_id: Number(form.value.role_id),
+    };
+
+    router.post(route('system.users.store'), payload, {
         onSuccess: () => {
             showCreateDialog.value = false;
+            toast.success('Usuário criado com sucesso');
+        },
+        onError: () => {
+            toast.error('Erro ao criar usuário. Tente novamente.');
         },
     });
 };
 
-const openPermissionsDialog = (user: User): void => {
-    selectedUser.value = user;
-    permissionsForm.value = {
-        roles: roles.value
-            .filter((r) => user.roles?.includes(r.name) ?? false)
-            .map((r) => r.id),
-        permissions: permissions.value
-            .filter((p) => user.permissions?.includes(p.name) ?? false)
-            .map((p) => p.id),
-    };
-    showPermissionsDialog.value = true;
-};
-
-const syncPermissions = (): void => {
-    if (!selectedUser.value) return;
-
-    router.post(
-        route('system.users.permissions.sync', selectedUser.value.id),
-        permissionsForm.value,
-        {
-            onSuccess: () => {
-                showPermissionsDialog.value = false;
-            },
-        }
-    );
-};
-
 const impersonate = (userId: number): void => {
-    if (confirm('Tem certeza que deseja entrar como este usuário?')) {
-        router.post(route('system.users.impersonate.start', userId));
+    const user = props.users?.find(u => u.id === userId);
+    if (user) {
+        selectedUserName.value = user.name;
+        selectedUserId.value = userId;
+        showImpersonateDialog.value = true;
+    }
+};
+
+const confirmImpersonate = (): void => {
+    if (selectedUserId.value !== null) {
+        router.post(route('system.users.impersonate.start', selectedUserId.value));
+        showImpersonateDialog.value = false;
+        selectedUserId.value = null;
+        selectedUserName.value = '';
     }
 };
 
 const deactivateUser = (userId: number): void => {
-    if (confirm('Tem certeza que deseja desativar este usuário?')) {
-        router.delete(route('system.users.destroy', userId));
+    const user = props.users?.find(u => u.id === userId);
+    if (user) {
+        selectedUserName.value = user.name;
+        selectedUserId.value = userId;
+        showDeactivateDialog.value = true;
+    }
+};
+
+const confirmDeactivate = (): void => {
+    if (selectedUserId.value !== null) {
+        router.delete(route('system.users.destroy', selectedUserId.value), {
+            onSuccess: () => {
+                showDeactivateDialog.value = false;
+                selectedUserId.value = null;
+                selectedUserName.value = '';
+                toast.success('Usuário desativado com sucesso');
+            },
+            onError: () => {
+                toast.error('Erro ao desativar usuário. Tente novamente.');
+            },
+        });
     }
 };
 </script>
@@ -214,7 +218,9 @@ const deactivateUser = (userId: number): void => {
                         :key="user.id"
                     >
                         <TableCell class="font-medium">
-                            {{ user.name }}
+                            <Link :href="route('system.users.show', user.id)" class="hover:underline">
+                                {{ user.name }}
+                            </Link>
                         </TableCell>
                         <TableCell class="text-muted-foreground">
                             {{ user.email }}
@@ -258,14 +264,6 @@ const deactivateUser = (userId: number): void => {
                                         <Eye class="w-4 h-4" />
                                     </Button>
                                 </Link>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    title="Permissões"
-                                    @click="openPermissionsDialog(user)"
-                                >
-                                    <Key class="w-4 h-4" />
-                                </Button>
                                 <Button
                                     v-if="$page.props.auth.user.is_admin && !user.is_admin"
                                     variant="ghost"
@@ -312,35 +310,18 @@ const deactivateUser = (userId: number): void => {
                         <Input v-model="form.email" type="email" placeholder="email@exemplo.com" />
                     </div>
                     <div class="grid gap-2">
-                        <label class="text-sm font-medium">Roles</label>
-                        <Select v-model="form.roles" multiple>
+                        <label class="text-sm font-medium">Role *</label>
+                        <Select v-model="form.role_id">
                             <SelectTrigger>
-                                <SelectValue placeholder="Selecione as roles" />
+                                <SelectValue placeholder="Selecione uma role" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem
-                                    v-for="role in roles"
+                                    v-for="role in allRoles"
                                     :key="role.id"
-                                    :value="role.id"
+                                    :value="String(role.id)"
                                 >
                                     {{ role.name }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Permissões Diretas</label>
-                        <Select v-model="form.permissions" multiple>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione permissões extras" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem
-                                    v-for="permission in permissions"
-                                    :key="permission.id"
-                                    :value="permission.id"
-                                >
-                                    {{ permission.name }}
                                 </SelectItem>
                             </SelectContent>
                         </Select>
@@ -356,58 +337,40 @@ const deactivateUser = (userId: number): void => {
             </DialogContent>
         </Dialog>
 
-        <!-- Permissions Dialog -->
-        <Dialog v-model:open="showPermissionsDialog">
+        <!-- Impersonate Confirmation Dialog -->
+        <Dialog v-model:open="showImpersonateDialog">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Permissões: {{ selectedUser?.name }}</DialogTitle>
+                    <DialogTitle>Impersonar Usuário</DialogTitle>
                     <DialogDescription>
-                        Gerencie as roles e permissões diretas do usuário.
+                        Tem certeza que deseja entrar como {{ selectedUserName }}?
                     </DialogDescription>
                 </DialogHeader>
 
-                <div class="grid gap-4 py-4">
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Roles</label>
-                        <Select v-model="permissionsForm.roles" multiple>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione as roles" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem
-                                    v-for="role in roles"
-                                    :key="role.id"
-                                    :value="role.id"
-                                >
-                                    {{ role.name }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Permissões Diretas</label>
-                        <Select v-model="permissionsForm.permissions" multiple>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione permissões extras" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem
-                                    v-for="permission in permissions"
-                                    :key="permission.id"
-                                    :value="permission.id"
-                                >
-                                    {{ permission.name }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
                 <DialogFooter>
-                    <Button variant="outline" @click="showPermissionsDialog = false">
+                    <Button variant="outline" @click="showImpersonateDialog = false">
                         Cancelar
                     </Button>
-                    <Button @click="syncPermissions">Salvar</Button>
+                    <Button @click="confirmImpersonate">Confirmar</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Deactivate Confirmation Dialog -->
+        <Dialog v-model:open="showDeactivateDialog">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Desativar Usuário</DialogTitle>
+                    <DialogDescription>
+                        Tem certeza que deseja desativar {{ selectedUserName }}?
+                    </DialogDescription>
+                </DialogHeader>
+
+                <DialogFooter>
+                    <Button variant="outline" @click="showDeactivateDialog = false">
+                        Cancelar
+                    </Button>
+                    <Button variant="destructive" @click="confirmDeactivate">Desativar</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

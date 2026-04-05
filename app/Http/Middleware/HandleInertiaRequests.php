@@ -36,10 +36,14 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $activeFeatures = [];
+        $userPermissions = [];
 
         if ($user) {
             $featureService = app(FeatureFlagService::class);
             $activeFeatures = $featureService->getActiveFeaturesForUser($user);
+
+            // Get all permissions for the user (excluding denied)
+            $userPermissions = $user->getActualPermissions()->pluck('name')->toArray();
         }
 
         // Build impersonation data
@@ -70,6 +74,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
             ],
             'activeFeatures' => $activeFeatures,
+            'userPermissions' => $userPermissions,
             'impersonating' => $impersonating,
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),

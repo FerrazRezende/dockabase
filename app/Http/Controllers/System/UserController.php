@@ -6,8 +6,9 @@ namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\System\StoreUserRequest;
-use App\Http\Requests\System\SyncUserPermissionsRequest;
+use App\Http\Requests\System\SyncDirectPermissionsRequest;
 use App\Http\Requests\System\UpdateUserRequest;
+use App\Http\Requests\System\UpdateUserRoleRequest;
 use App\Http\Resources\UserProfileResource;
 use App\Http\Resources\SystemUserResource;
 use App\Models\User;
@@ -44,8 +45,7 @@ class UserController extends Controller
 
         return Inertia::render('System/Users/Index', [
             'users' => SystemUserResource::collection($users)->toArray($request),
-            'roles' => Role::orderBy('name')->get(['id', 'name']),
-            'permissions' => Permission::orderBy('name')->get(['id', 'name']),
+            'allRoles' => Role::orderBy('name')->get(['id', 'name']),
             'filters' => ['search' => $search],
         ]);
     }
@@ -65,14 +65,9 @@ class UserController extends Controller
             'active' => true,
         ]);
 
-        // Assign roles
-        if ($request->has('roles')) {
-            $user->assignRole($request->validated('roles'));
-        }
-
-        // Assign direct permissions
-        if ($request->has('permissions')) {
-            $user->givePermissionTo($request->validated('permissions'));
+        // Assign role if provided
+        if ($request->has('role_id')) {
+            $user->assignRole($request->validated('role_id'));
         }
 
         if ($request->wantsJson()) {
@@ -97,6 +92,8 @@ class UserController extends Controller
 
         return Inertia::render('System/Users/Show', [
             'user' => (new UserProfileResource($user))->toArray($request),
+            'allRoles' => Role::orderBy('name')->get(['id', 'name']),
+            'allPermissions' => Permission::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -117,23 +114,51 @@ class UserController extends Controller
     }
 
     /**
-     * Sync roles and permissions for the specified user.
+     * Update the role for the specified user.
      */
-    public function syncPermissions(SyncUserPermissionsRequest $request, User $user)
+    public function updateRole(UpdateUserRoleRequest $request, User $user)
     {
         abort_unless($request->user()->is_admin, 403);
 
-        // Sync roles
-        $user->syncRoles($request->validated('roles', []));
+        // Remove all existing roles and assign the new one (if provided)
+        $user->syncRoles([]);
 
-        // Sync direct permissions
-        $user->syncPermissions($request->validated('permissions', []));
-
-        if ($request->wantsJson()) {
-            return new SystemUserResource($user->load('roles', 'permissions'));
+        if ($request->has('role_id')) {
+            $user->assignRole($request->validated('role_id'));
         }
 
-        return redirect()->back()->with('success', 'Permissions synced successfully.');
+        // Reload relationships
+        $user->load(['roles.permissions', 'permissions', 'credentials.databases']);
+
+        if ($request->wantsJson()) {
+            return new UserProfileResource($user);
+        }
+
+        return back()->with('success', 'Role updated successfully.');
+    }
+
+    /**
+     * Sync direct permissions for the specified user (extra permissions beyond role).
+     */
+    public function syncPermissions(SyncDirectPermissionsRequest $request, User $user)
+    {
+        abort_unless($request->user()->is_admin, 403);
+
+        // Sync direct permissions only (role permissions are kept)
+        $user->syncPermissions($request->validated('permissions', []));
+
+        // Sync denied permissions (explicitly revoked from role)
+        $user->denied_permissions = $request->validated('denied_permissions', []);
+        $user->save();
+
+        // Reload relationships
+        $user->load(['roles.permissions', 'permissions', 'credentials.databases']);
+
+        if ($request->wantsJson()) {
+            return new UserProfileResource($user);
+        }
+
+        return back()->with('success', 'Permissions synced successfully.');
     }
 
     /**

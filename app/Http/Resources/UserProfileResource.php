@@ -12,24 +12,6 @@ class UserProfileResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // Get all permissions (from roles + direct)
-        $allPermissions = $this->getAllPermissions();
-        
-        // Build permission list with source
-        $permissionsWithSource = $allPermissions->map(function ($permission) {
-            $source = 'direct';
-            foreach ($this->roles as $role) {
-                if ($role->permissions->contains($permission)) {
-                    $source = "role:{$role->name}";
-                    break;
-                }
-            }
-            return [
-                'name' => $permission->name,
-                'source' => $source,
-            ];
-        });
-
         // Get features active for this user
         $features = [];
         $featureNames = [
@@ -41,7 +23,7 @@ class UserProfileResource extends JsonResource
             'storage',
             'otp-auth',
         ];
-        
+
         foreach ($featureNames as $feature) {
             if (Feature::for($this->resource)->active($feature)) {
                 $features[] = $feature;
@@ -56,9 +38,57 @@ class UserProfileResource extends JsonResource
                     'id' => $database->id,
                     'name' => $database->name,
                     'credential' => $credential->name,
-                    'permission' => $credential->permission,
+                    'permission' => $credential->permission->value,
                 ];
             }
+        }
+
+        // Process roles manually to avoid {data: [...]} structure
+        $rolesArray = [];
+        foreach ($this->whenLoaded('roles') ?? collect() as $role) {
+            $permissionsArray = [];
+            foreach ($role->permissions ?? collect() as $perm) {
+                $permissionsArray[] = [
+                    'id' => $perm->id,
+                    'name' => $perm->name,
+                    'guard_name' => $perm->guard_name,
+                ];
+            }
+            $rolesArray[] = [
+                'id' => $role->id,
+                'name' => $role->name,
+                'guard_name' => $role->guard_name,
+                'permissions' => $permissionsArray,
+                'users_count' => $role->users_count ?? $role->users()->count(),
+                'created_at' => $role->created_at->toISOString(),
+                'updated_at' => $role->updated_at->toISOString(),
+            ];
+        }
+
+        // Process direct permissions manually
+        $directPermissionsArray = [];
+        foreach ($this->whenLoaded('permissions') ?? collect() as $perm) {
+            $directPermissionsArray[] = [
+                'id' => $perm->id,
+                'name' => $perm->name,
+                'guard_name' => $perm->guard_name,
+            ];
+        }
+
+        // Process credentials manually
+        $credentialsArray = [];
+        foreach ($this->whenLoaded('credentials') ?? collect() as $cred) {
+            $credentialsArray[] = [
+                'id' => $cred->id,
+                'name' => $cred->name,
+                'permission' => $cred->permission->value,
+                'permission_label' => $cred->permission->label(),
+                'description' => $cred->description,
+                'users_count' => $cred->users_count ?? $cred->users()->count(),
+                'databases_count' => $cred->databases_count ?? $cred->databases()->count(),
+                'created_at' => $cred->created_at->toISOString(),
+                'updated_at' => $cred->updated_at->toISOString(),
+            ];
         }
 
         return [
@@ -70,13 +100,13 @@ class UserProfileResource extends JsonResource
             'password_changed_at' => $this->password_changed_at?->toISOString(),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
-            
-            'roles' => RoleResource::collection($this->whenLoaded('roles')),
-            'direct_permissions' => PermissionResource::collection($this->whenLoaded('permissions')),
-            'all_permissions' => $permissionsWithSource,
-            
+
+            'roles' => $rolesArray,
+            'direct_permissions' => $directPermissionsArray,
+            'denied_permissions' => $this->denied_permissions ?? [],
+
             'features' => $features,
-            'credentials' => CredentialResource::collection($this->whenLoaded('credentials')),
+            'credentials' => $credentialsArray,
             'databases' => $databases,
         ];
     }

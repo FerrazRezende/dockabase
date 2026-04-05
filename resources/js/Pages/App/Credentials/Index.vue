@@ -22,11 +22,13 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import type { CredentialCollection } from '@/types/credential';
 import { MoreHorizontal, Plus, Key, Eye, Trash2 } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
+import { usePermissions } from '@/composables/usePermissions';
 
 defineProps<{
     credentials: CredentialCollection;
 }>();
 
+const { canCreate, canDelete } = usePermissions();
 const toast = useToast();
 const deleting = ref<string | null>(null);
 const deleteDialogOpen = ref(false);
@@ -85,7 +87,7 @@ const getPermissionBadgeClass = (permission: string): string => {
 
         <div class="space-y-4">
             <div class="flex justify-end">
-                <Link :href="route('app.credentials.create')">
+                <Link v-if="canCreate('credentials')" :href="route('app.credentials.create')">
                     <Button>
                         <Plus class="h-4 w-4 mr-2" />
                         Nova Credencial
@@ -154,6 +156,7 @@ const getPermissionBadgeClass = (permission: string): string => {
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
+                                        v-if="canDelete('credentials')"
                                         @click="openDeleteDialog(credential)"
                                         :disabled="deleting === credential.id"
                                         class="text-destructive focus:text-destructive"

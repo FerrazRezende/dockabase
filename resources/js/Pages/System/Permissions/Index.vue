@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {
@@ -21,14 +21,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Plus, Pencil, Key, Trash2, Search, Info } from 'lucide-vue-next';
+import { Plus, Pencil, Trash2, Search, Info } from 'lucide-vue-next';
+import { useToast } from 'vue-toastification';
 
 interface Permission {
     id: number;
@@ -42,40 +36,31 @@ interface Role {
     id: number;
     name: string;
     guard_name: string;
-    permissions: { id: number; name: string }[];
+    permissions?: { id: number; name: string }[];
     users_count: number;
     created_at: string;
     updated_at: string;
 }
 
 interface Props {
-    permissions: {
-        data: Permission[];
-    };
-    roles: {
-        data: Role[];
-    };
+    permissions: Permission[];
+    roles: Role[];
 }
 
 const props = defineProps<Props>();
 
+const toast = useToast();
+
 const searchRoles = ref('');
 
-// Dialogs - Roles
-const showCreateRoleDialog = ref(false);
-const showEditRoleDialog = ref(false);
-const showRolePermissionsDialog = ref(false);
+// Dialog - Delete Role
 const showDeleteRoleDialog = ref(false);
 const selectedRole = ref<Role | null>(null);
-const roleForm = ref({
-    name: '',
-    permissions: [] as number[],
-});
 
-const allPermissions = computed(() => props.permissions?.data ?? []);
+const allPermissions = computed(() => props.permissions ?? []);
 
 const filteredRoles = computed(() => {
-    const roles = props.roles?.data ?? [];
+    const roles = props.roles ?? [];
     if (!searchRoles.value) return roles;
     return roles.filter((role) =>
         role.name.toLowerCase().includes(searchRoles.value.toLowerCase())
@@ -86,6 +71,7 @@ const groupedPermissions = computed(() => {
     const groups: Record<string, Permission[]> = {};
 
     for (const permission of allPermissions.value) {
+        if (!permission.name) continue; // Skip if name is undefined
         const category = permission.name.split('.')[0];
         if (!groups[category]) {
             groups[category] = [];
@@ -107,53 +93,7 @@ const getCategoryLabel = (category: string): string => {
     return labels[category] || category.charAt(0).toUpperCase() + category.slice(1);
 };
 
-// Role actions
-const openCreateRoleDialog = (): void => {
-    roleForm.value = { name: '', permissions: [] };
-    showCreateRoleDialog.value = true;
-};
-
-const createRole = (): void => {
-    router.post(route('system.roles.store'), roleForm.value, {
-        onSuccess: () => {
-            showCreateRoleDialog.value = false;
-        },
-    });
-};
-
-const openEditRoleDialog = (role: Role): void => {
-    selectedRole.value = role;
-    roleForm.value = { name: role.name, permissions: [] };
-    showEditRoleDialog.value = true;
-};
-
-const updateRole = (): void => {
-    if (!selectedRole.value) return;
-    router.put(
-        route('system.roles.update', selectedRole.value.id),
-        { name: roleForm.value.name },
-        { onSuccess: () => { showEditRoleDialog.value = false; } }
-    );
-};
-
-const openRolePermissionsDialog = (role: Role): void => {
-    selectedRole.value = role;
-    roleForm.value = {
-        name: role.name,
-        permissions: role.permissions.map((p) => p.id),
-    };
-    showRolePermissionsDialog.value = true;
-};
-
-const syncRolePermissions = (): void => {
-    if (!selectedRole.value) return;
-    router.post(
-        route('system.roles.permissions.sync', selectedRole.value.id),
-        { permissions: roleForm.value.permissions },
-        { onSuccess: () => { showRolePermissionsDialog.value = false; } }
-    );
-};
-
+// Delete Role
 const openDeleteRoleDialog = (role: Role): void => {
     selectedRole.value = role;
     showDeleteRoleDialog.value = true;
@@ -162,7 +102,13 @@ const openDeleteRoleDialog = (role: Role): void => {
 const deleteRole = (): void => {
     if (!selectedRole.value) return;
     router.delete(route('system.roles.destroy', selectedRole.value.id), {
-        onSuccess: () => { showDeleteRoleDialog.value = false; },
+        onSuccess: () => {
+            showDeleteRoleDialog.value = false;
+            toast.success('Role excluída com sucesso');
+        },
+        onError: () => {
+            toast.error('Erro ao excluir role. Tente novamente.');
+        },
     });
 };
 </script>
@@ -193,10 +139,12 @@ const deleteRole = (): void => {
                             class="pl-9"
                         />
                     </div>
-                    <Button @click="openCreateRoleDialog">
-                        <Plus class="w-4 h-4 mr-2" />
-                        Nova Role
-                    </Button>
+                    <Link :href="route('system.roles.create')">
+                        <Button>
+                            <Plus class="w-4 h-4 mr-2" />
+                            Nova Role
+                        </Button>
+                    </Link>
                 </div>
 
                 <div class="bg-card shadow-sm rounded-lg border border-border">
@@ -215,12 +163,14 @@ const deleteRole = (): void => {
                                 :key="role.id"
                             >
                                 <TableCell class="font-medium">
-                                    {{ role.name }}
+                                    <Link :href="route('system.roles.edit', role.id)" class="hover:underline">
+                                        {{ role.name }}
+                                    </Link>
                                 </TableCell>
                                 <TableCell>
                                     <div class="flex flex-wrap gap-1 max-w-md">
                                         <Badge
-                                            v-for="permission in role.permissions"
+                                            v-for="permission in (role.permissions ?? [])"
                                             :key="permission.id"
                                             variant="secondary"
                                             class="text-xs"
@@ -228,7 +178,7 @@ const deleteRole = (): void => {
                                             {{ permission.name }}
                                         </Badge>
                                         <span
-                                            v-if="role.permissions.length === 0"
+                                            v-if="(role.permissions ?? []).length === 0"
                                             class="text-muted-foreground text-sm"
                                         >
                                             Nenhuma permissão
@@ -240,22 +190,15 @@ const deleteRole = (): void => {
                                 </TableCell>
                                 <TableCell>
                                     <div class="flex items-center gap-1">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            title="Editar"
-                                            @click="openEditRoleDialog(role)"
-                                        >
-                                            <Pencil class="w-4 h-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            title="Permissões"
-                                            @click="openRolePermissionsDialog(role)"
-                                        >
-                                            <Key class="w-4 h-4" />
-                                        </Button>
+                                        <Link :href="route('system.roles.edit', role.id)">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                title="Editar"
+                                            >
+                                                <Pencil class="w-4 h-4" />
+                                            </Button>
+                                        </Link>
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -318,98 +261,6 @@ const deleteRole = (): void => {
                 </div>
             </div>
         </div>
-
-        <!-- Create Role Dialog -->
-        <Dialog v-model:open="showCreateRoleDialog">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Nova Role</DialogTitle>
-                    <DialogDescription>
-                        Crie uma nova role e defina suas permissões.
-                    </DialogDescription>
-                </DialogHeader>
-                <div class="grid gap-4 py-4">
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Nome</label>
-                        <Input v-model="roleForm.name" placeholder="ex: Developer" />
-                    </div>
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Permissões</label>
-                        <Select v-model="roleForm.permissions" multiple>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione as permissões" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem
-                                    v-for="permission in allPermissions"
-                                    :key="permission.id"
-                                    :value="permission.id"
-                                >
-                                    {{ permission.name }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" @click="showCreateRoleDialog = false">Cancelar</Button>
-                    <Button @click="createRole">Criar</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Edit Role Dialog -->
-        <Dialog v-model:open="showEditRoleDialog">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Editar Role</DialogTitle>
-                    <DialogDescription>Altere o nome da role.</DialogDescription>
-                </DialogHeader>
-                <div class="grid gap-4 py-4">
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Nome</label>
-                        <Input v-model="roleForm.name" />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" @click="showEditRoleDialog = false">Cancelar</Button>
-                    <Button @click="updateRole">Salvar</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Role Permissions Dialog -->
-        <Dialog v-model:open="showRolePermissionsDialog">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Permissões: {{ selectedRole?.name }}</DialogTitle>
-                    <DialogDescription>Gerencie as permissões desta role.</DialogDescription>
-                </DialogHeader>
-                <div class="grid gap-4 py-4">
-                    <div class="grid gap-2">
-                        <label class="text-sm font-medium">Permissões</label>
-                        <Select v-model="roleForm.permissions" multiple>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione as permissões" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem
-                                    v-for="permission in allPermissions"
-                                    :key="permission.id"
-                                    :value="permission.id"
-                                >
-                                    {{ permission.name }}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" @click="showRolePermissionsDialog = false">Cancelar</Button>
-                    <Button @click="syncRolePermissions">Salvar</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
 
         <!-- Delete Role Dialog -->
         <Dialog v-model:open="showDeleteRoleDialog">

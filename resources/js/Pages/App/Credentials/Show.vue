@@ -75,7 +75,6 @@ const fetchAvailableUsers = async () => {
         const attachedIds = props.credential.users?.map(u => u.id) || [];
         availableUsers.value = (data.data || []).filter((u: User) => !attachedIds.includes(u.id));
     } catch (error) {
-        console.error('Failed to fetch users:', error);
         toast.error('Erro ao carregar usuários');
     } finally {
         loadingUsers.value = false;
@@ -103,7 +102,6 @@ const attachUser = async () => {
             }
         );
     } catch (error) {
-        console.error('Failed to attach user:', error);
         toast.error('Erro ao adicionar usuário');
     } finally {
         attaching.value = false;
@@ -128,7 +126,6 @@ const detachUser = async (userId: number) => {
             }
         );
     } catch (error) {
-        console.error('Failed to detach user:', error);
         toast.error('Erro ao remover usuário');
     } finally {
         detaching.value = null;

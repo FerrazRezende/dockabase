@@ -31,14 +31,15 @@ class FeatureFlagServiceTest extends TestCase
         $this->assertContainsOnlyInstancesOf(FeatureConfigDTO::class, $features);
     }
 
-    public function test_get_all_features_defaults_to_inactive(): void
+    public function test_get_all_features_defaults_to_active_in_local_environment(): void
     {
+        // Em ambiente de teste (que usa 'testing'), features são ativas por padrão
         $features = $this->service->getAllFeatures();
         $databaseCreator = $features->first(fn ($f) => $f->name === 'database-creator');
 
-        // Sem setting no banco, estratégia é Inactive
-        $this->assertFalse($databaseCreator->isActive);
-        $this->assertEquals(RolloutStrategyEnum::Inactive, $databaseCreator->strategy);
+        // Sem setting no banco, usa default do ambiente (testing = true)
+        $this->assertTrue($databaseCreator->isActive);
+        $this->assertEquals(RolloutStrategyEnum::All, $databaseCreator->strategy);
     }
 
     public function test_get_feature_returns_null_for_unknown(): void
@@ -95,7 +96,7 @@ class FeatureFlagServiceTest extends TestCase
         config()->set('app.env', 'local');
         $user = User::factory()->create(['is_admin' => false]);
 
-        // No FeatureSetting in database - should use environment default
-        $this->assertFalse($this->service->isActiveForUser('database-creator', $user));
+        // No FeatureSetting in database - should use environment default (local = true)
+        $this->assertTrue($this->service->isActiveForUser('database-creator', $user));
     }
 }

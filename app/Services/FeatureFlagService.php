@@ -64,11 +64,19 @@ class FeatureFlagService
 
         $setting = FeatureSetting::where('feature_name', $featureName)->first();
 
+        // Usa a mesma lógica do getAllFeatures() para consistência
+        $isActive = $setting
+            ? $setting->is_active
+            : $this->isFeatureActiveByDefault($featureName);
+
+        $strategy = $setting?->strategy ??
+            ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
+
         return FeatureConfigDTO::fromDefinition(
             name: $featureName,
             definition: $definition,
-            strategy: $setting?->strategy,
-            isActive: $setting?->is_active ?? false,
+            strategy: $strategy,
+            isActive: $isActive,
             percentage: $setting?->percentage ?? 0,
             userIds: $setting?->user_ids
         );
@@ -269,7 +277,7 @@ class FeatureFlagService
             ->map(fn (FeatureHistory $history) => [
                 'id' => $history->id,
                 'action' => $history->action,
-                'actor' => $history->actor->name ?? $history->actor->email,
+                'actor' => $history->actor?->name ?? $history->actor?->email ?? 'Usuário removido',
                 'previous_state' => $history->previous_state,
                 'new_state' => $history->new_state,
                 'created_at' => $history->created_at->toISOString(),

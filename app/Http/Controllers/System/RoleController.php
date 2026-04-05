@@ -17,6 +17,40 @@ use Spatie\Permission\Models\Role;
 class RoleController extends Controller
 {
     /**
+     * Show the form for creating a new role.
+     */
+    public function create(Request $request)
+    {
+        abort_unless($request->user()->is_admin, 403);
+
+        return Inertia::render('System/Roles/Form', [
+            'allPermissions' => Permission::orderBy('name')->get(['id', 'name', 'guard_name']),
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified role.
+     */
+    public function edit(Request $request, Role $role)
+    {
+        abort_unless($request->user()->is_admin, 403);
+
+        $role->load('permissions');
+
+        return Inertia::render('System/Roles/Form', [
+            'role' => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'permissions' => $role->permissions->map(fn($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                ])->toArray(),
+            ],
+            'allPermissions' => Permission::orderBy('name')->get(['id', 'name', 'guard_name']),
+        ]);
+    }
+
+    /**
      * Display a listing of roles.
      */
     public function index(Request $request)
@@ -47,18 +81,19 @@ class RoleController extends Controller
 
         $role = Role::create([
             'name' => $request->validated('name'),
-            'guard_name' => $request->validated('guard_name', 'web'),
+            'guard_name' => 'web',
         ]);
 
-        if ($request->has('permissions')) {
-            $role->syncPermissions($request->validated('permissions'));
+        $permissions = $request->input('permissions', []);
+        if (!empty($permissions)) {
+            $role->syncPermissions($permissions);
         }
 
         if ($request->wantsJson()) {
             return new RoleResource($role->load('permissions'));
         }
 
-        return redirect()->back()->with('success', 'Role created successfully.');
+        return redirect()->route('system.permissions.index')->with('success', 'Role created successfully.');
     }
 
     /**
@@ -68,13 +103,18 @@ class RoleController extends Controller
     {
         abort_unless($request->user()->is_admin, 403);
 
-        $role->update($request->validated());
+        $role->update([
+            'name' => $request->validated('name'),
+        ]);
+
+        $permissions = $request->input('permissions', []);
+        $role->syncPermissions($permissions);
 
         if ($request->wantsJson()) {
             return new RoleResource($role->load('permissions'));
         }
 
-        return redirect()->back()->with('success', 'Role updated successfully.');
+        return redirect()->route('system.permissions.index')->with('success', 'Role updated successfully.');
     }
 
     /**

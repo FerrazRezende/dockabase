@@ -30,8 +30,8 @@ class PermissionController extends Controller
         }
 
         return Inertia::render('System/Permissions/Index', [
-            'permissions' => PermissionResource::collection($permissions)->toArray($request),
-            'roles' => \App\Http\Resources\RoleResource::collection($roles)->toArray($request),
+            'permissions' => $permissions->items(),
+            'roles' => $roles->items(),
         ]);
     }
 }

@@ -11,10 +11,11 @@ return new class extends Migration
         Schema::create('credential_user', function (Blueprint $table) {
             $table->id();
             $table->char('credential_id', 27);
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->char('user_id', 27);
             $table->timestamp('created_at')->useCurrent();
 
             $table->foreign('credential_id')->references('id')->on('credentials')->cascadeOnDelete();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
 
             $table->unique(['credential_id', 'user_id']);
         });

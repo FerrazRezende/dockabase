@@ -1,20 +1,41 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed, watch, nextTick } from 'vue';
+import { useToast } from 'vue-toastification';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-vue-next';
-
-interface Permission {
-    name: string;
-    source: string;
-}
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowLeft, Shield, ShieldCheck, Key, Loader2 } from 'lucide-vue-next';
+import PvTabs from '@/components/ui/pv-tabs/PvTabs.vue';
+import PvTabsContent from '@/components/ui/pv-tabs/PvTabsContent.vue';
 
 interface Role {
     id: number;
     name: string;
     permissions: { id: number; name: string }[];
+}
+
+interface AllRole {
+    id: number;
+    name: string;
+}
+
+interface Permission {
+    id: number;
+    name: string;
+}
+
+interface GroupedPermissions {
+    [key: string]: Permission[];
 }
 
 interface Credential {
@@ -40,15 +61,212 @@ interface UserProfile {
     created_at: string;
     roles: Role[];
     direct_permissions: { id: number; name: string }[];
+    denied_permissions: number[];
     all_permissions: Permission[];
     features: string[];
     credentials: Credential[];
     databases: Database[];
 }
 
-defineProps<{
+const props = defineProps<{
     user: UserProfile;
+    allRoles?: AllRole[];
+    allPermissions?: Permission[];
 }>();
+
+const toast = useToast();
+const activeTab = ref('info');
+const isSavingPermissions = ref(false);
+
+// Roles from backend - use computed for reactivity
+const userRoles = computed(() => props.user.roles ?? []);
+const userCredentials = computed(() => props.user.credentials ?? []);
+const userDatabases = computed(() => props.user.databases ?? []);
+const userFeatures = computed(() => props.user.features ?? []);
+
+// Get the user's current role (only one allowed)
+const currentRoleId = computed(() => {
+    return userRoles.length > 0 ? userRoles[0].id : null;
+});
+
+// Use "none" for "no role" selection
+const selectedRoleId = ref<number | string>(currentRoleId.value ?? 'none');
+
+// Direct permissions (not from role)
+const directPermissions = props.user.direct_permissions ?? [];
+const directPermissionIds = ref<number[]>(directPermissions.map((p: any) => p.id));
+
+// Denied permissions (explicitly revoked from role)
+const deniedPermissionIds = ref<number[]>(props.user.denied_permissions ?? []);
+
+// Checkbox states - reactive ref for reactivity
+const checkboxStates = ref<Record<number, boolean>>({});
+
+// Get role permission IDs for quick lookup
+const rolePermissionIds = computed(() => {
+    const ids: number[] = [];
+    userRoles.value.forEach((r: any) => {
+        (r.permissions ?? []).forEach((p: any) => {
+            if (p?.id) ids.push(p.id);
+        });
+    });
+    return ids;
+});
+
+// Initialize checkbox states
+const initCheckboxStates = (): void => {
+    const states: Record<number, boolean> = {};
+    (props.allPermissions ?? []).forEach((perm: any) => {
+        const isDenied = deniedPermissionIds.value.includes(perm.id);
+        const fromRole = rolePermissionIds.value.includes(perm.id);
+        const isDirect = directPermissionIds.value.includes(perm.id);
+        states[perm.id] = !isDenied && (fromRole || isDirect);
+    });
+    checkboxStates.value = states;
+};
+
+// Initialize after nextTick to ensure computed are evaluated
+nextTick(() => {
+    initCheckboxStates();
+});
+
+// Get role permission names for quick lookup
+const rolePermissionNames = computed(() => {
+    const perms: string[] = [];
+    userRoles.value.forEach((r: any) => {
+        const rolePerms = Array.isArray(r.permissions)
+            ? r.permissions
+            : (r.permissions?.data ?? []);
+        rolePerms.forEach((p: any) => {
+            if (p?.name) perms.push(p.name);
+        });
+    });
+    return new Set(perms);
+});
+
+// Group permissions by feature/module
+const groupedPermissions = computed(() => {
+    const groups: GroupedPermissions = {};
+
+    (props.allPermissions ?? []).forEach((perm) => {
+        // Skip users.* permissions - only admin can manage users
+        if (perm.name.startsWith('users.')) {
+            return;
+        }
+
+        const parts = perm.name.split('.');
+        const module = parts[0] || 'other';
+        if (!groups[module]) {
+            groups[module] = [];
+        }
+        groups[module].push(perm);
+    });
+
+    return groups;
+});
+
+// Check if permission is assigned to user via role (by ID)
+const hasRolePermissionById = (permId: number): boolean => {
+    return rolePermissionIds.value.includes(permId);
+};
+
+// Check if permission is directly assigned
+const hasDirectPermission = (permId: number): boolean => {
+    return directPermissionIds.value.includes(permId);
+};
+
+// Check if permission is denied (explicitly revoked from role)
+const isDeniedPermission = (permId: number): boolean => {
+    return deniedPermissionIds.value.includes(permId);
+};
+
+// Check if user has permission (from role or direct, unless denied)
+const hasPermission = (permName: string, permId: number): boolean => {
+    if (isDeniedPermission(permId)) return false;
+    return hasRolePermissionById(permId) || hasDirectPermission(permId);
+};
+
+// Get checkbox state for a permission - uses reactive checkboxStates
+const getCheckboxState = (permId: number): boolean => {
+    return checkboxStates.value[permId] ?? false;
+};
+
+// Toggle permission (add/remove from direct or denied)
+const togglePermission = (permId: number): void => {
+    const currentState = getCheckboxState(permId);
+    const newState = !currentState;
+
+    if (newState) {
+        // Marcando - remover de negados se estiver lá
+        deniedPermissionIds.value = deniedPermissionIds.value.filter(id => id !== permId);
+        // Se NÃO vem da role, adicionar como direta
+        if (!rolePermissionIds.value.includes(permId)) {
+            directPermissionIds.value.push(permId);
+        }
+    } else {
+        // Desmarcando
+        if (rolePermissionIds.value.includes(permId)) {
+            // Se vem da role, adicionar à lista de negados
+            deniedPermissionIds.value.push(permId);
+        } else {
+            // Se é direta, remover
+            directPermissionIds.value = directPermissionIds.value.filter(id => id !== permId);
+        }
+    }
+
+    // Atualizar estado visual do checkbox imediatamente
+    checkboxStates.value[permId] = newState;
+};
+
+const updateRole = (): void => {
+    router.put(
+        route('system.users.role.update', props.user.id),
+        { role_id: selectedRoleId.value === 'none' ? null : selectedRoleId.value },
+        {
+            onSuccess: () => {
+                toast.success('Role atualizada com sucesso');
+                // Reload page to get updated props
+                router.visit(route('system.users.show', props.user.id), {
+                    only: ['user'],
+                    preserveScroll: true,
+                    preserveState: false,
+                });
+            },
+            onError: () => {
+                toast.error('Erro ao atualizar role. Tente novamente.');
+            },
+        }
+    );
+};
+
+const syncPermissions = (): void => {
+    isSavingPermissions.value = true;
+
+    router.post(
+        route('system.users.permissions.sync', props.user.id),
+        {
+            permissions: [...directPermissionIds.value],
+            denied_permissions: [...deniedPermissionIds.value],
+        },
+        {
+            onSuccess: () => {
+                toast.success('Permissões sincronizadas com sucesso');
+                // Reload page to get updated props
+                router.visit(route('system.users.show', props.user.id), {
+                    only: ['user'],
+                    preserveScroll: true,
+                    preserveState: false,
+                });
+            },
+            onError: () => {
+                toast.error('Erro ao sincronizar permissões. Tente novamente.');
+            },
+            onFinish: () => {
+                isSavingPermissions.value = false;
+            },
+        }
+    );
+};
 
 const formatDate = (date: string): string => {
     return new Date(date).toLocaleDateString('pt-BR', {
@@ -60,15 +278,10 @@ const formatDate = (date: string): string => {
     });
 };
 
-const getSourceLabel = (source: string): string => {
-    if (source === 'direct') return 'Direta';
-    return source.replace('role:', 'Role: ');
-};
-
-const getSourceVariant = (source: string): 'default' | 'secondary' | 'outline' => {
-    if (source === 'direct') return 'default';
-    return 'secondary';
-};
+const tabs = [
+    { value: 'info', label: 'Informações', icon: 'User' },
+    { value: 'roles', label: 'Roles e Permissões', icon: 'Shield' },
+];
 </script>
 
 <template>
@@ -93,169 +306,265 @@ const getSourceVariant = (source: string): 'default' | 'secondary' | 'outline' =
             </div>
         </template>
 
-        <div class="grid gap-6 md:grid-cols-2">
-            <!-- Informações Básicas -->
-            <Card>
-                <CardHeader>
-                    <CardTitle>Informações</CardTitle>
-                </CardHeader>
-                <CardContent class="space-y-4">
-                    <div class="flex justify-between">
-                        <span class="text-muted-foreground">Email</span>
-                        <span>{{ user.email }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-muted-foreground">Status</span>
-                        <Badge :variant="user.active ? 'default' : 'outline'">
-                            {{ user.active ? 'Ativo' : 'Inativo' }}
-                        </Badge>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-muted-foreground">Tipo</span>
-                        <Badge v-if="user.is_admin" variant="default" class="bg-primary">
-                            Admin
-                        </Badge>
-                        <span v-else class="text-muted-foreground">Usuário</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-muted-foreground">Criado em</span>
-                        <span>{{ formatDate(user.created_at) }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-muted-foreground">Senha trocada</span>
-                        <span v-if="user.password_changed_at">
-                            {{ formatDate(user.password_changed_at) }}
-                        </span>
-                        <Badge v-else variant="outline" class="text-yellow-500">
-                            Pendente
-                        </Badge>
-                    </div>
-                </CardContent>
-            </Card>
+        <div>
+            <PvTabs v-model="activeTab" :tabs="tabs">
+                <!-- Aba Informações -->
+                <PvTabsContent value="info" :active-tab="activeTab">
+                    <div class="grid gap-6 md:grid-cols-2">
+                        <!-- Informações Básicas -->
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Informações</CardTitle>
+                            </CardHeader>
+                            <CardContent class="space-y-4">
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">Email</span>
+                                    <span>{{ user.email }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">Status</span>
+                                    <Badge :variant="user.active ? 'default' : 'outline'">
+                                        {{ user.active ? 'Ativo' : 'Inativo' }}
+                                    </Badge>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">Tipo</span>
+                                    <Badge v-if="user.is_admin" variant="default" class="bg-primary">
+                                        Admin
+                                    </Badge>
+                                    <span v-else class="text-muted-foreground">Usuário</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">Criado em</span>
+                                    <span>{{ formatDate(user.created_at) }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-muted-foreground">Senha trocada</span>
+                                    <span v-if="user.password_changed_at">
+                                        {{ formatDate(user.password_changed_at) }}
+                                    </span>
+                                    <Badge v-else variant="outline" class="text-yellow-500">
+                                        Pendente
+                                    </Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
 
-            <!-- Roles -->
-            <Card>
-                <CardHeader>
-                    <CardTitle>Roles</CardTitle>
-                    <CardDescription>Grupos de permissões atribuídos ao usuário</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div v-if="user.roles.length > 0" class="flex flex-wrap gap-2">
-                        <Badge
-                            v-for="role in user.roles"
-                            :key="role.id"
-                            variant="secondary"
-                        >
-                            {{ role.name }}
-                        </Badge>
-                    </div>
-                    <p v-else class="text-muted-foreground text-sm">
-                        Nenhuma role atribuída
-                    </p>
-                </CardContent>
-            </Card>
+                        <!-- Features -->
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Features Visíveis</CardTitle>
+                                <CardDescription>Features ativas para este usuário</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div v-if="userFeatures.length > 0" class="flex flex-wrap gap-2">
+                                    <Badge
+                                        v-for="feature in userFeatures"
+                                        :key="feature"
+                                        variant="outline"
+                                    >
+                                        {{ feature }}
+                                    </Badge>
+                                </div>
+                                <p v-else class="text-muted-foreground text-sm">
+                                    Nenhuma feature ativa
+                                </p>
+                            </CardContent>
+                        </Card>
 
-            <!-- Permissões -->
-            <Card>
-                <CardHeader>
-                    <CardTitle>Permissões</CardTitle>
-                    <CardDescription>Todas as permissões efetivas (roles + diretas)</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div v-if="user.all_permissions.length > 0" class="space-y-2">
-                        <div
-                            v-for="permission in user.all_permissions"
-                            :key="permission.name"
-                            class="flex items-center justify-between"
-                        >
-                            <span class="text-sm">{{ permission.name }}</span>
-                            <Badge :variant="getSourceVariant(permission.source)" class="text-xs">
-                                {{ getSourceLabel(permission.source) }}
-                            </Badge>
-                        </div>
-                    </div>
-                    <p v-else class="text-muted-foreground text-sm">
-                        Nenhuma permissão
-                    </p>
-                </CardContent>
-            </Card>
+                        <!-- Credentials -->
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Credentials</CardTitle>
+                                <CardDescription>Credenciais de acesso à API</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div v-if="userCredentials.length > 0" class="space-y-2">
+                                    <div
+                                        v-for="credential in userCredentials"
+                                        :key="credential.id"
+                                        class="flex items-center justify-between"
+                                    >
+                                        <span>{{ credential.name }}</span>
+                                        <Badge variant="secondary">
+                                            {{ credential.permission }}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <p v-else class="text-muted-foreground text-sm">
+                                    Nenhuma credential
+                                </p>
+                            </CardContent>
+                        </Card>
 
-            <!-- Features -->
-            <Card>
-                <CardHeader>
-                    <CardTitle>Features Visíveis</CardTitle>
-                    <CardDescription>Features ativas para este usuário</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div v-if="user.features.length > 0" class="flex flex-wrap gap-2">
-                        <Badge
-                            v-for="feature in user.features"
-                            :key="feature"
-                            variant="outline"
-                        >
-                            {{ feature }}
-                        </Badge>
+                        <!-- Databases -->
+                        <Card class="md:col-span-2">
+                            <CardHeader>
+                                <CardTitle>Databases</CardTitle>
+                                <CardDescription>Bancos de dados acessíveis via credentials</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div v-if="userDatabases.length > 0" class="grid gap-2">
+                                    <div
+                                        v-for="database in userDatabases"
+                                        :key="database.id"
+                                        class="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                                    >
+                                        <div>
+                                            <span class="font-medium">{{ database.name }}</span>
+                                            <span class="text-muted-foreground text-sm ml-2">
+                                                via {{ database.credential }}
+                                            </span>
+                                        </div>
+                                        <Badge variant="secondary">
+                                            {{ database.permission }}
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <p v-else class="text-muted-foreground text-sm">
+                                    Nenhum database acessível
+                                </p>
+                            </CardContent>
+                        </Card>
                     </div>
-                    <p v-else class="text-muted-foreground text-sm">
-                        Nenhuma feature ativa
-                    </p>
-                </CardContent>
-            </Card>
+                </PvTabsContent>
 
-            <!-- Credentials -->
-            <Card>
-                <CardHeader>
-                    <CardTitle>Credentials</CardTitle>
-                    <CardDescription>Credenciais de acesso à API</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div v-if="user.credentials.length > 0" class="space-y-2">
-                        <div
-                            v-for="credential in user.credentials"
-                            :key="credential.id"
-                            class="flex items-center justify-between"
-                        >
-                            <span>{{ credential.name }}</span>
-                            <Badge variant="secondary">
-                                {{ credential.permission }}
-                            </Badge>
-                        </div>
-                    </div>
-                    <p v-else class="text-muted-foreground text-sm">
-                        Nenhuma credential
-                    </p>
-                </CardContent>
-            </Card>
+                <!-- Aba Roles e Permissões -->
+                <PvTabsContent value="roles" :active-tab="activeTab">
+                    <div class="grid gap-6 md:grid-cols-1">
+                        <!-- Role do Usuário -->
+                        <Card>
+                            <CardHeader>
+                                <CardTitle class="flex items-center gap-2">
+                                    <Shield class="w-5 h-5" />
+                                    Role do Usuário
+                                </CardTitle>
+                                <CardDescription>Cada usuário pode ter apenas uma role</CardDescription>
+                            </CardHeader>
+                            <CardContent class="space-y-4">
+                                <div class="flex gap-2">
+                                    <Select v-model="selectedRoleId">
+                                        <SelectTrigger class="flex-1">
+                                            <SelectValue placeholder="Selecione uma role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">
+                                                <span class="text-muted-foreground">Nenhuma role</span>
+                                            </SelectItem>
+                                            <SelectItem
+                                                v-for="role in allRoles ?? []"
+                                                :key="role.id"
+                                                :value="role.id"
+                                            >
+                                                {{ role.name }}
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Button
+                                        :disabled="selectedRoleId === (currentRoleId ?? 'none')"
+                                        @click="updateRole"
+                                    >
+                                        <ShieldCheck class="w-4 h-4 mr-2" />
+                                        Salvar
+                                    </Button>
+                                </div>
+                                <div v-if="userRoles.length > 0">
+                                    <Badge variant="secondary">
+                                        Role atual: {{ userRoles[0].name }}
+                                    </Badge>
+                                </div>
+                                <p v-else class="text-muted-foreground text-sm">
+                                    Nenhuma role atribuída
+                                </p>
+                            </CardContent>
+                        </Card>
 
-            <!-- Databases -->
-            <Card class="md:col-span-2">
-                <CardHeader>
-                    <CardTitle>Databases</CardTitle>
-                    <CardDescription>Bancos de dados acessíveis via credentials</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div v-if="user.databases.length > 0" class="grid gap-2">
-                        <div
-                            v-for="database in user.databases"
-                            :key="database.id"
-                            class="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-                        >
-                            <div>
-                                <span class="font-medium">{{ database.name }}</span>
-                                <span class="text-muted-foreground text-sm ml-2">
-                                    via {{ database.credential }}
-                                </span>
-                            </div>
-                            <Badge variant="secondary">
-                                {{ database.permission }}
-                            </Badge>
-                        </div>
+                        <!-- Todas as Permissões do Sistema -->
+                        <Card>
+                            <CardHeader>
+                                <CardTitle class="flex items-center gap-2">
+                                    <Key class="w-5 h-5" />
+                                    Permissões do Sistema
+                                </CardTitle>
+                                <CardDescription class="space-y-1">
+                                    <p>Marque permissões extras para este usuário (além da role).</p>
+                                    <p class="text-xs text-muted-foreground">
+                                        Permissões herdadas da role estão desabilitadas.
+                                    </p>
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div v-if="Object.keys(groupedPermissions).length > 0" class="space-y-6">
+                                    <div v-for="(permissions, module) in groupedPermissions" :key="module">
+                                        <h4 class="font-semibold text-sm uppercase tracking-wide text-muted-foreground mb-3">
+                                            {{ module }}
+                                        </h4>
+                                        <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                                            <label
+                                                v-for="perm in permissions"
+                                                :key="perm.id"
+                                                class="flex items-center gap-3 p-3 rounded border transition-colors"
+                                                :class="[
+                                                    isDeniedPermission(perm.id)
+                                                        ? 'bg-red-100 border-red-300 dark:bg-red-900/30 dark:border-red-700 opacity-70'
+                                                        : !getCheckboxState(perm.id)
+                                                        ? 'bg-muted/30 hover:bg-muted/50'
+                                                        : rolePermissionIds.includes(perm.id)
+                                                        ? 'bg-blue-100 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700'
+                                                        : 'bg-green-100 border-green-300 dark:bg-green-900/30 dark:border-green-700',
+                                                    'cursor-pointer',
+                                                ]"
+                                            >
+                                                <Checkbox
+                                                    :modelValue="getCheckboxState(perm.id)"
+                                                    :disabled="isSavingPermissions"
+                                                    @update:modelValue="() => togglePermission(perm.id)"
+                                                />
+                                                <span class="text-sm font-mono flex-1">{{ perm.name }}</span>
+                                                <Badge
+                                                    v-if="isDeniedPermission(perm.id)"
+                                                    variant="outline"
+                                                    class="text-xs bg-red-500 text-white border-red-500"
+                                                >
+                                                    Negada
+                                                </Badge>
+                                                <Badge
+                                                    v-else-if="rolePermissionIds.includes(perm.id)"
+                                                    variant="outline"
+                                                    class="text-xs bg-blue-500 text-white border-blue-500"
+                                                >
+                                                    Role
+                                                </Badge>
+                                                <Badge
+                                                    v-else-if="directPermissionIds.includes(perm.id)"
+                                                    variant="default"
+                                                    class="bg-green-600 text-white text-xs"
+                                                >
+                                                    Extra
+                                                </Badge>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p v-else class="text-muted-foreground text-sm">
+                                    Nenhuma permissão disponível no sistema
+                                </p>
+
+                                <!-- Save button for direct permissions -->
+                                <div v-if="Object.keys(groupedPermissions).length > 0" class="mt-6 pt-4 border-t">
+                                    <Button
+                                        @click="syncPermissions"
+                                        :disabled="isSavingPermissions"
+                                    >
+                                        <Loader2 v-if="isSavingPermissions" class="w-4 h-4 mr-2 animate-spin" />
+                                        Salvar Permissões Extras
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </div>
-                    <p v-else class="text-muted-foreground text-sm">
-                        Nenhum database acessível
-                    </p>
-                </CardContent>
-            </Card>
+                </PvTabsContent>
+            </PvTabs>
         </div>
     </AuthenticatedLayout>
 </template>

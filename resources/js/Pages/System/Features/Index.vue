@@ -13,12 +13,14 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { FeatureCollection } from '@/types/feature';
+import { useToast } from '@/composables/useToast';
 
 defineProps<{
     features: FeatureCollection;
 }>();
 
 const toggling = ref<string | null>(null);
+const toast = useToast();
 
 const toggleFeature = (featureName: string, currentlyActive: boolean): void => {
     toggling.value = featureName;
@@ -30,6 +32,18 @@ const toggleFeature = (featureName: string, currentlyActive: boolean): void => {
     router.post(url, { strategy: 'all' }, {
         preserveScroll: true,
         only: ['features'],
+        onSuccess: () => {
+            const message = currentlyActive
+                ? 'Feature desativada com sucesso'
+                : 'Feature ativada com sucesso';
+            toast.success(message);
+        },
+        onError: () => {
+            const errorMessage = currentlyActive
+                ? 'Erro ao desativar feature'
+                : 'Erro ao ativar feature';
+            toast.error(errorMessage);
+        },
         onFinish: () => {
             toggling.value = null;
         },

@@ -26,6 +26,7 @@ import {
 } from 'lucide-vue-next';
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
+import { usePermissions } from '@/composables/usePermissions';
 import { ref, computed } from 'vue';
 
 defineProps<{
@@ -51,6 +52,7 @@ const impersonating = computed(() => page.props.impersonating as {
 } | undefined);
 
 const { isDark, toggleDark } = useDarkMode();
+const { canView } = usePermissions();
 const collapsed = ref(false);
 
 const toggleSidebar = () => {
@@ -129,9 +131,9 @@ const initials = (name: string): string => {
                     <span v-if="!collapsed">Home</span>
                 </Link>
 
-                <!-- Databases - requires database-creator feature -->
+                <!-- Databases - requires database-creator feature AND databases.view permission -->
                 <Link
-                    v-if="!auth.user.is_admin && activeFeatures?.includes('database-creator')"
+                    v-if="!auth.user.is_admin && activeFeatures?.includes('database-creator') && canView('databases')"
                     :href="route('app.databases.index')"
                     :class="[
                         'flex items-center rounded-lg text-sm font-medium transition-colors',
@@ -147,9 +149,9 @@ const initials = (name: string): string => {
                     <span v-if="!collapsed">Databases</span>
                 </Link>
 
-                <!-- Credentials - requires credentials-manager feature -->
+                <!-- Credentials - requires credentials-manager feature AND credentials.view permission -->
                 <Link
-                    v-if="!auth.user.is_admin && activeFeatures?.includes('credentials-manager')"
+                    v-if="!auth.user.is_admin && activeFeatures?.includes('credentials-manager') && canView('credentials')"
                     :href="route('app.credentials.index')"
                     :class="[
                         'flex items-center rounded-lg text-sm font-medium transition-colors',

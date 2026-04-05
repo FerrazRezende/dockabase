@@ -67,7 +67,6 @@ export function useEcho() {
 
         // Avoid duplicate subscriptions
         if (activeChannels.has(channelName)) {
-            console.log(`Already subscribed to ${channelName}`);
             return null;
         }
 
@@ -89,17 +88,13 @@ export function useEcho() {
 
             activeChannels.add(channelName);
 
-            console.log(`Subscribed to ${channelName}`);
-
             return {
                 unsubscribe: () => {
                     echo.leave(channelName);
                     activeChannels.delete(channelName);
-                    console.log(`Unsubscribed from ${channelName}`);
                 },
             };
         } catch (error) {
-            console.error('Failed to subscribe to database channel:', error);
             return null;
         }
     };
@@ -123,7 +118,6 @@ export function useEcho() {
                 },
             };
         } catch (error) {
-            console.error('Failed to subscribe to notifications:', error);
             return null;
         }
     };
