@@ -163,5 +163,13 @@
   "URL": "El formato del :attribute es inválido.",
   "The :attribute format is invalid.": "El formato del :attribute es inválido.",
   "UUID": "El :attribute debe ser un UUID válido.",
-  "The :attribute must be a valid UUID.": "El :attribute debe ser un UUID válido."
+  "The :attribute must be a valid UUID.": "El :attribute debe ser un UUID válido.",
+  "auth.failed": "Estas credenciales no coinciden con nuestros registros.",
+  "auth.password": "La contraseña proporcionada es incorrecta.",
+  "auth.throttle": "Demasiados intentos de inicio de sesión. Por favor, inténtelo de nuevo en :seconds segundos.",
+  "passwords.reset": "Su contraseña ha sido restablecida.",
+  "passwords.sent": "Hemos enviado el enlace de restablecimiento de contraseña por correo electrónico.",
+  "passwords.throttled": "Por favor, espere antes de intentar de nuevo.",
+  "passwords.token": "Este token de restablecimiento de contraseña no es válido.",
+  "passwords.user": "No podemos encontrar un usuario con esa dirección de correo electrónico."
 }
