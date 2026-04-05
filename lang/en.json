@@ -171,5 +171,7 @@
   "passwords.sent": "We have emailed your password reset link.",
   "passwords.throttled": "Please wait before retrying.",
   "passwords.token": "This password reset token is invalid.",
-  "passwords.user": "We can't find a user with that email address."
+  "passwords.user": "We can't find a user with that email address.",
+  "Password changed successfully": "Password changed successfully",
+  "A new verification link has been sent to your email address.": "A new verification link has been sent to your email address."
 }

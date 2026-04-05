@@ -171,5 +171,7 @@
   "passwords.sent": "Enviamos o link de redefinição de senha por e-mail.",
   "passwords.throttled": "Por favor, aguarde antes de tentar novamente.",
   "passwords.token": "Este token de redefinição de senha é inválido.",
-  "passwords.user": "Não conseguimos encontrar um usuário com esse endereço de e-mail."
+  "passwords.user": "Não conseguimos encontrar um usuário com esse endereço de e-mail.",
+  "Password changed successfully": "Senha alterada com sucesso!",
+  "A new verification link has been sent to your email address.": "Um novo link de verificação foi enviado para seu endereço de e-mail."
 }

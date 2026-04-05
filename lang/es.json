@@ -171,5 +171,7 @@
   "passwords.sent": "Hemos enviado el enlace de restablecimiento de contraseña por correo electrónico.",
   "passwords.throttled": "Por favor, espere antes de intentar de nuevo.",
   "passwords.token": "Este token de restablecimiento de contraseña no es válido.",
-  "passwords.user": "No podemos encontrar un usuario con esa dirección de correo electrónico."
+  "passwords.user": "No podemos encontrar un usuario con esa dirección de correo electrónico.",
+  "Password changed successfully": "¡Contraseña cambiada con éxito!",
+  "A new verification link has been sent to your email address.": "Se ha enviado un nuevo enlace de verificación a su dirección de correo."
 }

@@ -58,6 +58,6 @@ class PasswordController extends Controller
             'password_changed_at' => now(),
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Senha alterada com sucesso!');
+        return redirect()->route('dashboard')->with('success', __('Password changed successfully'));
     }
 }
