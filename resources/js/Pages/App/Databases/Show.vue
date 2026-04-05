@@ -367,14 +367,14 @@ const credentials = computed(() => props.database.credentials || []);
                                 <Calendar class="h-4 w-4" />
                                 {{ __('Created at') }}
                             </span>
-                            <span class="text-sm">{{ new Date(database.created_at).toLocaleString('pt-BR') }}</span>
+                            <span class="text-sm">{{ new Date(database.created_at).toLocaleString(page.props.locale || 'pt-BR') }}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-muted-foreground flex items-center gap-2">
                                 <Calendar class="h-4 w-4" />
                                 {{ __('Updated at') }}
                             </span>
-                            <span class="text-sm">{{ new Date(database.updated_at).toLocaleString('pt-BR') }}</span>
+                            <span class="text-sm">{{ new Date(database.updated_at).toLocaleString(page.props.locale || 'pt-BR') }}</span>
                         </div>
                     </CardContent>
                 </Card>
