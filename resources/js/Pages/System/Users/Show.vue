@@ -224,7 +224,7 @@ const updateRole = (): void => {
         { role_id: selectedRoleId.value === 'none' ? null : selectedRoleId.value },
         {
             onSuccess: () => {
-                toast.success('Role atualizada com sucesso');
+                toast.success(__('Role updated successfully'));
                 // Reload page to get updated props
                 router.visit(route('system.users.show', props.user.id), {
                     only: ['user'],
@@ -233,7 +233,7 @@ const updateRole = (): void => {
                 });
             },
             onError: () => {
-                toast.error('Erro ao atualizar role. Tente novamente.');
+                toast.error(__('Error updating role. Please try again.'));
             },
         }
     );
@@ -250,7 +250,7 @@ const syncPermissions = (): void => {
         },
         {
             onSuccess: () => {
-                toast.success('Permissões sincronizadas com sucesso');
+                toast.success(__('Permissions synced successfully'));
                 // Reload page to get updated props
                 router.visit(route('system.users.show', props.user.id), {
                     only: ['user'],
@@ -259,7 +259,7 @@ const syncPermissions = (): void => {
                 });
             },
             onError: () => {
-                toast.error('Erro ao sincronizar permissões. Tente novamente.');
+                toast.error(__('Error syncing permissions. Please try again.'));
             },
             onFinish: () => {
                 isSavingPermissions.value = false;
@@ -279,13 +279,13 @@ const formatDate = (date: string): string => {
 };
 
 const tabs = [
-    { value: 'info', label: 'Informações', icon: 'User' },
-    { value: 'roles', label: 'Roles e Permissões', icon: 'Shield' },
+    { value: 'info', label: __('Information'), icon: 'User' },
+    { value: 'roles', label: __('Roles and Permissions'), icon: 'Shield' },
 ];
 </script>
 
 <template>
-    <Head :title="`Perfil: ${user.name}`" />
+    <Head :title="__('Profile: :name', { name: user.name })" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
@@ -314,37 +314,37 @@ const tabs = [
                         <!-- Informações Básicas -->
                         <Card>
                             <CardHeader>
-                                <CardTitle>Informações</CardTitle>
+                                <CardTitle>{{ __('Basic Information') }}</CardTitle>
                             </CardHeader>
                             <CardContent class="space-y-4">
                                 <div class="flex justify-between">
-                                    <span class="text-muted-foreground">Email</span>
+                                    <span class="text-muted-foreground">{{ __('Email') }}</span>
                                     <span>{{ user.email }}</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-muted-foreground">Status</span>
+                                    <span class="text-muted-foreground">{{ __('Status') }}</span>
                                     <Badge :variant="user.active ? 'default' : 'outline'">
-                                        {{ user.active ? 'Ativo' : 'Inativo' }}
+                                        {{ user.active ? __('Active') : __('Inactive') }}
                                     </Badge>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-muted-foreground">Tipo</span>
+                                    <span class="text-muted-foreground">{{ __('Type') }}</span>
                                     <Badge v-if="user.is_admin" variant="default" class="bg-primary">
-                                        Admin
+                                        {{ __('Admin') }}
                                     </Badge>
-                                    <span v-else class="text-muted-foreground">Usuário</span>
+                                    <span v-else class="text-muted-foreground">{{ __('User') }}</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-muted-foreground">Criado em</span>
+                                    <span class="text-muted-foreground">{{ __('Created at') }}</span>
                                     <span>{{ formatDate(user.created_at) }}</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-muted-foreground">Senha trocada</span>
+                                    <span class="text-muted-foreground">{{ __('Password changed') }}</span>
                                     <span v-if="user.password_changed_at">
                                         {{ formatDate(user.password_changed_at) }}
                                     </span>
                                     <Badge v-else variant="outline" class="text-yellow-500">
-                                        Pendente
+                                        {{ __('Pending') }}
                                     </Badge>
                                 </div>
                             </CardContent>
@@ -353,8 +353,8 @@ const tabs = [
                         <!-- Features -->
                         <Card>
                             <CardHeader>
-                                <CardTitle>Features Visíveis</CardTitle>
-                                <CardDescription>Features ativas para este usuário</CardDescription>
+                                <CardTitle>{{ __('Visible Features') }}</CardTitle>
+                                <CardDescription>{{ __('Features active for this user') }}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div v-if="userFeatures.length > 0" class="flex flex-wrap gap-2">
@@ -367,7 +367,7 @@ const tabs = [
                                     </Badge>
                                 </div>
                                 <p v-else class="text-muted-foreground text-sm">
-                                    Nenhuma feature ativa
+                                    {{ __('No active features') }}
                                 </p>
                             </CardContent>
                         </Card>
@@ -375,8 +375,8 @@ const tabs = [
                         <!-- Credentials -->
                         <Card>
                             <CardHeader>
-                                <CardTitle>Credentials</CardTitle>
-                                <CardDescription>Credenciais de acesso à API</CardDescription>
+                                <CardTitle>{{ __('Credentials') }}</CardTitle>
+                                <CardDescription>{{ __('API access credentials') }}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div v-if="userCredentials.length > 0" class="space-y-2">
@@ -392,7 +392,7 @@ const tabs = [
                                     </div>
                                 </div>
                                 <p v-else class="text-muted-foreground text-sm">
-                                    Nenhuma credential
+                                    {{ __('No credentials') }}
                                 </p>
                             </CardContent>
                         </Card>
@@ -400,8 +400,8 @@ const tabs = [
                         <!-- Databases -->
                         <Card class="md:col-span-2">
                             <CardHeader>
-                                <CardTitle>Databases</CardTitle>
-                                <CardDescription>Bancos de dados acessíveis via credentials</CardDescription>
+                                <CardTitle>{{ __('Databases') }}</CardTitle>
+                                <CardDescription>{{ __('Databases accessible via credentials') }}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div v-if="userDatabases.length > 0" class="grid gap-2">
@@ -413,7 +413,7 @@ const tabs = [
                                         <div>
                                             <span class="font-medium">{{ database.name }}</span>
                                             <span class="text-muted-foreground text-sm ml-2">
-                                                via {{ database.credential }}
+                                                {{ __('via') }} {{ database.credential }}
                                             </span>
                                         </div>
                                         <Badge variant="secondary">
@@ -422,7 +422,7 @@ const tabs = [
                                     </div>
                                 </div>
                                 <p v-else class="text-muted-foreground text-sm">
-                                    Nenhum database acessível
+                                    {{ __('No accessible databases') }}
                                 </p>
                             </CardContent>
                         </Card>
@@ -437,19 +437,19 @@ const tabs = [
                             <CardHeader>
                                 <CardTitle class="flex items-center gap-2">
                                     <Shield class="w-5 h-5" />
-                                    Role do Usuário
+                                    {{ __("User's Role") }}
                                 </CardTitle>
-                                <CardDescription>Cada usuário pode ter apenas uma role</CardDescription>
+                                <CardDescription>{{ __('Each user can only have one role') }}</CardDescription>
                             </CardHeader>
                             <CardContent class="space-y-4">
                                 <div class="flex gap-2">
                                     <Select v-model="selectedRoleId">
                                         <SelectTrigger class="flex-1">
-                                            <SelectValue placeholder="Selecione uma role" />
+                                            <SelectValue :placeholder="__('Select a role')" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="none">
-                                                <span class="text-muted-foreground">Nenhuma role</span>
+                                                <span class="text-muted-foreground">{{ __('No role assigned') }}</span>
                                             </SelectItem>
                                             <SelectItem
                                                 v-for="role in allRoles ?? []"
@@ -465,16 +465,16 @@ const tabs = [
                                         @click="updateRole"
                                     >
                                         <ShieldCheck class="w-4 h-4 mr-2" />
-                                        Salvar
+                                        {{ __('Save') }}
                                     </Button>
                                 </div>
                                 <div v-if="userRoles.length > 0">
                                     <Badge variant="secondary">
-                                        Role atual: {{ userRoles[0].name }}
+                                        {{ __('Current role: :name', { name: userRoles[0].name }) }}
                                     </Badge>
                                 </div>
                                 <p v-else class="text-muted-foreground text-sm">
-                                    Nenhuma role atribuída
+                                    {{ __('No role assigned') }}
                                 </p>
                             </CardContent>
                         </Card>
@@ -484,12 +484,12 @@ const tabs = [
                             <CardHeader>
                                 <CardTitle class="flex items-center gap-2">
                                     <Key class="w-5 h-5" />
-                                    Permissões do Sistema
+                                    {{ __('System Permissions') }}
                                 </CardTitle>
                                 <CardDescription class="space-y-1">
-                                    <p>Marque permissões extras para este usuário (além da role).</p>
+                                    <p>{{ __('Mark extra permissions for this user (besides the role).') }}</p>
                                     <p class="text-xs text-muted-foreground">
-                                        Permissões herdadas da role estão desabilitadas.
+                                        {{ __('Permissions inherited from the role are disabled.') }}
                                     </p>
                                 </CardDescription>
                             </CardHeader>
@@ -526,28 +526,28 @@ const tabs = [
                                                     variant="outline"
                                                     class="text-xs bg-red-500 text-white border-red-500"
                                                 >
-                                                    Negada
+                                                    {{ __('Denied') }}
                                                 </Badge>
                                                 <Badge
                                                     v-else-if="rolePermissionIds.includes(perm.id)"
                                                     variant="outline"
                                                     class="text-xs bg-blue-500 text-white border-blue-500"
                                                 >
-                                                    Role
+                                                    {{ __('Role') }}
                                                 </Badge>
                                                 <Badge
                                                     v-else-if="directPermissionIds.includes(perm.id)"
                                                     variant="default"
                                                     class="bg-green-600 text-white text-xs"
                                                 >
-                                                    Extra
+                                                    {{ __('Extra') }}
                                                 </Badge>
                                             </label>
                                         </div>
                                     </div>
                                 </div>
                                 <p v-else class="text-muted-foreground text-sm">
-                                    Nenhuma permissão disponível no sistema
+                                    {{ __('No permissions available in the system') }}
                                 </p>
 
                                 <!-- Save button for direct permissions -->
@@ -557,7 +557,7 @@ const tabs = [
                                         :disabled="isSavingPermissions"
                                     >
                                         <Loader2 v-if="isSavingPermissions" class="w-4 h-4 mr-2 animate-spin" />
-                                        Salvar Permissões Extras
+                                        {{ __('Save Extra Permissions') }}
                                     </Button>
                                 </div>
                             </CardContent>
