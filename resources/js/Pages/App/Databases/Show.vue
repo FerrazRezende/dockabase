@@ -93,12 +93,12 @@ onMounted(() => {
             status.value = 'ready';
             currentStep.value = 'ready';
             progress.value = 100;
-            toast.success('Database criado com sucesso!');
+            toast.success(__('Database created successfully!'));
         },
         onDatabaseFailed: (data) => {
             status.value = 'failed';
             errorMessage.value = data.error;
-            toast.error('Erro na criação do database');
+            toast.error(__('Error creating database'));
         },
     });
 });
@@ -110,13 +110,13 @@ onUnmounted(() => {
 const getStatusBadge = () => {
     switch (status.value) {
         case 'pending':
-            return { variant: 'outline', class: 'bg-yellow-500/10 text-yellow-500', label: 'Pendente' };
+            return { variant: 'outline', class: 'bg-yellow-500/10 text-yellow-500', label: __('Pending') };
         case 'processing':
-            return { variant: 'outline', class: 'bg-blue-500/10 text-blue-500', label: 'Processando' };
+            return { variant: 'outline', class: 'bg-blue-500/10 text-blue-500', label: __('Processing') };
         case 'ready':
-            return { variant: 'default', class: 'bg-green-500/10 text-green-500', label: 'Pronto' };
+            return { variant: 'default', class: 'bg-green-500/10 text-green-500', label: __('Ready') };
         case 'failed':
-            return { variant: 'destructive', class: '', label: 'Falhou' };
+            return { variant: 'destructive', class: '', label: __('Failed') };
         default:
             return { variant: 'outline', class: '', label: status.value };
     }
@@ -139,10 +139,10 @@ const attachCredential = async () => {
             onSuccess: () => {
                 addCredentialDialogOpen.value = false;
                 selectedCredentialId.value = '';
-                toast.success('Credencial adicionada com sucesso!');
+                toast.success(__('Credential added successfully!'));
             },
             onError: () => {
-                toast.error('Erro ao adicionar credencial');
+                toast.error(__('Error adding credential'));
             },
             onFinish: () => {
                 attaching.value = false;
@@ -167,10 +167,10 @@ const confirmDetachCredential = () => {
             onSuccess: () => {
                 deleteDialogOpen.value = false;
                 credentialToDelete.value = null;
-                toast.success('Credencial removida com sucesso!');
+                toast.success(__('Credential removed successfully!'));
             },
             onError: () => {
-                toast.error('Erro ao remover credencial');
+                toast.error(__('Error removing credential'));
             },
             onFinish: () => {
                 detaching.value = null;
@@ -189,7 +189,7 @@ const credentials = computed(() => props.database.credentials || []);
 </script>
 
 <template>
-    <Head :title="`Database: ${database.name}`" />
+    <Head :title="__('Database: :name', { name: database.name })" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
@@ -205,7 +205,7 @@ const credentials = computed(() => props.database.credentials || []);
                         {{ database.display_name || database.name }}
                     </h2>
                     <p class="text-sm text-muted-foreground mt-1">
-                        Detalhes do database
+                        {{ __('Database details') }}
                     </p>
                 </div>
             </div>
@@ -217,10 +217,10 @@ const credentials = computed(() => props.database.credentials || []);
                 <CardHeader>
                     <CardTitle class="flex items-center gap-2">
                         <Loader2 v-if="status === 'processing'" class="h-5 w-5 animate-spin text-primary" />
-                        Criação do Database
+                        {{ __('Database Creation') }}
                     </CardTitle>
                     <CardDescription>
-                        Acompanhe o progresso da criação
+                        {{ __('Monitor the creation progress') }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -235,7 +235,7 @@ const credentials = computed(() => props.database.credentials || []);
             <!-- Error Alert -->
             <Alert v-if="status === 'failed'" variant="destructive">
                 <AlertCircle class="h-4 w-4" />
-                <AlertTitle>Erro na criação</AlertTitle>
+                <AlertTitle>{{ __('Creation error') }}</AlertTitle>
                 <AlertDescription>
                     {{ errorMessage }}
                 </AlertDescription>
@@ -244,29 +244,29 @@ const credentials = computed(() => props.database.credentials || []);
             <!-- Success Alert -->
             <Alert v-if="status === 'ready'" class="border-green-500/50 bg-green-500/10">
                 <CheckCircle2 class="h-4 w-4 text-green-500" />
-                <AlertTitle class="text-green-500">Database pronto</AlertTitle>
+                <AlertTitle class="text-green-500">{{ __('Database ready') }}</AlertTitle>
                 <AlertDescription>
-                    O database está criado e disponível para uso.
+                    {{ __('The database is created and available for use.') }}
                 </AlertDescription>
             </Alert>
 
             <div class="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Informações</CardTitle>
-                        <CardDescription>Detalhes do database</CardDescription>
+                        <CardTitle>{{ __('Information') }}</CardTitle>
+                        <CardDescription>{{ __('Database details') }}</CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">
                         <div class="flex justify-between">
-                            <span class="text-muted-foreground">Nome</span>
+                            <span class="text-muted-foreground">{{ __('Name') }}</span>
                             <span class="font-medium">{{ database.name }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-muted-foreground">Database Name</span>
+                            <span class="text-muted-foreground">{{ __('Database Name') }}</span>
                             <span class="font-medium font-mono text-sm">{{ database.database_name }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-muted-foreground">Status</span>
+                            <span class="text-muted-foreground">{{ __('Status') }}</span>
                             <Badge
                                 :variant="getStatusBadge().variant"
                                 :class="getStatusBadge().class"
@@ -275,7 +275,7 @@ const credentials = computed(() => props.database.credentials || []);
                             </Badge>
                         </div>
                         <div v-if="database.description" class="pt-2 border-t">
-                            <span class="text-muted-foreground text-sm">Descrição</span>
+                            <span class="text-muted-foreground text-sm">{{ __('Description') }}</span>
                             <p class="mt-1">{{ database.description }}</p>
                         </div>
                     </CardContent>
@@ -283,19 +283,19 @@ const credentials = computed(() => props.database.credentials || []);
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Conexão</CardTitle>
-                        <CardDescription>Configurações de conexão</CardDescription>
+                        <CardTitle>{{ __('Connection') }}</CardTitle>
+                        <CardDescription>{{ __('Connection settings') }}</CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">
                         <div class="flex justify-between items-center">
                             <span class="text-muted-foreground flex items-center gap-2">
                                 <Server class="h-4 w-4" />
-                                Host
+                                {{ __('Host') }}
                             </span>
                             <span class="font-medium font-mono text-sm">{{ database.host }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-muted-foreground">Port</span>
+                            <span class="text-muted-foreground">{{ __('Port') }}</span>
                             <span class="font-medium">{{ database.port }}</span>
                         </div>
                     </CardContent>
@@ -308,13 +308,13 @@ const credentials = computed(() => props.database.credentials || []);
                             <div>
                                 <CardTitle class="flex items-center gap-2">
                                     <Key class="h-5 w-5" />
-                                    Credenciais
+                                    {{ __('Credentials') }}
                                 </CardTitle>
-                                <CardDescription>Credenciais com acesso a este database</CardDescription>
+                                <CardDescription>{{ __('Credentials with access to this database') }}</CardDescription>
                             </div>
                             <Button size="sm" @click="openAddCredentialDialog" :disabled="availableCredentials.length === 0">
                                 <Plus class="h-4 w-4 mr-2" />
-                                Adicionar
+                                {{ __('Add') }}
                             </Button>
                         </div>
                     </CardHeader>
@@ -330,7 +330,7 @@ const credentials = computed(() => props.database.credentials || []);
                                     <div>
                                         <p class="font-medium">{{ credential.name }}</p>
                                         <p class="text-xs text-muted-foreground">
-                                            {{ credential.users?.length || 0 }} usuário(s)
+                                            {{ __(':count user(s)', { count: credential.users?.length || 0 }) }}
                                         </p>
                                     </div>
                                 </div>
@@ -351,28 +351,28 @@ const credentials = computed(() => props.database.credentials || []);
                             </div>
                         </div>
                         <p v-else class="text-muted-foreground text-center py-4">
-                            Nenhuma credencial vinculada
+                            {{ __('No credentials linked') }}
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle>Metadados</CardTitle>
-                        <CardDescription>Informações de criação</CardDescription>
+                        <CardTitle>{{ __('Metadata') }}</CardTitle>
+                        <CardDescription>{{ __('Creation information') }}</CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">
                         <div class="flex justify-between items-center">
                             <span class="text-muted-foreground flex items-center gap-2">
                                 <Calendar class="h-4 w-4" />
-                                Criado em
+                                {{ __('Created at') }}
                             </span>
                             <span class="text-sm">{{ new Date(database.created_at).toLocaleString('pt-BR') }}</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-muted-foreground flex items-center gap-2">
                                 <Calendar class="h-4 w-4" />
-                                Atualizado em
+                                {{ __('Updated at') }}
                             </span>
                             <span class="text-sm">{{ new Date(database.updated_at).toLocaleString('pt-BR') }}</span>
                         </div>
@@ -385,15 +385,15 @@ const credentials = computed(() => props.database.credentials || []);
         <Dialog v-model:open="addCredentialDialogOpen">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Adicionar Credencial</DialogTitle>
+                    <DialogTitle>{{ __('Add Credential') }}</DialogTitle>
                     <DialogDescription>
-                        Selecione uma credencial para adicionar a este database.
+                        {{ __('Select a credential to add to this database.') }}
                     </DialogDescription>
                 </DialogHeader>
                 <div class="py-4">
                     <Select v-model="selectedCredentialId">
                         <SelectTrigger>
-                            <SelectValue placeholder="Selecione uma credencial" />
+                            <SelectValue :placeholder="__('Select a credential')" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem
@@ -406,16 +406,16 @@ const credentials = computed(() => props.database.credentials || []);
                         </SelectContent>
                     </Select>
                     <p v-if="availableCredentials.length === 0" class="text-sm text-muted-foreground mt-2">
-                        Todas as credenciais já estão vinculadas ou não há credenciais disponíveis.
+                        {{ __('All credentials are already linked or no credentials available.') }}
                     </p>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" @click="addCredentialDialogOpen = false">
-                        Cancelar
+                        {{ __('Cancel') }}
                     </Button>
                     <Button @click="attachCredential" :disabled="!selectedCredentialId || attaching">
-                        <span v-if="attaching">Adicionando...</span>
-                        <span v-else>Adicionar</span>
+                        <span v-if="attaching">{{ __('Adding...') }}</span>
+                        <span v-else>{{ __('Add') }}</span>
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -424,9 +424,9 @@ const credentials = computed(() => props.database.credentials || []);
         <!-- Detach Credential Dialog -->
         <ConfirmDialog
             v-model:open="deleteDialogOpen"
-            title="Remover Credencial"
-            :description="`Tem certeza que deseja remover a credencial '${credentialToDelete?.name}' deste database?`"
-            confirm-text="Remover"
+            :title="__('Remove Credential')"
+            :description="__('Are you sure you want to remove the credential \':name\' from this database?', { name: credentialToDelete?.name })"
+            :confirm-text="__('Remove')"
             :loading="detaching === credentialToDelete?.id"
             variant="danger"
             @confirm="confirmDetachCredential"
