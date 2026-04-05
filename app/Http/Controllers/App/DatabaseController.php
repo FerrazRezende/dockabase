@@ -75,7 +75,7 @@ class DatabaseController extends Controller
         }
 
         return to_route('app.databases.show', $database)
-            ->with('message', 'Solicitação para criar database enviada com sucesso!')
+            ->with('message', __('Database creation request sent successfully!'))
             ->with('messageType', 'warning');
     }
 

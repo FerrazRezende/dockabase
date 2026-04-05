@@ -19,8 +19,8 @@ class DatabaseCreatedNotification
         return Notification::create([
             'user_id' => $user->id,
             'type' => 'database_created',
-            'title' => 'Database criado com sucesso',
-            'message' => "O database {$this->database->name} foi criado e está pronto para uso.",
+            'title' => __('Database created successfully'),
+            'message' => __('The database :name was created and is ready for use.', ['name' => $this->database->name]),
             'data' => [
                 'database_id' => $this->database->id,
                 'database_name' => $this->database->name,

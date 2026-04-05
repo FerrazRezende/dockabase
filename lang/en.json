@@ -268,5 +268,16 @@
   "No permissions available in the system": "No permissions available in the system",
   "Save Extra Permissions": "Save Extra Permissions",
   "Error updating role. Please try again.": "Error updating role. Please try again.",
-  "Error syncing permissions. Please try again.": "Error syncing permissions. Please try again."
+  "Error syncing permissions. Please try again.": "Error syncing permissions. Please try again.",
+  "Database creation request sent successfully!": "Database creation request sent successfully!",
+  "The database :name was created and is ready for use.": "The database :name was created and is ready for use.",
+  "Validating": "Validating",
+  "Creating": "Creating",
+  "Configuring": "Configuring",
+  "Migrating": "Migrating",
+  "Permissions": "Permissions",
+  "Testing": "Testing",
+  "Ready": "Ready",
+  "The name must start with a lowercase letter and contain only lowercase letters, numbers, underscores, and hyphens.": "The name must start with a lowercase letter and contain only lowercase letters, numbers, underscores, and hyphens.",
+  "Each credential ID must be a valid KSUID (27 characters).": "Each credential ID must be a valid KSUID (27 characters)."
 }

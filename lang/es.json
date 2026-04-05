@@ -268,5 +268,16 @@
   "No permissions available in the system": "Sin permisos disponibles en el sistema",
   "Save Extra Permissions": "Guardar Permisos Extra",
   "Error updating role. Please try again.": "Error al actualizar rol. Intente nuevamente.",
-  "Error syncing permissions. Please try again.": "Error al sincronizar permisos. Intente nuevamente."
+  "Error syncing permissions. Please try again.": "Error al sincronizar permisos. Intente nuevamente.",
+  "Database creation request sent successfully!": "¡Solicitud de creación de base de datos enviada con éxito!",
+  "The database :name was created and is ready for use.": "La base de datos :name fue creada y está lista para usar.",
+  "Validating": "Validando",
+  "Creating": "Creando",
+  "Configuring": "Configurando",
+  "Migrating": "Migraciones",
+  "Permissions": "Permisos",
+  "Testing": "Probando",
+  "Ready": "Listo",
+  "The name must start with a lowercase letter and contain only lowercase letters, numbers, underscores, and hyphens.": "El nombre debe comenzar con una letra minúscula y contener solo letras minúsculas, números, guiones bajos y guiones.",
+  "Each credential ID must be a valid KSUID (27 characters).": "Cada ID de credencial debe ser un KSUID válido (27 caracteres)."
 }
