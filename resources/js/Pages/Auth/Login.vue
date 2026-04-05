@@ -29,7 +29,7 @@ const { isDark, toggleDark } = useDarkMode();
 </script>
 
 <template>
-    <Head title="Entrar" />
+    <Head :title="__('Sign in')" />
 
     <div class="min-h-screen flex flex-col bg-background">
         <!-- Header -->
@@ -55,9 +55,9 @@ const { isDark, toggleDark } = useDarkMode();
         <main class="flex-1 flex items-center justify-center px-4 pt-24">
             <Card class="w-full max-w-md">
                 <CardHeader class="text-center">
-                    <CardTitle class="text-2xl">Entrar</CardTitle>
+                    <CardTitle class="text-2xl">{{ __('Sign in to your account') }}</CardTitle>
                     <CardDescription>
-                        Digite suas credenciais para acessar
+                        {{ __('Enter your credentials to access') }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -67,7 +67,7 @@ const { isDark, toggleDark } = useDarkMode();
 
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="space-y-2">
-                            <Label for="email">Email</Label>
+                            <Label for="email">{{ __('Email') }}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -75,7 +75,7 @@ const { isDark, toggleDark } = useDarkMode();
                                 required
                                 autofocus
                                 autocomplete="email"
-                                placeholder="admin@dockabase.com"
+                                :placeholder="__('Enter your email')"
                             />
                             <p v-if="form.errors.email" class="text-sm text-destructive">
                                 {{ form.errors.email }}
@@ -83,7 +83,7 @@ const { isDark, toggleDark } = useDarkMode();
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="password">Senha</Label>
+                            <Label for="password">{{ __('Password') }}</Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -104,7 +104,7 @@ const { isDark, toggleDark } = useDarkMode();
                                     v-model="form.remember"
                                     class="rounded border-input"
                                 />
-                                Lembrar de mim
+                                {{ __('Remember me') }}
                             </label>
 
                             <Link
@@ -112,7 +112,7 @@ const { isDark, toggleDark } = useDarkMode();
                                 :href="route('password.request')"
                                 class="text-sm text-primary hover:underline"
                             >
-                                Esqueceu a senha?
+                                {{ __('Forgot your password?') }}
                             </Link>
                         </div>
 
@@ -121,8 +121,8 @@ const { isDark, toggleDark } = useDarkMode();
                             class="w-full"
                             :disabled="form.processing"
                         >
-                            <span v-if="form.processing">Entrando...</span>
-                            <span v-else>Entrar</span>
+                            <span v-if="form.processing">{{ __('Signing in...') }}</span>
+                            <span v-else>{{ __('Sign in') }}</span>
                         </Button>
                     </form>
                 </CardContent>
