@@ -437,5 +437,18 @@
   "No history available": "No history available",
   "Strategy:": "Strategy:",
   "Name": "Name",
-  "Email": "Email"
+  "Email": "Email",
+  "Manage system roles and permissions": "Manage system roles and permissions",
+  "Search roles...": "Search roles...",
+  "New Role": "New Role",
+  "No permissions": "No permissions",
+  "No role found": "No role found",
+  "Available Permissions": "Available Permissions",
+  "These permissions are predefined and cannot be modified.": "These permissions are predefined and cannot be modified.",
+  "No permission available": "No permission available",
+  "Delete Role": "Delete Role",
+  "Are you sure you want to delete the role \":name\"?": "Are you sure you want to delete the role \":name\"?",
+  "This action cannot be undone.": "This action cannot be undone.",
+  "Role deleted successfully": "Role deleted successfully",
+  "Error deleting role. Please try again.": "Error deleting role. Please try again."
 }

@@ -437,5 +437,18 @@
   "No history available": "Sin historial disponible",
   "Strategy:": "Estrategia:",
   "Name": "Nombre",
-  "Email": "Correo electrónico"
+  "Email": "Correo electrónico",
+  "Manage system roles and permissions": "Gestionar roles y permisos del sistema",
+  "Search roles...": "Buscar roles...",
+  "New Role": "Nuevo Rol",
+  "No permissions": "Sin permisos",
+  "No role found": "Ningún rol encontrado",
+  "Available Permissions": "Permisos Disponibles",
+  "These permissions are predefined and cannot be modified.": "Estos permisos están predefinidos y no pueden ser modificados.",
+  "No permission available": "Sin permisos disponibles",
+  "Delete Role": "Eliminar Rol",
+  "Are you sure you want to delete the role \":name\"?": "¿Está seguro de que desea eliminar el rol \":name\"?",
+  "This action cannot be undone.": "Esta acción no se puede deshacer.",
+  "Role deleted successfully": "Rol eliminado con éxito",
+  "Error deleting role. Please try again.": "Error al eliminar rol. Intente nuevamente."
 }
