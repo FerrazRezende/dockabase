@@ -75,7 +75,7 @@ const fetchAvailableUsers = async () => {
         const attachedIds = props.credential.users?.map(u => u.id) || [];
         availableUsers.value = (data.data || []).filter((u: User) => !attachedIds.includes(u.id));
     } catch (error) {
-        toast.error('Erro ao carregar usuários');
+        toast.error(__('Error loading users'));
     } finally {
         loadingUsers.value = false;
     }
@@ -94,22 +94,22 @@ const attachUser = async () => {
                 onSuccess: () => {
                     isAddUserDialogOpen.value = false;
                     selectedUserId.value = '';
-                    toast.success('Usuário adicionado com sucesso!');
+                    toast.success(__('User added successfully!'));
                 },
                 onError: (errors) => {
-                    toast.error('Erro ao adicionar usuário');
+                    toast.error(__('Error adding user'));
                 },
             }
         );
     } catch (error) {
-        toast.error('Erro ao adicionar usuário');
+        toast.error(__('Error adding user'));
     } finally {
         attaching.value = false;
     }
 };
 
 const detachUser = async (userId: number) => {
-    if (!confirm('Remover este usuário da credencial?')) return;
+    if (!confirm(__('Remove this user from the credential?'))) return;
 
     detaching.value = userId;
     try {
@@ -118,15 +118,15 @@ const detachUser = async (userId: number) => {
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    toast.success('Usuário removido com sucesso!');
+                    toast.success(__('User removed successfully!'));
                 },
                 onError: () => {
-                    toast.error('Erro ao remover usuário');
+                    toast.error(__('Error removing user'));
                 },
             }
         );
     } catch (error) {
-        toast.error('Erro ao remover usuário');
+        toast.error(__('Error removing user'));
     } finally {
         detaching.value = null;
     }
@@ -139,7 +139,7 @@ const openAddUserDialog = () => {
 </script>
 
 <template>
-    <Head :title="`Credencial: ${credential.name}`" />
+    <Head :title="__('Credential: :name', { name: credential.name })" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
@@ -155,7 +155,7 @@ const openAddUserDialog = () => {
                         {{ credential.name }}
                     </h2>
                     <p class="text-sm text-muted-foreground mt-1">
-                        Detalhes da credencial
+                        {{ __('Credential details') }}
                     </p>
                 </div>
             </div>
@@ -164,18 +164,18 @@ const openAddUserDialog = () => {
         <div class="grid gap-6 md:grid-cols-2">
             <Card>
                 <CardHeader>
-                    <CardTitle>Informações</CardTitle>
-                    <CardDescription>Detalhes da credencial</CardDescription>
+                    <CardTitle>{{ __('Information') }}</CardTitle>
+                    <CardDescription>{{ __('Credential details') }}</CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <div class="flex justify-between">
-                        <span class="text-muted-foreground">Nome</span>
+                        <span class="text-muted-foreground">{{ __('Name') }}</span>
                         <span class="font-medium">{{ credential.name }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-muted-foreground flex items-center gap-2">
                             <Shield class="h-4 w-4" />
-                            Permissão
+                            {{ __('Permission') }}
                         </span>
                         <Badge
                             :variant="getPermissionBadgeVariant(credential.permission)"
@@ -185,7 +185,7 @@ const openAddUserDialog = () => {
                         </Badge>
                     </div>
                     <div v-if="credential.description" class="pt-2 border-t">
-                        <span class="text-muted-foreground text-sm">Descrição</span>
+                        <span class="text-muted-foreground text-sm">{{ __('Description') }}</span>
                         <p class="mt-1">{{ credential.description }}</p>
                     </div>
                 </CardContent>
@@ -193,21 +193,21 @@ const openAddUserDialog = () => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Estatísticas</CardTitle>
-                    <CardDescription>Resumo de uso</CardDescription>
+                    <CardTitle>{{ __('Statistics') }}</CardTitle>
+                    <CardDescription>{{ __('Usage summary') }}</CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <div class="flex justify-between items-center">
                         <span class="text-muted-foreground flex items-center gap-2">
                             <Users class="h-4 w-4" />
-                            Usuários
+                            {{ __('Users') }}
                         </span>
                         <Badge variant="secondary">{{ credential.users_count ?? credential.users?.length ?? 0 }}</Badge>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-muted-foreground flex items-center gap-2">
                             <Database class="h-4 w-4" />
-                            Databases
+                            {{ __('Databases') }}
                         </span>
                         <Badge variant="secondary">{{ credential.databases_count ?? credential.databases?.length ?? 0 }}</Badge>
                     </div>
@@ -218,27 +218,27 @@ const openAddUserDialog = () => {
                 <CardHeader>
                     <div class="flex items-center justify-between">
                         <div>
-                            <CardTitle>Usuários</CardTitle>
-                            <CardDescription>Usuários com esta credencial</CardDescription>
+                            <CardTitle>{{ __('Users') }}</CardTitle>
+                            <CardDescription>{{ __('Users with this credential') }}</CardDescription>
                         </div>
                         <Dialog v-model:open="isAddUserDialogOpen">
                             <DialogTrigger as-child>
                                 <Button size="sm" @click="openAddUserDialog">
                                     <UserPlus class="h-4 w-4 mr-2" />
-                                    Adicionar Usuário
+                                    {{ __('Add User') }}
                                 </Button>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Adicionar Usuário</DialogTitle>
+                                    <DialogTitle>{{ __('Add User') }}</DialogTitle>
                                     <DialogDescription>
-                                        Selecione um usuário para adicionar a esta credencial.
+                                        {{ __('Select a user to add to this credential.') }}
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div class="py-4">
                                     <Select v-model="selectedUserId">
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Selecione um usuário" />
+                                            <SelectValue :placeholder="__('Select a user')" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem
@@ -251,19 +251,19 @@ const openAddUserDialog = () => {
                                         </SelectContent>
                                     </Select>
                                     <p v-if="availableUsers.length === 0 && !loadingUsers" class="text-sm text-muted-foreground mt-2">
-                                        Todos os usuários já estão vinculados ou não há usuários disponíveis.
+                                        {{ __('All users are already linked or no users available.') }}
                                     </p>
                                 </div>
                                 <DialogFooter>
                                     <Button variant="outline" @click="isAddUserDialogOpen = false">
-                                        Cancelar
+                                        {{ __('Cancel') }}
                                     </Button>
                                     <Button
                                         @click="attachUser"
                                         :disabled="!selectedUserId || attaching"
                                     >
-                                        <span v-if="attaching">Adicionando...</span>
-                                        <span v-else>Adicionar</span>
+                                        <span v-if="attaching">{{ __('Adding...') }}</span>
+                                        <span v-else>{{ __('Add') }}</span>
                                     </Button>
                                 </DialogFooter>
                             </DialogContent>
@@ -274,8 +274,8 @@ const openAddUserDialog = () => {
                     <Table v-if="credential.users && credential.users.length > 0">
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Email</TableHead>
+                                <TableHead>{{ __('Name') }}</TableHead>
+                                <TableHead>{{ __('Email') }}</TableHead>
                                 <TableHead class="w-[80px]"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -303,28 +303,28 @@ const openAddUserDialog = () => {
                         </TableBody>
                     </Table>
                     <p v-else class="text-muted-foreground text-center py-4">
-                        Nenhum usuário vinculado
+                        {{ __('No user linked') }}
                     </p>
                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Metadados</CardTitle>
-                    <CardDescription>Informações de criação</CardDescription>
+                    <CardTitle>{{ __('Metadata') }}</CardTitle>
+                    <CardDescription>{{ __('Creation information') }}</CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-4">
                     <div class="flex justify-between items-center">
                         <span class="text-muted-foreground flex items-center gap-2">
                             <Calendar class="h-4 w-4" />
-                            Criado em
+                            {{ __('Created at') }}
                         </span>
                         <span class="text-sm">{{ new Date(credential.created_at).toLocaleString('pt-BR') }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-muted-foreground flex items-center gap-2">
                             <Calendar class="h-4 w-4" />
-                            Atualizado em
+                            {{ __('Updated at') }}
                         </span>
                         <span class="text-sm">{{ new Date(credential.updated_at).toLocaleString('pt-BR') }}</span>
                     </div>
