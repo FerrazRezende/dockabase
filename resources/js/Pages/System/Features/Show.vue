@@ -90,13 +90,13 @@ watch(selectedUserId, (newId) => {
 const actionLabel = computed(() => {
     switch (props.feature.strategy) {
         case 'all':
-            return 'Liberado para todos';
+            return __('Released to all');
         case 'percentage':
-            return `${props.feature.percentage}% dos usuários`;
+            return `${props.feature.percentage}% ${__('of users')}`;
         case 'users':
-            return 'Usuários específicos';
+            return __('Specific users');
         default:
-            return 'Desativado';
+            return __('Inactive');
     }
 });
 
@@ -128,11 +128,11 @@ const activateFeature = () => {
     router.post(route('system.features.activate', props.feature.name), body, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Feature ativada com sucesso');
+            toast.success(__('Feature enabled successfully'));
             showActivateDialog.value = false;
         },
         onError: () => {
-            toast.error('Erro ao ativar feature');
+            toast.error(__('Error activating feature'));
         },
         onFinish: () => {
             activating.value = false;
@@ -146,10 +146,10 @@ const deactivateFeature = () => {
     router.post(route('system.features.deactivate', props.feature.name), {}, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Feature desativada com sucesso');
+            toast.success(__('Feature disabled successfully'));
         },
         onError: () => {
-            toast.error('Erro ao desativar feature');
+            toast.error(__('Error deactivating feature'));
         },
         onFinish: () => {
             activating.value = false;
@@ -171,11 +171,11 @@ const formatDate = (dateString: string) => {
 const getActionBadge = (action: string) => {
     switch (action) {
         case 'activated':
-            return { variant: 'default', label: 'Ativado', class: 'bg-green-500/10 text-green-500' };
+            return { variant: 'default', label: __('Activated'), class: 'bg-green-500/10 text-green-500' };
         case 'deactivated':
-            return { variant: 'outline', label: 'Desativado', class: '' };
+            return { variant: 'outline', label: __('Deactivated'), class: '' };
         case 'updated':
-            return { variant: 'secondary', label: 'Atualizado', class: '' };
+            return { variant: 'secondary', label: __('Updated'), class: '' };
         default:
             return { variant: 'outline', label: action, class: '' };
     }
@@ -193,24 +193,24 @@ const openActivateDialog = () => {
 // Get display info for access
 const accessDisplay = computed(() => {
     if (!props.feature.is_active) {
-        return { type: 'none', message: 'Nenhum usuário tem acesso' };
+        return { type: 'none', message: __('No users have access') };
     }
 
     switch (props.feature.strategy) {
         case 'all':
-            return { type: 'all', message: 'Todos os usuários estão vendo a feature' };
+            return { type: 'all', message: __('All users are seeing this feature') };
         case 'percentage':
-            return { type: 'percentage', message: `${props.feature.percentage}% dos usuários (${props.usersWithAccess.length} de ${props.users.length})` };
+            return { type: 'percentage', message: `${props.feature.percentage}% ${__('of users')} (${props.usersWithAccess.length} ${__('of')} ${props.users.length})` };
         case 'users':
-            return { type: 'users', message: `${props.usersWithAccess.length} usuário(s) selecionado(s)` };
+            return { type: 'users', message: __(':count user(s) selected', { count: props.usersWithAccess.length }) };
         default:
-            return { type: 'none', message: 'Nenhum usuário tem acesso' };
+            return { type: 'none', message: __('No users have access') };
     }
 });
 </script>
 
 <template>
-    <Head :title="`${feature.display_name} - Feature Flags`" />
+    <Head :title="`${feature.display_name} - ${__('Feature Flags')}`" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
@@ -235,8 +235,8 @@ const accessDisplay = computed(() => {
             <!-- Status Card -->
             <Card class="mb-6">
                 <CardHeader>
-                    <CardTitle>Status</CardTitle>
-                    <CardDescription>Configuração atual da feature</CardDescription>
+                    <CardTitle>{{ __('Status') }}</CardTitle>
+                    <CardDescription>{{ __('Current configuration') }}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div class="flex items-center justify-between">
@@ -246,7 +246,7 @@ const accessDisplay = computed(() => {
                                 :class="feature.is_active ? 'bg-green-500/10 text-green-500' : ''"
                                 class="text-base px-4 py-1"
                             >
-                                {{ feature.is_active ? 'Ativo' : 'Inativo' }}
+                                {{ feature.is_active ? __('Active') : __('Inactive') }}
                             </Badge>
                             <span class="text-muted-foreground">{{ actionLabel }}</span>
                         </div>
@@ -262,26 +262,26 @@ const accessDisplay = computed(() => {
                                         @click="openActivateDialog"
                                     >
                                         <Play class="h-4 w-4" />
-                                        Ativar
+                                        {{ __('Activate') }}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent class="max-w-lg">
                                     <DialogHeader>
-                                        <DialogTitle>Ativar Feature</DialogTitle>
+                                        <DialogTitle>{{ __('Activate') }} {{ __('Feature') }}</DialogTitle>
                                         <DialogDescription>
-                                            Escolha como deseja liberar esta feature.
+                                            {{ __('Choose rollout strategy') }}
                                         </DialogDescription>
                                     </DialogHeader>
                                     <div class="space-y-4 py-4">
                                         <div class="space-y-2">
-                                            <Label>Estratégia de Rollout</Label>
+                                            <Label>{{ __('Rollout Strategy') }}</Label>
                                             <div class="grid grid-cols-3 gap-2">
                                                 <Button
                                                     :variant="strategy === 'all' ? 'default' : 'outline'"
                                                     @click="strategy = 'all'"
                                                     class="h-auto py-3 flex-col"
                                                 >
-                                                    <span class="font-semibold">Todos</span>
+                                                    <span class="font-semibold">{{ __('All') }}</span>
                                                     <span class="text-xs opacity-70">100%</span>
                                                 </Button>
                                                 <Button
@@ -289,22 +289,22 @@ const accessDisplay = computed(() => {
                                                     @click="strategy = 'percentage'"
                                                     class="h-auto py-3 flex-col"
                                                 >
-                                                    <span class="font-semibold">Percentual</span>
-                                                    <span class="text-xs opacity-70">Gradual</span>
+                                                    <span class="font-semibold">{{ __('Percentage') }}</span>
+                                                    <span class="text-xs opacity-70">{{ __('of users') }}</span>
                                                 </Button>
                                                 <Button
                                                     :variant="strategy === 'users' ? 'default' : 'outline'"
                                                     @click="strategy = 'users'"
                                                     class="h-auto py-3 flex-col"
                                                 >
-                                                    <span class="font-semibold">Usuários</span>
-                                                    <span class="text-xs opacity-70">Específicos</span>
+                                                    <span class="font-semibold">{{ __('Users') }}</span>
+                                                    <span class="text-xs opacity-70">{{ __('of users') }}</span>
                                                 </Button>
                                             </div>
                                         </div>
 
                                         <div v-if="strategy === 'percentage'" class="space-y-2">
-                                            <Label>Percentual</Label>
+                                            <Label>{{ __('Percentage') }}</Label>
                                             <Input
                                                 type="number"
                                                 v-model="percentage"
@@ -313,17 +313,17 @@ const accessDisplay = computed(() => {
                                                 placeholder="50"
                                             />
                                             <p class="text-xs text-muted-foreground">
-                                                Usuários serão selecionados de forma determinística baseada no ID.
+                                                Users will be selected deterministically based on ID.
                                             </p>
                                         </div>
 
                                         <div v-if="strategy === 'users'" class="space-y-3">
-                                            <Label>Selecionar Usuários</Label>
+                                            <Label>{{ __('Select users') }}</Label>
 
                                             <!-- User Select -->
                                             <Select v-model="selectedUserId">
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Selecione um usuário" />
+                                                    <SelectValue :placeholder="__('Select a user')" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem
@@ -354,16 +354,16 @@ const accessDisplay = computed(() => {
                                                 </Badge>
                                             </div>
                                             <p v-else class="text-xs text-muted-foreground">
-                                                Nenhum usuário selecionado
+                                                {{ __('No user selected') }}
                                             </p>
                                         </div>
                                     </div>
                                     <DialogFooter>
                                         <Button variant="outline" @click="showActivateDialog = false">
-                                            Cancelar
+                                            {{ __('Cancel') }}
                                         </Button>
                                         <Button @click="activateFeature" :disabled="activating">
-                                            {{ activating ? 'Ativando...' : 'Ativar' }}
+                                            {{ activating ? __('Activating...') : __('Activate') }}
                                         </Button>
                                     </DialogFooter>
                                 </DialogContent>
@@ -378,26 +378,26 @@ const accessDisplay = computed(() => {
                                         class="gap-2"
                                     >
                                         <Square class="h-4 w-4" />
-                                        Desativar
+                                        {{ __('Deactivate') }}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent>
                                     <DialogHeader>
-                                        <DialogTitle>Desativar Feature</DialogTitle>
+                                        <DialogTitle>{{ __('Deactivate') }} {{ __('Feature') }}</DialogTitle>
                                         <DialogDescription>
-                                            Tem certeza que deseja desativar esta feature? Todos os usuários perderão acesso.
+                                            Are you sure you want to deactivate this feature? All users will lose access.
                                         </DialogDescription>
                                     </DialogHeader>
                                     <DialogFooter>
                                         <Button variant="outline" @click="showDeactivateDialog = false">
-                                            Cancelar
+                                            {{ __('Cancel') }}
                                         </Button>
                                         <Button
                                             variant="destructive"
                                             @click="deactivateFeature"
                                             :disabled="activating"
                                         >
-                                            {{ activating ? 'Desativando...' : 'Desativar' }}
+                                            {{ activating ? __('Deactivating...') : __('Deactivate') }}
                                         </Button>
                                     </DialogFooter>
                                 </DialogContent>
@@ -412,7 +412,7 @@ const accessDisplay = computed(() => {
                 <CardHeader>
                     <div class="flex items-center gap-2">
                         <Users class="h-5 w-5 text-muted-foreground" />
-                        <CardTitle>Usuários com Acesso</CardTitle>
+                        <CardTitle>{{ __('Users with access') }}</CardTitle>
                     </div>
                     <CardDescription>{{ accessDisplay.message }}</CardDescription>
                 </CardHeader>
@@ -420,10 +420,10 @@ const accessDisplay = computed(() => {
                     <!-- All users message -->
                     <div v-if="accessDisplay.type === 'all'" class="text-center py-8">
                         <div class="text-green-500 font-semibold text-lg mb-2">
-                            TODOS OS USUÁRIOS ESTÃO VENDO A FEATURE
+                            {{ __('All users are seeing this feature') }}
                         </div>
                         <p class="text-muted-foreground text-sm">
-                            Total de {{ users.length }} usuário(s) no sistema
+                            {{ __('Total users in system', { count: users.length }) }}
                         </p>
                     </div>
 
@@ -431,8 +431,8 @@ const accessDisplay = computed(() => {
                     <Table v-else-if="usersWithAccess.length > 0">
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Email</TableHead>
+                                <TableHead>{{ __('Name') }}</TableHead>
+                                <TableHead>{{ __('Email') }}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -449,7 +449,7 @@ const accessDisplay = computed(() => {
 
                     <!-- No users message -->
                     <div v-else class="text-center py-8 text-muted-foreground">
-                        Nenhum usuário tem acesso a esta feature
+                        {{ __('No users have access') }}
                     </div>
                 </CardContent>
             </Card>
@@ -459,18 +459,18 @@ const accessDisplay = computed(() => {
                 <CardHeader>
                     <div class="flex items-center gap-2">
                         <History class="h-5 w-5 text-muted-foreground" />
-                        <CardTitle>Histórico</CardTitle>
+                        <CardTitle>{{ __('History') }}</CardTitle>
                     </div>
-                    <CardDescription>Histórico de mudanças desta feature</CardDescription>
+                    <CardDescription>{{ __('Change history') }}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table v-if="history.length > 0">
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Data</TableHead>
-                                <TableHead>Ação</TableHead>
-                                <TableHead>Responsável</TableHead>
-                                <TableHead>Detalhes</TableHead>
+                                <TableHead>{{ __('Date') }}</TableHead>
+                                <TableHead>{{ __('Action') }}</TableHead>
+                                <TableHead>{{ __('Responsible') }}</TableHead>
+                                <TableHead>{{ __('Details') }}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -490,7 +490,7 @@ const accessDisplay = computed(() => {
                                 <TableCell class="text-muted-foreground text-sm">
                                     <template v-if="item.new_state">
                                         <span v-if="item.new_state.strategy">
-                                            Estratégia: {{ item.new_state.strategy }}
+                                            {{ __('Strategy:') }} {{ item.new_state.strategy }}
                                         </span>
                                         <span v-if="item.new_state.percentage">
                                             · {{ item.new_state.percentage }}%
@@ -501,7 +501,7 @@ const accessDisplay = computed(() => {
                         </TableBody>
                     </Table>
                     <div v-else class="text-center py-8 text-muted-foreground">
-                        Nenhum histórico disponível
+                        {{ __('No history available') }}
                     </div>
                 </CardContent>
             </Card>
