@@ -93,7 +93,7 @@ class RoleController extends Controller
             return new RoleResource($role->load('permissions'));
         }
 
-        return redirect()->route('system.permissions.index')->with('success', 'Role created successfully.');
+        return redirect()->route('system.permissions.index')->with('success', __('Role created successfully'));
     }
 
     /**
@@ -114,7 +114,7 @@ class RoleController extends Controller
             return new RoleResource($role->load('permissions'));
         }
 
-        return redirect()->route('system.permissions.index')->with('success', 'Role updated successfully.');
+        return redirect()->route('system.permissions.index')->with('success', __('Role updated successfully'));
     }
 
     /**
@@ -130,7 +130,7 @@ class RoleController extends Controller
             return new RoleResource($role->load('permissions'));
         }
 
-        return redirect()->back()->with('success', 'Permissions synced successfully.');
+        return redirect()->back()->with('success', __('Permissions synced successfully'));
     }
 
     /**
@@ -143,16 +143,16 @@ class RoleController extends Controller
         // Check if role has users
         if ($role->users()->exists()) {
             return redirect()->back()->withErrors([
-                'error' => 'Cannot delete role that is assigned to users.',
+                'error' => __('Cannot delete role that is assigned to users'),
             ]);
         }
 
         $role->delete();
 
         if ($request->wantsJson()) {
-            return response()->json(['message' => 'Role deleted successfully.']);
+            return response()->json(['message' => __('Role deleted successfully')]);
         }
 
-        return redirect()->back()->with('success', 'Role deleted successfully.');
+        return redirect()->back()->with('success', __('Role deleted successfully'));
     }
 }
