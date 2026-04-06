@@ -283,10 +283,10 @@ const submit = (): void => {
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div class="grid gap-2">
-                                <label class="text-sm font-medium">Nome</label>
+                                <label class="text-sm font-medium">{{ __('Name') }}</label>
                                 <Input
                                     v-model="form.name"
-                                    placeholder="ex: Developer, Manager, Admin"
+                                    :placeholder="__('ex: Developer, Manager, Admin')"
                                     :disabled="isSaving"
                                 />
                             </div>

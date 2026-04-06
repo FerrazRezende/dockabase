@@ -466,5 +466,6 @@
   "Are you sure you want to delete the role \":name\"?": "Are you sure you want to delete the role \":name\"?",
   "This action cannot be undone.": "This action cannot be undone.",
   "Role deleted successfully": "Role deleted successfully",
-  "Error deleting role. Please try again.": "Error deleting role. Please try again."
+  "Error deleting role. Please try again.": "Error deleting role. Please try again.",
+  "ex: Developer, Manager, Admin": "ex: Developer, Manager, Admin"
 }

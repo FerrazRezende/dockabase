@@ -466,5 +466,6 @@
   "Are you sure you want to delete the role \":name\"?": "Tem certeza que deseja excluir a role \":name\"?",
   "This action cannot be undone.": "Esta ação não pode ser desfeita.",
   "Role deleted successfully": "Role excluída com sucesso",
-  "Error deleting role. Please try again.": "Erro ao excluir role. Tente novamente."
+  "Error deleting role. Please try again.": "Erro ao excluir role. Tente novamente.",
+  "ex: Developer, Manager, Admin": "ex: Desenvolvedor, Gerente, Admin"
 }
