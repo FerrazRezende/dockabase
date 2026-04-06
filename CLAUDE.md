@@ -496,6 +496,41 @@ Feature::define('realtime', function (User $user) use ($featureName) {
 Feature::purge($featureName);
 ```
 
+## Localização e Traduções
+
+**REGRA CRÍTICA:** Todas as funcionalidades novas DEVEM usar traduções com `__()`. NÃO use texto hardcoded em PT, EN ou ES.
+
+### Backend (Laravel)
+- Use `__('Texto original')` para mensagens ao usuário
+- Em Controllers: `return redirect()->back()->with('toast', ['message' => __('Success message')])`
+- Em Resources: use `__()` para labels e valores
+- Validações do Laravel são traduzidas automaticamente pelo arquivo de tradução
+- Em Jobs e Notifications: use `__()` para mensagens
+
+### Frontend (Vue)
+- Use `__('Texto original')` em componentes Vue
+- O helper `__()` está disponível globalmente (não precisa importar)
+- Para parâmetros: `__('Hello :name', { name: 'John' })`
+- Em templates: `{{ __('Texto') }}`
+- Em atributos: `:title="__('Texto')"`
+
+### Adicionando Novas Traduções
+1. Adicione a chave (texto original ou mais comum) nos 3 arquivos: `lang/pt.json`, `lang/en.json`, `lang/es.json`
+2. Sincronize as chaves - TODAS as chaves devem existir em TODOS os idiomas
+3. Use no código: `__('sua chave')`
+4. Valide: `php artisan test tests/Feature/Lang/TranslationKeysTest.php`
+
+### Validação de Traduções
+Execute o teste de validação antes de commitar:
+```bash
+php artisan test tests/Feature/Lang/TranslationKeysTest.php
+```
+
+Este teste verifica se todas as chaves existem em todos os idiomas (PT, EN, ES).
+
+### Mensagens de Validação Laravel
+Todas as mensagens de validação padrão do Laravel estão traduzidas. Não é necessário usar `__()` em regras de validação - o Laravel traduz automaticamente.
+
 ## RLS - Row Level Security
 
 ### Middleware
