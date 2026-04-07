@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Button } from '@/components/ui/button';
+import { useLang } from '@/composables/useLang';
 import {
     Database,
     Key,
@@ -17,12 +18,17 @@ import {
     Cpu,
     Crown,
     Building2,
+    Languages,
 } from 'lucide-vue-next';
 
 defineProps({
     canLogin: Boolean,
     canRegister: Boolean,
 });
+
+// Language selector
+const { availableLocales, currentLocale, setLocale } = useLang();
+const showLangMenu = ref(false);
 
 // Mouse position for spotlight effect
 const mouseX = ref(0);
@@ -184,6 +190,37 @@ const plans = [
 
                     <!-- Actions -->
                     <div class="flex items-center gap-4">
+                        <!-- Language Selector -->
+                        <div class="relative">
+                            <button
+                                @click="showLangMenu = !showLangMenu"
+                                class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/70 backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                                title="Change language"
+                            >
+                                <Globe :size="16" />
+                                <span>{{ currentLocale?.flag }}</span>
+                                <Languages :size="14" class="opacity-50" />
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div
+                                v-if="showLangMenu"
+                                class="absolute right-0 top-full mt-2 w-40 rounded-lg border border-white/10 bg-[#0a0a0c] p-1 shadow-xl backdrop-blur-sm"
+                                @click.outside="showLangMenu = false"
+                            >
+                                <button
+                                    v-for="lang in availableLocales"
+                                    :key="lang.code"
+                                    @click="setLocale(lang.code); showLangMenu = false"
+                                    class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+                                    :class="{ 'bg-white/5 text-white': currentLocale?.code === lang.code }"
+                                >
+                                    <span>{{ lang.flag }}</span>
+                                    <span>{{ lang.label }}</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <template v-if="canLogin">
                             <Link v-if="$page.props.auth.user" :href="route('dashboard')">
                                 <Button
