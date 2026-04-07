@@ -27,11 +27,15 @@ export function useLang() {
       // Authenticated users: save to database via profile route
       router.patch(route('profile.locale.update'), { locale: newLocale })
     } else {
-      // Guests: save to session via public route (use direct URL)
-      router.visit('/locale', {
-        method: 'patch',
-        data: { locale: newLocale },
-        preserveState: true,
+      // Guests: save to session via public route
+      // Use fetch directly for guests since Inertia router doesn't return Promise
+      fetch('/locale', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ locale: newLocale }),
       }).then(() => {
         // Force page reload to apply new locale
         window.location.reload()
