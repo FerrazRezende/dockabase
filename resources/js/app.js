@@ -34,17 +34,18 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
+        const app = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
-            .use(Toast, toastOptions)
-            .mount(el);
+            .use(Toast, toastOptions);
+
+        // Make translation helpers globally available in Vue templates
+        app.config.globalProperties.__ = __;
+        app.config.globalProperties.transChoice = transChoice;
+
+        return app.mount(el);
     },
     progress: {
         color: '#4B5563',
     },
 });
-
-// Make translation helpers globally available for use in Vue components
-window.__ = __
-window.transChoice = transChoice
