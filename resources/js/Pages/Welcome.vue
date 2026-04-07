@@ -175,13 +175,13 @@ const plans = [
                     <!-- Nav Links -->
                     <div class="hidden items-center gap-10 lg:flex">
                         <a href="#features" class="text-sm font-medium text-white/50 transition-colors hover:text-white">
-                            Features
+                            {{ __('Features') }}
                         </a>
                         <a href="#pricing" class="text-sm font-medium text-white/50 transition-colors hover:text-white">
-                            Preços
+                            {{ __('Pricing') }}
                         </a>
                         <a href="#tech" class="text-sm font-medium text-white/50 transition-colors hover:text-white">
-                            Stack
+                            {{ __('Stack') }}
                         </a>
                         <a href="https://github.com" target="_blank" class="text-sm font-medium text-white/50 transition-colors hover:text-white">
                             Docs
@@ -236,14 +236,14 @@ const plans = [
                                         variant="ghost"
                                         class="text-white/60 hover:text-white hover:bg-white/5"
                                     >
-                                        Entrar
+                                        {{ __('Sign in') }}
                                     </Button>
                                 </Link>
                                 <Link v-if="canRegister" :href="route('register')">
                                     <Button
                                         class="bg-white text-[#030304] hover:bg-white/90 shadow-lg shadow-white/5 font-medium"
                                     >
-                                        Começar Grátis
+                                        {{ __('Start Free') }}
                                     </Button>
                                 </Link>
                             </template>
@@ -262,26 +262,26 @@ const plans = [
                         <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
                         <span class="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
                     </span>
-                    <span class="text-sm font-medium text-white/70">Open Source BaaS</span>
+                    <span class="text-sm font-medium text-white/70">{{ __('Open Source BaaS') }}</span>
                 </div>
 
                 <!-- Main Title -->
                 <h1 class="relative mb-8 leading-[1.1]">
                     <span class="block text-5xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
-                        Seu próprio
+                        {{ __('Your own') }}
                     </span>
                     <span class="block mt-2 text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-violet-400 bg-clip-text text-transparent">
                         Supabase
                     </span>
                     <span class="block mt-2 text-5xl font-bold tracking-tight text-white/30 sm:text-6xl md:text-7xl lg:text-8xl">
-                        self-hosted
+                        {{ __('self-hosted') }}
                     </span>
                 </h1>
 
                 <!-- Subtitle -->
                 <p class="mx-auto max-w-2xl text-lg leading-relaxed text-white/40 sm:text-xl mb-12">
-                    Backend as a Service completo com PostgreSQL, autenticação, API REST dinâmica,
-                    realtime e storage. <span class="text-white/60">Controle total, sem vendor lock-in.</span>
+                    {{ __('Complete Backend as a Service with PostgreSQL, authentication, dynamic REST API, realtime and storage.') }}
+                    <span class="text-white/60">{{ __('Full control, no vendor lock-in.') }}</span>
                 </p>
 
                 <!-- CTA Buttons -->
@@ -292,7 +292,7 @@ const plans = [
                             class="group relative overflow-hidden bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-white shadow-2xl shadow-fuchsia-500/20 hover:shadow-fuchsia-500/40 transition-all duration-500 h-14 px-8 text-base font-medium"
                         >
                             <span class="relative z-10 flex items-center gap-2">
-                                Começar Agora
+                                {{ __('Get Started') }}
                                 <ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </span>
                         </Button>
