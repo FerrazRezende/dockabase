@@ -23,7 +23,14 @@ class SetLocaleMiddleware
         if ($request->user()?->locale) {
             $locale = $request->user()->locale;
         }
-        // For guests, check cookie
+        // For guests, check session first (set by locale.set route)
+        elseif ($request->session()->has('locale')) {
+            $sessionLocale = $request->session()->get('locale');
+            if (in_array($sessionLocale, ['pt', 'en', 'es'], true)) {
+                $locale = $sessionLocale;
+            }
+        }
+        // Then check cookie
         elseif ($request->hasCookie('locale')) {
             $cookieLocale = $request->cookie('locale');
             if (in_array($cookieLocale, ['pt', 'en', 'es'], true)) {

@@ -20,7 +20,16 @@ export function useLang() {
   ]
 
   const setLocale = (newLocale: string) => {
-    router.patch(route('profile.locale.update'), { locale: newLocale })
+    // Check if user is authenticated
+    const isAuthenticated = !!page.props.auth?.user
+
+    if (isAuthenticated) {
+      // Authenticated users: save to database via profile route
+      router.patch(route('profile.locale.update'), { locale: newLocale })
+    } else {
+      // Guests: save to session via public route
+      router.patch(route('locale.set'), { locale: newLocale })
+    }
   }
 
   const currentLocale = computed(() =>

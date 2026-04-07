@@ -14,6 +14,9 @@ Route::get('/', function () {
     ]);
 });
 
+// Public locale route for guests
+Route::patch('/locale', [App\Http\Controllers\LocaleController::class, 'set'])->name('locale.set');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
