@@ -17,13 +17,13 @@ enum DatabaseCreationStepEnum: string
     public function label(): string
     {
         return match ($this) {
-            self::VALIDATING => 'Validando',
-            self::CREATING => 'Criando',
-            self::CONFIGURING => 'Configurando',
-            self::MIGRATING => 'Migrações',
-            self::PERMISSIONS => 'Permissões',
-            self::TESTING => 'Testando',
-            self::READY => 'Pronto',
+            self::VALIDATING => __('Validating'),
+            self::CREATING => __('Creating'),
+            self::CONFIGURING => __('Configuring'),
+            self::MIGRATING => __('Migrating'),
+            self::PERMISSIONS => __('Permissions'),
+            self::TESTING => __('Testing'),
+            self::READY => __('Ready'),
         };
     }
 
