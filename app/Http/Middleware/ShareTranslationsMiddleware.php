@@ -35,8 +35,12 @@ class ShareTranslationsMiddleware
 
             // Share translations with Inertia
             Inertia::share('translations', $translations);
+
+            // Debug: log locale
+            \Log::info('Locale set to: ' . $locale . ', translations count: ' . count($translations));
         } else {
             Inertia::share('translations', []);
+            \Log::warning('Translation file not found: ' . $translationFile);
         }
 
         // Share current locale with Inertia

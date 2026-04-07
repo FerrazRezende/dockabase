@@ -211,7 +211,7 @@ const plans = [
                                 <button
                                     v-for="lang in availableLocales"
                                     :key="lang.code"
-                                    @click="setLocale(lang.code); showLangMenu = false"
+                                    @click="console.log('Clicked locale:', lang.code); setLocale(lang.code); showLangMenu = false"
                                     class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
                                     :class="{ 'bg-white/5 text-white': currentLocale?.code === lang.code }"
                                 >

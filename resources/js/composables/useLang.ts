@@ -27,8 +27,8 @@ export function useLang() {
       // Authenticated users: save to database via profile route
       router.patch(route('profile.locale.update'), { locale: newLocale })
     } else {
-      // Guests: save to session via public route
-      router.patch(route('locale.set'), { locale: newLocale })
+      // Guests: save to session via public route (use direct URL)
+      router.patch('/locale', { locale: newLocale })
     }
   }
 
