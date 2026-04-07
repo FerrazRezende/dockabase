@@ -1,12 +1,6 @@
-import { computed } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 
 export type TranslationParams = Record<string, string | number>
-
-const translations = computed(() => {
-  const page = usePage()
-  return (page.props.translations || {}) as Record<string, string>
-})
 
 /**
  * Translate a key using the current locale's translations.
@@ -15,10 +9,12 @@ const translations = computed(() => {
  * @returns The translated string or the key if not found
  */
 export function __(key: string, params?: TranslationParams): string {
-  const translated = translations.value[key]
+  const page = usePage()
+  const translations = (page.props.translations || {}) as Record<string, string>
+
+  const translated = translations[key]
 
   if (!translated) {
-    console.warn(`[Translation] Missing key: ${key}`)
     return key
   }
 

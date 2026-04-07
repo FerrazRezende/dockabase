@@ -8,10 +8,16 @@ export interface LocaleOption {
   flag: string
 }
 
+export type TranslationParams = Record<string, string | number>
+
 export function useLang() {
   const page = usePage()
 
   const locale = computed(() => (page.props.locale as string) || 'pt')
+
+  const translations = computed(() => {
+    return (page.props.translations || {}) as Record<string, string>
+  })
 
   const availableLocales: LocaleOption[] = [
     { code: 'pt', label: 'Português', flag: '🇧🇷' },
@@ -49,8 +55,35 @@ export function useLang() {
 
   return {
     locale,
+    translations,
     availableLocales,
     currentLocale,
     setLocale,
   }
+}
+
+/**
+ * Translate a key using the current locale's translations.
+ * @param key - The translation key (original string)
+ * @param params - Optional parameters to replace in the translation
+ * @returns The translated string or the key if not found
+ */
+export function __(key: string, params?: TranslationParams): string {
+  const page = usePage()
+  const translations = (page.props.translations || {}) as Record<string, string>
+
+  const translated = translations[key]
+
+  if (!translated) {
+    return key
+  }
+
+  // Replace parameters :name → actual value
+  if (params) {
+    return translated.replace(/:(\w+)/g, (_match, paramKey) => {
+      return params[paramKey]?.toString() || `:${paramKey}`
+    })
+  }
+
+  return translated
 }
