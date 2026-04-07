@@ -28,11 +28,14 @@ export function useLang() {
       router.patch(route('profile.locale.update'), { locale: newLocale })
     } else {
       // Guests: save to session via public route (use direct URL)
-      router.patch('/locale', { locale: newLocale })
-        .then(() => {
-          // Force page reload to apply new locale
-          window.location.reload()
-        })
+      router.visit('/locale', {
+        method: 'patch',
+        data: { locale: newLocale },
+        preserveState: true,
+      }).then(() => {
+        // Force page reload to apply new locale
+        window.location.reload()
+      })
     }
   }
 
