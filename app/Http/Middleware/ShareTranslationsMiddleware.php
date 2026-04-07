@@ -17,13 +17,6 @@ class ShareTranslationsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $response = $next($request);
-
-        // Only share translations for Inertia requests
-        if (!$request->header('X-Inertia')) {
-            return $response;
-        }
-
         // Get the current locale
         $locale = App::getLocale();
 
@@ -33,19 +26,17 @@ class ShareTranslationsMiddleware
         if (file_exists($translationFile)) {
             $translations = json_decode(file_get_contents($translationFile), true);
 
-            // Share translations with Inertia
+            // Share translations with Inertia BEFORE the response is generated
             Inertia::share('translations', $translations);
+            Inertia::share('locale', $locale);
 
-            // Debug: log locale
-            \Log::info('Locale set to: ' . $locale . ', translations count: ' . count($translations));
+            \Log::info('ShareTranslationsMiddleware: Locale=' . $locale . ', Translations=' . count($translations));
         } else {
             Inertia::share('translations', []);
+            Inertia::share('locale', $locale);
             \Log::warning('Translation file not found: ' . $translationFile);
         }
 
-        // Share current locale with Inertia
-        Inertia::share('locale', $locale);
-
-        return $response;
+        return $next($request);
     }
 }
