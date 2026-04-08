@@ -36,10 +36,11 @@ export function __(key: string, params?: TranslationParams): string {
  * @returns The translated string for the count
  */
 export function transChoice(key: string, count: number, params?: TranslationParams): string {
-  const translated = translations.value[key]
+  const page = usePage()
+  const translations = (page.props.translations || {}) as Record<string, string>
+  const translated = translations[key]
 
   if (!translated) {
-    console.warn(`[Translation] Missing key: ${key}`)
     return key
   }
 
