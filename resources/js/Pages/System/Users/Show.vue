@@ -18,6 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Shield, ShieldCheck, Key, Loader2 } from 'lucide-vue-next';
 import PvTabs from '@/components/ui/pv-tabs/PvTabs.vue';
 import PvTabsContent from '@/components/ui/pv-tabs/PvTabsContent.vue';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Role {
     id: number;
@@ -56,6 +57,7 @@ interface UserProfile {
     id: number;
     name: string;
     email: string;
+    avatar?: string;
     is_admin: boolean;
     active: boolean;
     password_changed_at: string | null;
@@ -283,7 +285,11 @@ const tabs = [
     { value: 'info', label: __('Information'), icon: 'User' },
     { value: 'roles', label: __('Roles and Permissions'), icon: 'Shield' },
 ];
-</script>
+
+// Get user initials for avatar fallback
+const userInitials = computed(() => {
+    return props.user.name.slice(0, 2).toUpperCase();
+});</script>
 
 <template>
     <Head :title="__('Profile: :name', { name: user.name })" />
@@ -296,13 +302,21 @@ const tabs = [
                         <ArrowLeft class="w-4 h-4" />
                     </Button>
                 </Link>
-                <div>
-                    <h2 class="text-2xl font-semibold text-foreground">
-                        {{ user.name }}
-                    </h2>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        {{ user.email }}
-                    </p>
+                <div class="flex items-center gap-4">
+                    <Avatar class="h-16 w-16 ring-2 ring-border">
+                        <AvatarImage v-if="user.avatar" :src="user.avatar" />
+                        <AvatarFallback class="bg-primary text-primary-foreground text-xl">
+                            {{ userInitials }}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-foreground">
+                            {{ user.name }}
+                        </h2>
+                        <p class="text-sm text-muted-foreground mt-1">
+                            {{ user.email }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </template>

@@ -29,8 +29,23 @@ class ProfilePictureService
 
     public function delete(?string $path): void
     {
-        if ($path && Storage::disk('minio')->exists($path)) {
+        if (!$path) {
+            return;
+        }
+
+        try {
+            // Try to delete directly - S3 delete is idempotent
+            // This avoids the 'UnableToCheckDirectoryExistence' error when bucket doesn't exist
             Storage::disk('minio')->delete($path);
+        } catch (\Exception $e) {
+            // Log but don't throw - file might not exist or bucket might be missing
+            // This is a soft delete attempt
+            if (app()->environment('local')) {
+                logger()->warning('Failed to delete profile picture', [
+                    'path' => $path,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 

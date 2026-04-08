@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     Dialog,
     DialogContent,
@@ -47,6 +48,7 @@ interface User {
     id: number;
     name: string;
     email: string;
+    avatar?: string;
     is_admin: boolean;
     active: boolean;
     roles?: string[];
@@ -206,6 +208,7 @@ const confirmDeactivate = (): void => {
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead class="w-[50px]">{{ __('Avatar') }}</TableHead>
                         <TableHead>{{ __('Name') }}</TableHead>
                         <TableHead>{{ __('Email') }}</TableHead>
                         <TableHead>{{ __('Roles') }}</TableHead>
@@ -218,6 +221,14 @@ const confirmDeactivate = (): void => {
                         v-for="user in (users ?? [])"
                         :key="user.id"
                     >
+                        <TableCell>
+                            <Avatar class="h-8 w-8">
+                                <AvatarImage v-if="user.avatar" :src="user.avatar" />
+                                <AvatarFallback class="bg-primary text-primary-foreground text-xs">
+                                    {{ user.name.substring(0, 2).toUpperCase() }}
+                                </AvatarFallback>
+                            </Avatar>
+                        </TableCell>
                         <TableCell class="font-medium">
                             <Link :href="route('system.users.show', user.id)" class="hover:underline">
                                 {{ user.name }}

@@ -24,7 +24,28 @@ final class CacheUserStatusListenerTest extends TestCase
 
     public function test_listener_calls_status_service_to_cache(): void
     {
-        $this->markTestSkipped('UserStatusService is marked as final and cannot be mocked');
+        try {
+            // Integration test: use real service and Redis connection
+            $user = User::factory()->create();
+
+            $event = new UserStatusUpdatedEvent(
+                user: $user,
+                status: UserStatusEnum::BUSY,
+                message: 'Focus time',
+            );
+
+            $listener = app(CacheUserStatusListener::class);
+            $listener->handle($event);
+
+            // Verify Redis was updated via the service
+            $cachedStatus = \Illuminate\Support\Facades\Redis::hget("user:{$user->id}:status", 'status');
+            $this->assertSame('busy', $cachedStatus);
+
+            // Cleanup
+            \Illuminate\Support\Facades\Redis::del("user:{$user->id}:status");
+        } catch (\RedisException $e) {
+            $this->markTestSkipped('Redis is not available for integration testing');
+        }
     }
 
     public function test_listener_implements_should_queue(): void

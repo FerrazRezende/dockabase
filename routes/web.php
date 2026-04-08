@@ -32,6 +32,8 @@ Route::middleware('auth')->group(function () {
         ->middleware(['auth', 'verified']);
     Route::post('/profile/photo', [ProfilePhotoController::class, 'store'])
         ->name('profile.photo.store');
+    Route::delete('/profile/photo', [ProfilePhotoController::class, 'destroy'])
+        ->name('profile.photo.destroy');
     // TODO: Uncomment when ProfilePhotoRefreshController is implemented
     // Route::get('/profile/photo/refresh', \App\Http\Controllers\Profile\ProfilePhotoRefreshController::class)
     //     ->name('profile.photo.refresh');

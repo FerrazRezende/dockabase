@@ -36,6 +36,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ArrowLeft, Play, Square, History, UserPlus, X, Users } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick } from 'vue';
@@ -55,6 +56,7 @@ interface User {
     id: string;
     name: string;
     email: string;
+    avatar?: string;
 }
 
 interface Props {
@@ -432,12 +434,21 @@ const accessDisplay = computed(() => {
                     <Table v-else-if="usersWithAccess.length > 0">
                         <TableHeader>
                             <TableRow>
+                                <TableHead class="w-[60px]"></TableHead>
                                 <TableHead>{{ __('Name') }}</TableHead>
                                 <TableHead>{{ __('Email') }}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             <TableRow v-for="user in usersWithAccess" :key="user.id">
+                                <TableCell>
+                                    <Avatar class="h-8 w-8">
+                                        <AvatarImage v-if="user.avatar" :src="user.avatar" />
+                                        <AvatarFallback class="bg-primary text-primary-foreground text-xs">
+                                            {{ user.name.slice(0, 2).toUpperCase() }}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </TableCell>
                                 <TableCell class="font-medium">
                                     {{ user.name }}
                                 </TableCell>

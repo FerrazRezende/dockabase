@@ -95,6 +95,8 @@ class UserProfileResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            'avatar' => $this->avatar,
+            'bio' => $this->bio,
             'is_admin' => $this->is_admin,
             'active' => $this->active,
             'password_changed_at' => $this->password_changed_at?->toISOString(),

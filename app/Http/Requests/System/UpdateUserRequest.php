@@ -19,6 +19,7 @@ class UpdateUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $this->user->id],
             'active' => ['nullable', 'boolean'],
+            'bio' => ['nullable', 'string', 'max:500'],
         ];
     }
 }
