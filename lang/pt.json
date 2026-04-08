@@ -529,5 +529,20 @@
     "bio": "bio",
     "About me": "Sobre mim",
     "Optional": "Opcional",
-    "Tell us a little about yourself...": "Conte-nos um pouco sobre você..."
+    "Tell us a little about yourself...": "Conte-nos um pouco sobre você...",
+    "user_status.online": "Online",
+    "user_status.away": "Ausente",
+    "user_status.busy": "Ocupado",
+    "user_status.offline": "Offline",
+    "user_status.available": "Disponível",
+    "user_status.in_a_meeting": "Em reunião",
+    "user_status.focused": "Trabalho focado",
+    "user_status.stepped_out": "Saio por um momento",
+    "user_status.set_status": "Definir status",
+    "user_status.clear_status": "Limpar status",
+    "user_status.activity_log": "Log de atividades",
+    "user_status.no_recent_activity": "Sem atividade recente",
+    "user_activity.status_changed": "Status alterado",
+    "user_activity.page_view": "Visualizou",
+    "user_activity.database_created": "Criou database"
 }

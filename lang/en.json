@@ -529,5 +529,20 @@
     "bio": "bio",
     "About me": "About me",
     "Optional": "Optional",
-    "Tell us a little about yourself...": "Tell us a little about yourself..."
+    "Tell us a little about yourself...": "Tell us a little about yourself...",
+    "user_status.online": "Online",
+    "user_status.away": "Away",
+    "user_status.busy": "Busy",
+    "user_status.offline": "Offline",
+    "user_status.available": "Available",
+    "user_status.in_a_meeting": "In a meeting",
+    "user_status.focused": "Focused work",
+    "user_status.stepped_out": "Stepped out",
+    "user_status.set_status": "Set status",
+    "user_status.clear_status": "Clear status",
+    "user_status.activity_log": "Activity Log",
+    "user_status.no_recent_activity": "No recent activity",
+    "user_activity.status_changed": "Status changed",
+    "user_activity.page_view": "Viewed",
+    "user_activity.database_created": "Created database"
 }
