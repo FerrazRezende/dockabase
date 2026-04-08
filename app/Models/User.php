@@ -29,6 +29,7 @@ class User extends Authenticatable
         'active',
         'denied_permissions',
         'locale',
+        'avatar',
     ];
 
     /**
