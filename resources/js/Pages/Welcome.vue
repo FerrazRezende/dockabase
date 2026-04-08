@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Button } from '@/components/ui/button';
-import { useLang } from '@/composables/useLang';
+import { useLang, __ } from '@/composables/useLang';
 import {
     Database,
     Key,
@@ -62,76 +62,76 @@ const techStack = [
 // Plans data
 const plans = [
     {
-        name: 'Self-Hosted',
-        price: 'Grátis',
-        period: 'para sempre',
-        description: 'Para desenvolvedores que querem controle total',
+        name: __('Self-Hosted'),
+        price: __('Free'),
+        period: __('forever'),
+        description: __('For developers who want full control'),
         features: [
-            'Databases ilimitados',
-            'Todas as features core',
-            'API REST dinâmica',
-            'Auth com OTP',
-            'Realtime websockets',
-            'Storage MinIO',
-            'Suporte via Discord',
+            __('Unlimited databases'),
+            __('All core features'),
+            __('Dynamic REST API'),
+            __('OTP authentication'),
+            __('Realtime websockets'),
+            __('MinIO Storage'),
+            __('Support via Discord'),
         ],
-        cta: 'Começar Grátis',
+        cta: __('Start Free'),
         highlighted: false,
         icon: Server,
     },
     {
         name: 'Starter',
         price: 'R$ 97',
-        period: '/mês',
-        description: 'Para startups e pequenos projetos',
+        period: __('/month'),
+        description: __('For startups and small projects'),
         features: [
-            'Tudo do Self-Hosted',
-            'Deploy gerenciado',
-            '5 databases inclusos',
-            '10GB storage',
-            'Backups diários',
-            'Uptime 99.5%',
-            'Suporte por email',
+            __('Everything in Self-Hosted'),
+            __('Managed deploy'),
+            __('5 databases included'),
+            __('10GB storage'),
+            __('Daily backups'),
+            __('99.5% uptime'),
+            __('Email support'),
         ],
-        cta: 'Começar Trial',
+        cta: __('Start Trial'),
         highlighted: false,
         icon: Cpu,
     },
     {
         name: 'Pro',
         price: 'R$ 297',
-        period: '/mês',
-        description: 'Para equipes em crescimento',
+        period: __('/month'),
+        description: __('For growing teams'),
         features: [
-            'Tudo do Starter',
-            '25 databases inclusos',
-            '100GB storage',
-            'Backups a cada 6h',
-            'Uptime 99.9%',
-            'RLS avançado',
-            'Suporte prioritário',
-            'MCP Server access',
+            __('Everything in Starter'),
+            __('25 databases included'),
+            __('100GB storage'),
+            __('Backups every 6h'),
+            __('99.9% uptime'),
+            __('Advanced RLS'),
+            __('Priority support'),
+            __('MCP Server access'),
         ],
-        cta: 'Começar Trial',
+        cta: __('Start Trial'),
         highlighted: true,
         icon: Crown,
     },
     {
-        name: 'Enterprise',
-        price: 'Custom',
+        name: __('Custom'),
+        price: __('Custom'),
         period: '',
-        description: 'Para grandes organizações',
+        description: __('For large organizations'),
         features: [
-            'Tudo do Pro',
-            'Databases ilimitados',
-            'Storage ilimitado',
-            'SLA personalizado',
-            'SSO / SAML',
-            'Dedicated infrastructure',
-            'Suporte 24/7',
-            'On-premise option',
+            __('Everything in Pro'),
+            __('Unlimited databases'),
+            __('Unlimited storage'),
+            __('Custom SLA'),
+            __('SSO / SAML'),
+            __('Dedicated infrastructure'),
+            __('24/7 support'),
+            __('On-premise option'),
         ],
-        cta: 'Falar com Vendas',
+        cta: __('Contact Sales'),
         highlighted: false,
         icon: Building2,
     },
@@ -161,9 +161,9 @@ const plans = [
         />
 
         <!-- Header -->
-        <header class="fixed left-0 right-0 top-0 z-50">
-            <div class="mx-auto w-full max-w-7xl px-6 py-6">
-                <nav class="flex items-center justify-between">
+        <header class="fixed left-0 right-0 top-0 z-50 transition-all duration-300" ref="headerRef">
+            <div class="mx-auto w-full max-w-7xl px-6 py-4">
+                <nav class="flex items-center justify-between rounded-2xl border border-white/[0.05] bg-[#0a0a0c]/80 backdrop-blur-xl px-6 py-3 shadow-lg shadow-black/20">
                     <!-- Logo -->
                     <Link href="/" class="flex items-center gap-4 group">
                         <img src="/logo.png" alt="DockaBase" class="h-14 w-auto transition-transform duration-300 group-hover:scale-105" />
@@ -184,7 +184,7 @@ const plans = [
                             {{ __('Stack') }}
                         </a>
                         <a href="https://github.com" target="_blank" class="text-sm font-medium text-white/50 transition-colors hover:text-white">
-                            Docs
+                            {{ __('Docs') }}
                         </a>
                     </div>
 
@@ -303,7 +303,7 @@ const plans = [
                             size="lg"
                             class="border-white/10 bg-white/[0.02] text-white/70 hover:bg-white/[0.05] hover:border-white/20 hover:text-white h-14 px-8 text-base"
                         >
-                            Conhecer Features
+                            {{ __('Explore Features') }}
                         </Button>
                     </a>
                 </div>
@@ -348,12 +348,12 @@ const plans = [
             <div class="mx-auto max-w-7xl px-6">
                 <!-- Section Header -->
                 <div class="mx-auto mb-20 max-w-3xl text-center">
-                    <p class="text-sm font-medium uppercase tracking-[0.2em] text-cyan-400 mb-4">Features</p>
+                    <p class="text-sm font-medium uppercase tracking-[0.2em] text-cyan-400 mb-4">{{ __('Features') }}</p>
                     <h2 class="text-4xl font-bold tracking-tight text-white sm:text-5xl mb-6">
-                        Tudo que você precisa
+                        {{ __('Everything you need') }}
                     </h2>
                     <p class="text-lg text-white/40">
-                        Uma plataforma completa para construir aplicações modernas com controle total sobre seus dados.
+                        {{ __('A complete platform to build modern applications with full control over your data.') }}
                     </p>
                 </div>
 
@@ -371,15 +371,15 @@ const plans = [
                                 <Database class="h-8 w-8 text-cyan-400" />
                             </div>
                             <h3 class="mb-4 text-2xl font-bold text-white">
-                                Database Manager
+                                {{ __('Database Manager') }}
                             </h3>
                             <p class="mb-8 max-w-md text-white/40 leading-relaxed flex-grow">
-                                Interface visual para gerenciar múltiplos databases PostgreSQL. Suporte completo a tipos avançados como UUID, JSONB e Arrays.
+                                {{ __('Visual interface to manage multiple PostgreSQL databases. Full support for advanced types like UUID, JSONB and Arrays.') }}
                             </p>
                             <div class="flex flex-wrap gap-2">
-                                <span class="rounded-full bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-400 border border-cyan-500/10">PostgreSQL 16+</span>
-                                <span class="rounded-full bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-white/50 border border-white/[0.05]">Multi-database</span>
-                                <span class="rounded-full bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-white/50 border border-white/[0.05]">Schema Builder</span>
+                                <span class="rounded-full bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-400 border border-cyan-500/10">{{ __('PostgreSQL 16+') }}</span>
+                                <span class="rounded-full bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-white/50 border border-white/[0.05]">{{ __('Multi-database') }}</span>
+                                <span class="rounded-full bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-white/50 border border-white/[0.05]">{{ __('Schema Builder') }}</span>
                             </div>
                         </div>
                     </div>
@@ -397,10 +397,10 @@ const plans = [
                             </div>
                             <div>
                                 <h3 class="mb-2 text-lg font-bold text-white">
-                                    Auth Provider
+                                    {{ __('Auth Provider') }}
                                 </h3>
                                 <p class="text-sm text-white/40 leading-relaxed">
-                                    Autenticação multi-tenant com OTP, JWT e RBAC integrado usando Spatie Permission.
+                                    {{ __('Multi-tenant authentication with OTP, JWT and integrated RBAC using Spatie Permission.') }}
                                 </p>
                             </div>
                         </div>
@@ -419,10 +419,10 @@ const plans = [
                             </div>
                             <div>
                                 <h3 class="mb-2 text-lg font-bold text-white">
-                                    Dynamic REST API
+                                    {{ __('Dynamic REST API') }}
                                 </h3>
                                 <p class="text-sm text-white/40 leading-relaxed">
-                                    API auto-gerada estilo PostgREST com query syntax poderosa para filtros e ordenação.
+                                    {{ __('Auto-generated API PostgREST-style with powerful query syntax for filters and sorting.') }}
                                 </p>
                             </div>
                         </div>
@@ -441,10 +441,10 @@ const plans = [
                             </div>
                             <div>
                                 <h3 class="text-base font-bold text-white">
-                                    Realtime
+                                    {{ __('Realtime') }}
                                 </h3>
                                 <p class="text-xs text-white/40">
-                                    Websockets com LISTEN/NOTIFY
+                                    {{ __('Websockets with LISTEN/NOTIFY') }}
                                 </p>
                             </div>
                         </div>
@@ -463,10 +463,10 @@ const plans = [
                             </div>
                             <div>
                                 <h3 class="text-base font-bold text-white">
-                                    Storage
+                                    {{ __('Storage') }}
                                 </h3>
                                 <p class="text-xs text-white/40">
-                                    S3 / MinIO com políticas
+                                    {{ __('S3 / MinIO with policies') }}
                                 </p>
                             </div>
                         </div>
@@ -485,10 +485,10 @@ const plans = [
                             </div>
                             <div>
                                 <h3 class="text-base font-bold text-white">
-                                    Row Level Security
+                                    {{ __('Row Level Security') }}
                                 </h3>
                                 <p class="text-xs text-white/40">
-                                    Segurança a nível de linha com roles
+                                    {{ __('Row-level security with roles') }}
                                 </p>
                             </div>
                         </div>
@@ -507,10 +507,10 @@ const plans = [
                             </div>
                             <div>
                                 <h3 class="mb-2 text-lg font-bold text-white">
-                                    Feature Flags
+                                    {{ __('Feature Flags') }}
                                 </h3>
                                 <p class="text-sm text-white/40 leading-relaxed">
-                                    Laravel Pennant para rollout gradual de features com suporte a estratégias por porcentagem, usuários e databases.
+                                    {{ __('Laravel Pennant for gradual feature rollout with support for percentage, user, and database strategies.') }}
                                 </p>
                             </div>
                         </div>
@@ -529,10 +529,10 @@ const plans = [
                             </div>
                             <div>
                                 <h3 class="mb-2 text-lg font-bold text-white">
-                                    Async Jobs
+                                    {{ __('Async Jobs') }}
                                 </h3>
                                 <p class="text-sm text-white/40 leading-relaxed">
-                                    Processamento assíncrono robusto com RabbitMQ para tarefas pesadas e notificações em tempo real.
+                                    {{ __('Robust async processing with RabbitMQ for heavy tasks and real-time notifications.') }}
                                 </p>
                             </div>
                         </div>
@@ -546,12 +546,12 @@ const plans = [
             <div class="mx-auto max-w-7xl px-6">
                 <!-- Section Header -->
                 <div class="mx-auto mb-20 max-w-3xl text-center">
-                    <p class="text-sm font-medium uppercase tracking-[0.2em] text-fuchsia-400 mb-4">Preços</p>
+                    <p class="text-sm font-medium uppercase tracking-[0.2em] text-fuchsia-400 mb-4">{{ __('Pricing') }}</p>
                     <h2 class="text-4xl font-bold tracking-tight text-white sm:text-5xl mb-6">
-                        Planos para todos
+                        {{ __('Plans for everyone') }}
                     </h2>
                     <p class="text-lg text-white/40">
-                        Comece grátis self-hosted ou deixe o deploy conosco. Sem surpresas, sem limites ocultos.
+                        {{ __('Start free self-hosted or let us handle the deploy. No surprises, no hidden limits.') }}
                     </p>
                 </div>
 
@@ -649,30 +649,29 @@ const plans = [
                     <div class="relative z-10 grid gap-12 lg:grid-cols-2 lg:items-center">
                         <div>
                             <h2 class="mb-6 text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                                Pronto para começar?
+                                {{ __('Ready to start?') }}
                             </h2>
                             <p class="mb-10 text-lg text-white/40 leading-relaxed">
-                                Suba sua própria instância do DockaBase em minutos com Docker.
-                                Controle total, sem vendor lock-in, open source para sempre.
+                                {{ __('Deploy your own DockaBase instance in minutes with Docker. Full control, no vendor lock-in, open source forever.') }}
                             </p>
                             <ul class="mb-10 space-y-4">
                                 <li class="flex items-center gap-4 text-white/60">
                                     <div class="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/10">
                                         <Check class="h-3.5 w-3.5 text-cyan-400" />
                                     </div>
-                                    <span>Open source para sempre</span>
+                                    <span>{{ __('Open source forever') }}</span>
                                 </li>
                                 <li class="flex items-center gap-4 text-white/60">
                                     <div class="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/10">
                                         <Check class="h-3.5 w-3.5 text-cyan-400" />
                                     </div>
-                                    <span>Deploy com um comando</span>
+                                    <span>{{ __('One-command deploy') }}</span>
                                 </li>
                                 <li class="flex items-center gap-4 text-white/60">
                                     <div class="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/10">
                                         <Check class="h-3.5 w-3.5 text-cyan-400" />
                                     </div>
-                                    <span>Sem limites de uso</span>
+                                    <span>{{ __('No usage limits') }}</span>
                                 </li>
                             </ul>
                             <Link v-if="canRegister && !$page.props.auth.user" :href="route('register')">
@@ -680,7 +679,7 @@ const plans = [
                                     size="lg"
                                     class="group bg-white text-[#030304] hover:bg-white/90 shadow-xl shadow-white/5 h-14 px-8 text-base font-medium"
                                 >
-                                    Criar conta gratuita
+                                    {{ __('Create free account') }}
                                     <ArrowRight class="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                                 </Button>
                             </Link>
@@ -706,19 +705,19 @@ const plans = [
                     <div class="flex items-center gap-4">
                         <img src="/logo.png" alt="DockaBase" class="h-8 w-auto opacity-60" />
                         <span class="text-sm text-white/30">
-                            Open Source Backend as a Service
+                            {{ __('Open Source Backend as a Service') }}
                         </span>
                     </div>
 
                     <div class="flex items-center gap-8">
                         <a href="#" class="text-sm text-white/30 transition-colors hover:text-white/60">
-                            Documentação
+                            {{ __('Documentation') }}
                         </a>
                         <a href="#" class="text-sm text-white/30 transition-colors hover:text-white/60">
-                            GitHub
+                            {{ __('GitHub') }}
                         </a>
                         <a href="#" class="text-sm text-white/30 transition-colors hover:text-white/60">
-                            Discord
+                            {{ __('Discord') }}
                         </a>
                     </div>
                 </div>

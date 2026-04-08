@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,6 @@ import {
 } from '@/components/ui/accordion';
 import { ArrowLeft, Loader2, Shield, Key } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
-import { __ } from '@/utils/lang';
 
 interface Permission {
     id: number;

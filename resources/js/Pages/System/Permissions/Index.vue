@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { __ } from '@/composables/useLang';
 import {
     Table,
     TableBody,
@@ -111,10 +112,12 @@ const deleteRole = (): void => {
         },
     });
 };
+
+const pageTitle = computed(() => __('Permissions'));
 </script>
 
 <template>
-    <Head title="{{ __('Permissions') }}" />
+    <Head :title="pageTitle" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
