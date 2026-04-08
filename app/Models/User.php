@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\UserActivity;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -31,6 +33,7 @@ class User extends Authenticatable
         'denied_permissions',
         'locale',
         'avatar',
+        'bio',
     ];
 
     /**
@@ -151,5 +154,13 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Credential::class, 'credential_user', 'user_id', 'credential_id')
             ->withTimestamps();
+    }
+
+    /**
+     * Activities logged for the user.
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(UserActivity::class)->latest();
     }
 }
