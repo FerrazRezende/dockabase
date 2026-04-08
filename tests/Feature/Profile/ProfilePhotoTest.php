@@ -16,9 +16,11 @@ class ProfilePhotoTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_has_avatar_attribute(): void
+    protected User $user;
+
+    protected function setUp(): void
     {
-        Storage::fake('minio');
+        parent::setUp();
 
         // Manually add avatar column if it doesn't exist
         if (!Schema::hasColumn('users', 'avatar')) {
@@ -26,6 +28,13 @@ class ProfilePhotoTest extends TestCase
                 $table->string('avatar')->nullable()->after('email');
             });
         }
+
+        $this->user = User::factory()->create();
+    }
+
+    public function test_user_has_avatar_attribute(): void
+    {
+        Storage::fake('minio');
 
         $user = User::factory()->create(['avatar' => 'test-avatar.jpg']);
         $this->assertEquals('test-avatar.jpg', $user->avatar);
@@ -34,13 +43,6 @@ class ProfilePhotoTest extends TestCase
     public function test_avatar_defaults_to_null(): void
     {
         Storage::fake('minio');
-
-        // Manually add avatar column if it doesn't exist
-        if (!Schema::hasColumn('users', 'avatar')) {
-            Schema::table('users', function ($table) {
-                $table->string('avatar')->nullable()->after('email');
-            });
-        }
 
         $user = User::factory()->create([
             'name' => 'João Silva',
@@ -53,17 +55,54 @@ class ProfilePhotoTest extends TestCase
     {
         Storage::fake('minio');
 
-        // Manually add avatar column if it doesn't exist
-        if (!Schema::hasColumn('users', 'avatar')) {
-            Schema::table('users', function ($table) {
-                $table->string('avatar')->nullable()->after('email');
-            });
-        }
-
         $response = $this->post(route('profile.photo.store'), [
-            'photo' => UploadedFile::fake()->image('photo.jpg'),
+            'photo' => UploadedFile::fake()->image('photo.jpg', 200, 200),
         ]);
 
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_photo_validation_requires_image(): void
+    {
+        $this->actingAs($this->user)
+            ->post(route('profile.photo.store'), [
+                'photo' => 'not-a-file',
+            ])
+            ->assertSessionHasErrors('photo');
+    }
+
+    public function test_photo_validation_accepts_jpg(): void
+    {
+        Storage::fake('minio');
+
+        $this->actingAs($this->user)
+            ->post(route('profile.photo.store'), [
+                'photo' => UploadedFile::fake()->image('photo.jpg', 200, 200),
+            ])
+            ->assertSessionHasNoErrors();
+    }
+
+    public function test_photo_validation_accepts_png(): void
+    {
+        Storage::fake('minio');
+
+        $this->actingAs($this->user)
+            ->post(route('profile.photo.store'), [
+                'photo' => UploadedFile::fake()->image('photo.png', 150, 150),
+            ])
+            ->assertSessionHasNoErrors();
+    }
+
+    public function test_photo_validation_rejects_large_files(): void
+    {
+        Storage::fake('minio');
+
+        $this->actingAs($this->user)
+            ->post(route('profile.photo.store'), [
+                'photo' => UploadedFile::fake()
+                    ->image('photo.jpg', 200, 200)
+                    ->size(5000), // 5MB
+            ])
+            ->assertSessionHasErrors('photo');
     }
 }

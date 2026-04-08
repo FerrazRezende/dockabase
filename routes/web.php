@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Profile\ProfilePhotoController;
-use App\Http\Controllers\Profile\ProfilePhotoRefreshController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -33,8 +32,9 @@ Route::middleware('auth')->group(function () {
         ->middleware(['auth', 'verified']);
     Route::post('/profile/photo', [ProfilePhotoController::class, 'store'])
         ->name('profile.photo.store');
-    Route::get('/profile/photo/refresh', ProfilePhotoRefreshController::class)
-        ->name('profile.photo.refresh');
+    // TODO: Uncomment when ProfilePhotoRefreshController is implemented
+    // Route::get('/profile/photo/refresh', \App\Http\Controllers\Profile\ProfilePhotoRefreshController::class)
+    //     ->name('profile.photo.refresh');
 });
 
 require __DIR__.'/auth.php';
