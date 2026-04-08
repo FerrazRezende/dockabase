@@ -91,6 +91,14 @@ final readonly class UserStatusService
         Redis::setex($heartbeatKey, self::HEARTBEAT_TTL, (string) now()->timestamp);
     }
 
+    public function updateHeartbeat(User $user): void
+    {
+        $userId = $user->id;
+        $heartbeatKey = "user:{$userId}:heartbeat";
+
+        Redis::setex($heartbeatKey, self::HEARTBEAT_TTL, now()->toIso8601String());
+    }
+
     public function isOnline(User $user): bool
     {
         $status = $this->getStatus($user);

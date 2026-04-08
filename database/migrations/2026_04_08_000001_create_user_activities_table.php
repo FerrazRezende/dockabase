@@ -18,6 +18,7 @@ return new class extends Migration
                 UserActivityTypeEnum::StatusChanged->value,
                 UserActivityTypeEnum::DatabaseCreated->value,
                 UserActivityTypeEnum::CredentialCreated->value,
+                UserActivityTypeEnum::PageView->value,
             ]);
             $table->string('from_status', 20)->nullable();
             $table->string('to_status', 20)->nullable();

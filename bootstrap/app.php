@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleImpersonation::class,
             \App\Http\Middleware\EnsurePasswordChanged::class,
             \App\Http\Middleware\CheckDeniedPermissions::class,
+            \App\Http\Middleware\TrackUserPresence::class,
         ]);
 
         $middleware->alias([
