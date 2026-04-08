@@ -12,8 +12,11 @@ use App\Models\UserActivity;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Redis;
 
-class UserActivityService
+final readonly class UserActivityService
 {
+    public function __construct()
+    {
+    }
     public function logStatusChange(User $user, UserStatusEnum $from, UserStatusEnum $to): UserActivity
     {
         return UserActivity::create([
