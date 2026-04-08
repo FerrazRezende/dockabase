@@ -8,7 +8,7 @@
 
 ## Overview
 
-Sistema de presença e status para usuários do DockaBase com arquitetura híbrida Redis + MySQL. O sistema permite que usuários definam seu status manualmente (Online, Ausente, Ocupado, Offline) enquanto o sistema gerencia automaticamente a detecção de entrada/saída.
+Sistema de presença e status para usuários do DockaBase com arquitetura híbrida Redis + PostgreSQL. O sistema permite que usuários definam seu status manualmente (Online, Ausente, Ocupado, Offline) enquanto o sistema gerencia automaticamente a detecção de entrada/saída.
 
 ---
 
@@ -28,7 +28,7 @@ Sistema de presença e status para usuários do DockaBase com arquitetura híbri
 │                          │                                              │
 │                          ▼                                              │
 │                   ┌────────────┐                                        │
-│                   │   MySQL    │                                        │
+│                   │ PostgreSQL │                                        │
 │                   │ Activities │                                        │
 │                   │ (History)  │                                        │
 │                   └────────────┘                                        │

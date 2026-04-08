@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement real-time user presence and status system with Redis for live tracking and MySQL for persistent history of manual changes and important events.
+**Goal:** Implement real-time user presence and status system with Redis for live tracking and PostgreSQL for persistent history of manual changes and important events.
 
-**Architecture:** Hybrid approach using Redis for real-time presence (with TTL/heartbeat) and MySQL for persistent activity logging. Laravel Echo/Reverb broadcasts status changes to admin users in real-time.
+**Architecture:** Hybrid approach using Redis for real-time presence (with TTL/heartbeat) and PostgreSQL for persistent activity logging. Laravel Echo/Reverb broadcasts status changes to admin users in real-time.
 
-**Tech Stack:** Laravel 13, Redis 7+, MySQL 8+, Laravel Echo/Reverb, Vue 3 + TypeScript, Pinia
+**Tech Stack:** Laravel 13, Redis 7+, PostgreSQL 8+, Laravel Echo/Reverb, Vue 3 + TypeScript, Pinia
 
 ---
 
@@ -18,7 +18,7 @@ app/
 │   └── UserStatusEnum.php (NEW) - Status enum with labels/colors for each state
 ├── Services/
 │   ├── UserStatusService.php (NEW) - Redis operations for status management
-│   └── UserActivityService.php (NEW) - MySQL operations for activity logging
+│   └── UserActivityService.php (NEW) - PostgreSQL operations for activity logging
 ├── Events/
 │   ├── UserStatusUpdated.php (NEW) - Broadcast status changes via Echo
 │   └── UserActivityLogged.php (NEW) - Broadcast activity logs via Echo
@@ -777,7 +777,7 @@ git commit -m "feat: add UserStatusService for Redis status management"
 
 ---
 
-## Task 4: Create UserActivityService (MySQL Operations)
+## Task 4: Create UserActivityService (PostgreSQL Operations)
 
 **Files:**
 - Create: `app/Services/UserActivityService.php`
@@ -998,7 +998,7 @@ Expected: PASS (8 tests)
 
 ```bash
 git add app/Services/UserActivityService.php tests/Unit/Services/UserActivityServiceTest.php
-git commit -m "feat: add UserActivityService for MySQL activity logging"
+git commit -m "feat: add UserActivityService for PostgreSQL activity logging"
 ```
 
 ---
@@ -1898,7 +1898,7 @@ class UserStatusController extends Controller
         // Update Redis
         $result = $this->statusService->setStatus($user, $newStatus);
 
-        // Log to MySQL only if it's a manual change (not auto online/offline)
+        // Log to PostgreSQL only if it's a manual change (not auto online/offline)
         if ($previousStatus !== UserStatusEnum::OFFLINE && $newStatus !== UserStatusEnum::ONLINE) {
             $this->activityService->logStatusChange($user, $previousStatus, $newStatus);
         }
@@ -3209,7 +3209,7 @@ After completing all 20 tasks, the user status and presence system will be fully
 1. ✅ UserStatusEnum with labels and colors
 2. ✅ UserActivity model and migration
 3. ✅ UserStatusService (Redis operations)
-4. ✅ UserActivityService (MySQL operations)
+4. ✅ UserActivityService (PostgreSQL operations)
 5. ✅ Echo events for broadcasting
 6. ✅ Listeners for logout, database, credential events
 7. ✅ TrackUserStatus middleware (auto online + heartbeat)
