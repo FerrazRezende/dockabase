@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Profile\ProfilePhotoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile/locale', [App\Http\Controllers\Profile\LocaleController::class, 'update'])
         ->name('profile.locale.update')
         ->middleware(['auth', 'verified']);
+    Route::post('/profile/photo', [ProfilePhotoController::class, 'store'])
+        ->name('profile.photo.store');
+    // TODO: Uncomment when ProfilePhotoRefreshController is implemented
+    // Route::get('/profile/photo/refresh', \App\Http\Controllers\Profile\ProfilePhotoRefreshController::class)
+    //     ->name('profile.photo.refresh');
 });
 
 require __DIR__.'/auth.php';
