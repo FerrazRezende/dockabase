@@ -556,5 +556,8 @@
     ":count week ago | :count weeks ago": ":count semana atrás | :count semanas atrás",
     ":count month ago | :count months ago": ":count mês atrás | :count meses atrás",
     ":count year ago | :count years ago": ":count ano atrás | :count anos atrás",
-    "Credential created": "Credencial criada"
+    "Credential created": "Credencial criada",
+    "Updates": "Atualizações",
+    "Recent activities and updates for this user": "Atividades e atualizações recentes deste usuário",
+    "Error loading activities": "Erro ao carregar atividades"
 }

@@ -53,6 +53,7 @@ Route::middleware(['web', 'auth'])
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.role.update');
         Route::post('/users/{user}/permissions', [UserController::class, 'syncPermissions'])->name('users.permissions.sync');
+        Route::get('/users/{user}/activities', [UserController::class, 'activities'])->name('users.activities');
         Route::post('/users/{user}/impersonate', [ImpersonateController::class, 'start'])->name('users.impersonate.start');
 
         // Impersonate
