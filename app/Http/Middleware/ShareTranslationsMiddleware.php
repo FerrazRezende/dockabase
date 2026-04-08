@@ -29,12 +29,9 @@ class ShareTranslationsMiddleware
             // Share translations with Inertia BEFORE the response is generated
             Inertia::share('translations', $translations);
             Inertia::share('locale', $locale);
-
-            \Log::info('ShareTranslationsMiddleware: Locale=' . $locale . ', Translations=' . count($translations));
         } else {
             Inertia::share('translations', []);
             Inertia::share('locale', $locale);
-            \Log::warning('Translation file not found: ' . $translationFile);
         }
 
         return $next($request);
