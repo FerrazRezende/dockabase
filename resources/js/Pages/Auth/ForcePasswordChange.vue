@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +19,7 @@ const submit = (): void => {
     form.post(route('password.force-change.update'), {
         preserveScroll: true,
         onError: (errors) => {
-            const errorMessage = errors.current_password || errors.password || errors.password_confirmation || 'Erro ao alterar senha';
+            const errorMessage = errors.current_password || errors.password || errors.password_confirmation || __('Error changing password');
             toast.error(errorMessage);
         },
     });
@@ -26,7 +27,7 @@ const submit = (): void => {
 </script>
 
 <template>
-    <Head title="Trocar Senha" />
+    <Head :title="__('Change Password')" />
 
     <div class="min-h-screen flex items-center justify-center bg-background p-4">
         <Card class="w-full max-w-md">
@@ -34,20 +35,20 @@ const submit = (): void => {
                 <div class="mx-auto mb-4 w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
                     <AlertCircle class="w-6 h-6 text-yellow-600" />
                 </div>
-                <CardTitle>Troque sua Senha</CardTitle>
+                <CardTitle>{{ __('Change Password') }}</CardTitle>
                 <CardDescription>
-                    Por segurança, você precisa definir uma nova senha antes de continuar.
+                    {{ __('For security, you need to set a new password before continuing.') }}
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <form @submit.prevent="submit" class="space-y-4">
                     <div class="space-y-2">
-                        <label for="current_password" class="text-sm font-medium">Senha atual</label>
+                        <label for="current_password" class="text-sm font-medium">{{ __('Current password') }}</label>
                         <Input
                             id="current_password"
                             v-model="form.current_password"
                             type="password"
-                            placeholder="Digite sua senha atual"
+                            :placeholder="__('Enter your current password')"
                             required
                             autocomplete="current-password"
                         />
@@ -57,12 +58,12 @@ const submit = (): void => {
                     </div>
 
                     <div class="space-y-2">
-                        <label for="password" class="text-sm font-medium">Nova senha</label>
+                        <label for="password" class="text-sm font-medium">{{ __('New password') }}</label>
                         <Input
                             id="password"
                             v-model="form.password"
                             type="password"
-                            placeholder="Digite a nova senha (mínimo 8 caracteres)"
+                            :placeholder="__('Enter new password (min. 8 characters)')"
                             required
                             autocomplete="new-password"
                         />
@@ -72,12 +73,12 @@ const submit = (): void => {
                     </div>
 
                     <div class="space-y-2">
-                        <label for="password_confirmation" class="text-sm font-medium">Confirmar nova senha</label>
+                        <label for="password_confirmation" class="text-sm font-medium">{{ __('Confirm new password') }}</label>
                         <Input
                             id="password_confirmation"
                             v-model="form.password_confirmation"
                             type="password"
-                            placeholder="Confirme a nova senha"
+                            :placeholder="__('Confirm the new password')"
                             required
                             autocomplete="new-password"
                         />
@@ -91,7 +92,7 @@ const submit = (): void => {
                         class="w-full"
                         :disabled="form.processing"
                     >
-                        Trocar Senha
+                        {{ __('Change Password') }}
                     </Button>
                 </form>
             </CardContent>

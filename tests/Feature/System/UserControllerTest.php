@@ -581,7 +581,7 @@ class UserControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJson([
-                'message' => 'User deactivated successfully.',
+                'message' => 'User deactivated successfully',
             ]);
 
         // Verify admin was deactivated (soft delete)
@@ -603,7 +603,7 @@ class UserControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJson([
-                'message' => 'User deactivated successfully.',
+                'message' => 'User deactivated successfully',
             ]);
 
         // Verify user was deactivated
@@ -634,7 +634,7 @@ class UserControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJson([
-                'message' => 'User deactivated successfully.',
+                'message' => 'User deactivated successfully',
             ]);
 
         $user->refresh();

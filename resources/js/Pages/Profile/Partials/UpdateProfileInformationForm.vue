@@ -1,20 +1,17 @@
-<script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+<script setup lang="ts">
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 
-defineProps({
-    mustVerifyEmail: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-    },
-});
+defineProps<{
+    mustVerifyEmail: boolean;
+    status?: string;
+}>();
 
-const user = usePage().props.auth.user;
+const user = usePage().props.auth.user as { name: string; email: string; email_verified_at?: string | null };
 
 const form = useForm({
     name: user.name,
@@ -24,74 +21,77 @@ const form = useForm({
 
 <template>
     <section>
-        <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Profile Information
+        <header class="mb-6">
+            <h2 class="text-lg font-medium text-foreground">
+                {{ __('Profile Information') }}
             </h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                Update your account's profile information and email address.
+            <p class="mt-1 text-sm text-muted-foreground">
+                {{ __('Update your account\'s profile information and email address.') }}
             </p>
         </header>
 
-        <form
-            @submit.prevent="form.patch(route('profile.update'))"
-            class="mt-6 space-y-6"
-        >
-            <div>
-                <InputLabel for="name" value="Name" />
-
-                <TextInput
+        <form @submit.prevent="form.patch(route('profile.update'))" class="space-y-6">
+            <div class="space-y-2">
+                <Label for="name">{{ __('Name') }}</Label>
+                <Input
                     id="name"
-                    type="text"
-                    class="mt-1 block w-full"
                     v-model="form.name"
-                    required
-                    autofocus
+                    :disabled="form.processing"
+                    :placeholder="__('Your name')"
                     autocomplete="name"
+                    required
                 />
-
-                <InputError class="mt-2" :message="form.errors.name" />
+                <p v-if="form.errors.name" class="text-sm text-destructive">
+                    {{ form.errors.name }}
+                </p>
             </div>
 
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
+            <div class="space-y-2">
+                <Label for="email">{{ __('Email') }}</Label>
+                <Input
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
                     v-model="form.email"
-                    required
+                    :disabled="form.processing"
+                    :placeholder="__('your@email.com')"
                     autocomplete="username"
+                    required
                 />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+                <p v-if="form.errors.email" class="text-sm text-destructive">
+                    {{ form.errors.email }}
+                </p>
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="mt-2 text-sm text-gray-800">
-                    Your email address is unverified.
-                    <Link
-                        :href="route('verification.send')"
-                        method="post"
-                        as="button"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                        Click here to re-send the verification email.
-                    </Link>
-                </p>
+                <Alert>
+                    <AlertDescription>
+                        <span class="text-sm">
+                            {{ __('Your email address is unverified.') }}
+                            <Link
+                                :href="route('verification.send')"
+                                method="post"
+                                as="button"
+                                class="text-sm underline hover:text-primary focus:outline-none"
+                            >
+                                {{ __('Click here to re-send the verification email.') }}
+                            </Link>
+                        </span>
+                    </AlertDescription>
+                </Alert>
 
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600"
-                >
-                    A new verification link has been sent to your email address.
-                </div>
+                <Alert v-if="status === 'verification-link-sent'" class="mt-2">
+                    <AlertDescription>
+                        <span class="text-sm font-medium">
+                            {{ __('A new verification link has been sent to your email address.') }}
+                        </span>
+                    </AlertDescription>
+                </Alert>
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <Button type="submit" :disabled="form.processing">
+                    {{ form.processing ? __('Saving...') : __('Save') }}
+                </Button>
 
                 <Transition
                     enter-active-class="transition ease-in-out"
@@ -99,11 +99,8 @@ const form = useForm({
                     leave-active-class="transition ease-in-out"
                     leave-to-class="opacity-0"
                 >
-                    <p
-                        v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
-                    >
-                        Saved.
+                    <p v-if="form.recentlySuccessful" class="text-sm text-muted-foreground">
+                        {{ __('Saved.') }}
                     </p>
                 </Transition>
             </div>

@@ -28,6 +28,7 @@ class User extends Authenticatable
         'password_changed_at',
         'active',
         'denied_permissions',
+        'locale',
     ];
 
     /**
@@ -54,6 +55,7 @@ class User extends Authenticatable
             'password_changed_at' => 'datetime',
             'active' => 'boolean',
             'denied_permissions' => 'array',
+            'locale' => 'string',
         ];
     }
 

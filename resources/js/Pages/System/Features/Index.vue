@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 import { ref } from 'vue';
 import {
     Table,
@@ -34,14 +35,14 @@ const toggleFeature = (featureName: string, currentlyActive: boolean): void => {
         only: ['features'],
         onSuccess: () => {
             const message = currentlyActive
-                ? 'Feature desativada com sucesso'
-                : 'Feature ativada com sucesso';
+                ? __('Feature disabled successfully')
+                : __('Feature enabled successfully');
             toast.success(message);
         },
         onError: () => {
             const errorMessage = currentlyActive
-                ? 'Erro ao desativar feature'
-                : 'Erro ao ativar feature';
+                ? __('Error deactivating feature')
+                : __('Error activating feature');
             toast.error(errorMessage);
         },
         onFinish: () => {
@@ -58,17 +59,17 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
 </script>
 
 <template>
-    <Head title="Feature Flags" />
+    <Head :title="__('Feature Flags')" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-semibold text-foreground">
-                        Feature Flags
+                        {{ __('Feature Flags') }}
                     </h2>
                     <p class="text-sm text-muted-foreground mt-1">
-                        Gerencie as features disponíveis na sua instância
+                        {{ __('Manage available features') }}
                     </p>
                 </div>
             </div>
@@ -78,11 +79,11 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead class="w-[200px]">Feature</TableHead>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead class="w-[100px]">Status</TableHead>
-                        <TableHead class="w-[150px]">Estratégia</TableHead>
-                        <TableHead class="w-[100px]">Rollout</TableHead>
+                        <TableHead class="w-[200px]">{{ __('Feature') }}</TableHead>
+                        <TableHead>{{ __('Description') }}</TableHead>
+                        <TableHead class="w-[100px]">{{ __('Status') }}</TableHead>
+                        <TableHead class="w-[150px]">{{ __('Strategy') }}</TableHead>
+                        <TableHead class="w-[100px]">{{ __('Rollout') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>

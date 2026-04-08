@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { __ } from '@/composables/useLang';
 import {
     Table,
     TableBody,
@@ -84,11 +85,11 @@ const groupedPermissions = computed(() => {
 
 const getCategoryLabel = (category: string): string => {
     const labels: Record<string, string> = {
-        databases: 'Databases',
+        databases: __('Databases'),
         schemas: 'Schemas',
-        credentials: 'Credentials',
+        credentials: __('Credentials'),
         tables: 'Tables',
-        users: 'Users',
+        users: __('Users'),
     };
     return labels[category] || category.charAt(0).toUpperCase() + category.slice(1);
 };
@@ -104,25 +105,27 @@ const deleteRole = (): void => {
     router.delete(route('system.roles.destroy', selectedRole.value.id), {
         onSuccess: () => {
             showDeleteRoleDialog.value = false;
-            toast.success('Role excluída com sucesso');
+            toast.success(__('Role deleted successfully'));
         },
         onError: () => {
-            toast.error('Erro ao excluir role. Tente novamente.');
+            toast.error(__('Error deleting role. Please try again.'));
         },
     });
 };
+
+const pageTitle = computed(() => __('Permissions'));
 </script>
 
 <template>
-    <Head title="Permissões" />
+    <Head :title="pageTitle" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
             <h2 class="text-2xl font-semibold text-foreground">
-                Permissões
+                {{ __('Permissions') }}
             </h2>
             <p class="text-sm text-muted-foreground mt-1">
-                Gerencie roles e permissões do sistema
+                {{ __('Manage system roles and permissions') }}
             </p>
         </template>
 
@@ -135,14 +138,14 @@ const deleteRole = (): void => {
                         <Input
                             v-model="searchRoles"
                             type="search"
-                            placeholder="Buscar roles..."
+                            :placeholder="__('Search roles...')"
                             class="pl-9"
                         />
                     </div>
                     <Link :href="route('system.roles.create')">
                         <Button>
                             <Plus class="w-4 h-4 mr-2" />
-                            Nova Role
+                            {{ __('New Role') }}
                         </Button>
                     </Link>
                 </div>
@@ -151,10 +154,10 @@ const deleteRole = (): void => {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Permissões</TableHead>
-                                <TableHead class="w-[100px]">Usuários</TableHead>
-                                <TableHead class="w-[150px]">Ações</TableHead>
+                                <TableHead>{{ __('Name') }}</TableHead>
+                                <TableHead>{{ __('Permissions') }}</TableHead>
+                                <TableHead class="w-[100px]">{{ __('Users') }}</TableHead>
+                                <TableHead class="w-[150px]">{{ __('Actions') }}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -181,7 +184,7 @@ const deleteRole = (): void => {
                                             v-if="(role.permissions ?? []).length === 0"
                                             class="text-muted-foreground text-sm"
                                         >
-                                            Nenhuma permissão
+                                            {{ __('No permissions') }}
                                         </span>
                                     </div>
                                 </TableCell>
@@ -194,7 +197,7 @@ const deleteRole = (): void => {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                title="Editar"
+                                                :title="__('Edit')"
                                             >
                                                 <Pencil class="w-4 h-4" />
                                             </Button>
@@ -202,7 +205,7 @@ const deleteRole = (): void => {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            title="Excluir"
+                                            :title="__('Delete')"
                                             :disabled="role.users_count > 0"
                                             @click="openDeleteRoleDialog(role)"
                                         >
@@ -213,7 +216,7 @@ const deleteRole = (): void => {
                             </TableRow>
                             <TableRow v-if="filteredRoles.length === 0">
                                 <TableCell colspan="4" class="text-center text-muted-foreground py-8">
-                                    Nenhuma role encontrada
+                                    {{ __('No role found') }}
                                 </TableCell>
                             </TableRow>
                         </TableBody>
@@ -226,10 +229,10 @@ const deleteRole = (): void => {
                 <div class="flex items-start gap-2">
                     <div class="space-y-1">
                         <h3 class="text-lg font-semibold text-foreground">
-                            Permissões Disponíveis
+                            {{ __('Available Permissions') }}
                         </h3>
                         <p class="text-sm text-muted-foreground">
-                            Essas permissões são predefinidas e não podem ser modificadas.
+                            {{ __('These permissions are predefined and cannot be modified.') }}
                         </p>
                     </div>
                     <Info class="w-4 h-4 text-muted-foreground mt-1" />
@@ -256,7 +259,7 @@ const deleteRole = (): void => {
                         </div>
                     </div>
                     <div v-if="Object.keys(groupedPermissions).length === 0" class="text-center text-muted-foreground py-4">
-                        Nenhuma permissão disponível
+                        {{ __('No permission available') }}
                     </div>
                 </div>
             </div>
@@ -266,15 +269,15 @@ const deleteRole = (): void => {
         <Dialog v-model:open="showDeleteRoleDialog">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Excluir Role</DialogTitle>
+                    <DialogTitle>{{ __('Delete Role') }}</DialogTitle>
                     <DialogDescription>
-                        Tem certeza que deseja excluir a role "{{ selectedRole?.name }}"?
-                        Esta ação não pode ser desfeita.
+                        {{ __('Are you sure you want to delete the role ":name"?', { name: selectedRole?.name }) }}
+                        {{ __('This action cannot be undone.') }}
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button variant="outline" @click="showDeleteRoleDialog = false">Cancelar</Button>
-                    <Button variant="destructive" @click="deleteRole">Excluir</Button>
+                    <Button variant="outline" @click="showDeleteRoleDialog = false">{{ __('Cancel') }}</Button>
+                    <Button variant="destructive" @click="deleteRole">{{ __('Delete') }}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

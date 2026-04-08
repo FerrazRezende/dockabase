@@ -31,8 +31,8 @@ class CreateDatabaseRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.regex' => 'The name must start with a lowercase letter and contain only lowercase letters, numbers, underscores, and hyphens.',
-            'credential_ids.*.size' => 'Each credential ID must be a valid KSUID (27 characters).',
+            'name.regex' => __('The name must start with a lowercase letter and contain only lowercase letters, numbers, underscores, and hyphens.'),
+            'credential_ids.*.size' => __('Each credential ID must be a valid KSUID (27 characters).'),
         ];
     }
 }

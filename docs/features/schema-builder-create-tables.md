@@ -24,7 +24,7 @@
 
 ```gherkin
 Scenario: Criar tabela com colunas básicas
-  Given estou autenticado como admin do projeto
+  Given estou autenticado com uma conta com credentials de write no banco do dados
   And estou na página "Database > Tables"
   When clico em "Nova Tabela"
   And informo o nome "products"
@@ -41,7 +41,7 @@ Scenario: Criar tabela com colunas básicas
 
 ```gherkin
 Scenario: Criar tabela com coluna JSONB
-  Given estou autenticado como admin do projeto
+  Given estou autenticado com uma conta com credentials de write no banco do dados
   When crio uma tabela "users"
   And adiciono coluna "metadata" do tipo "jsonb"
   Then a tabela suporta armazenar dados JSON estruturados
@@ -49,7 +49,7 @@ Scenario: Criar tabela com coluna JSONB
 
 ```gherkin
 Scenario: Criar tabela com coluna ARRAY
-  Given estou autenticado como admin do projeto
+  Given estou autenticado com uma conta com credentials de write no banco do dados
   When crio uma tabela "posts"
   And adiciono coluna "tags" do tipo "text[]"
   Then a tabela suporta armazenar arrays de texto
@@ -145,7 +145,7 @@ CREATE TABLE system_tables (
 
 ## Security Considerations
 
-- [ ] Apenas admins do projeto podem criar tabelas
+- [ ] Apenas usuarios com credentials com permissão de W (write) associadas ao banco podem criar tabelas
 - [ ] Validar nome da tabela contra SQL injection
-- [ ] Limite de tabelas por projeto (configurável)
+- [ ] Fazer varredura no final contra qualquer tipo de SQL Injection
 - [ ] Nomes reservados bloqueados (`pg_`, `system_`)

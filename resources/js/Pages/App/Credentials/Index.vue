@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,12 +47,12 @@ const confirmDelete = () => {
     router.delete(route('app.credentials.destroy', credentialToDelete.value.id), {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Credencial excluída com sucesso!');
+            toast.success(__('Credential deleted successfully'));
             deleteDialogOpen.value = false;
             credentialToDelete.value = null;
         },
         onError: (errors) => {
-            toast.error('Erro ao excluir credencial');
+            toast.error(__('Error deleting credential'));
         },
         onFinish: () => {
             deleting.value = null;
@@ -73,15 +74,15 @@ const getPermissionBadgeClass = (permission: string): string => {
 </script>
 
 <template>
-    <Head title="Credentials" />
+    <Head :title="__('Credentials')" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
             <h2 class="text-2xl font-semibold text-foreground">
-                Credentials
+                {{ __('Credentials') }}
             </h2>
             <p class="text-sm text-muted-foreground mt-1">
-                Gerencie as credenciais de acesso aos databases
+                {{ __('Manage database access credentials') }}
             </p>
         </template>
 
@@ -90,7 +91,7 @@ const getPermissionBadgeClass = (permission: string): string => {
                 <Link v-if="canCreate('credentials')" :href="route('app.credentials.create')">
                     <Button>
                         <Plus class="h-4 w-4 mr-2" />
-                        Nova Credencial
+                        {{ __('New Credential') }}
                     </Button>
                 </Link>
             </div>
@@ -99,10 +100,10 @@ const getPermissionBadgeClass = (permission: string): string => {
                 <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead class="w-[250px]">Nome</TableHead>
-                        <TableHead class="w-[150px]">Permissão</TableHead>
-                        <TableHead class="w-[100px]">Usuários</TableHead>
-                        <TableHead class="w-[100px]">Databases</TableHead>
+                        <TableHead class="w-[250px]">{{ __('Name') }}</TableHead>
+                        <TableHead class="w-[150px]">{{ __('Permission') }}</TableHead>
+                        <TableHead class="w-[100px]">{{ __('Users') }}</TableHead>
+                        <TableHead class="w-[100px]">{{ __('Databases') }}</TableHead>
                         <TableHead class="w-[80px]"></TableHead>
                     </TableRow>
                 </TableHeader>
@@ -152,7 +153,7 @@ const getPermissionBadgeClass = (permission: string): string => {
                                             class="flex items-center w-full"
                                         >
                                             <Eye class="mr-2 h-4 w-4" />
-                                            Visualizar
+                                            {{ __('View') }}
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
@@ -162,7 +163,7 @@ const getPermissionBadgeClass = (permission: string): string => {
                                         class="text-destructive focus:text-destructive"
                                     >
                                         <Trash2 class="mr-2 h-4 w-4" />
-                                        Excluir
+                                        {{ __('Delete') }}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -170,7 +171,7 @@ const getPermissionBadgeClass = (permission: string): string => {
                     </TableRow>
                     <TableRow v-if="credentials.data.length === 0">
                         <TableCell colspan="5" class="text-center text-muted-foreground py-8">
-                            Nenhuma credencial cadastrada
+                            {{ __('No credential registered') }}
                         </TableCell>
                     </TableRow>
                 </TableBody>
@@ -181,9 +182,9 @@ const getPermissionBadgeClass = (permission: string): string => {
         <!-- Delete Confirmation Dialog -->
         <ConfirmDialog
             v-model:open="deleteDialogOpen"
-            title="Excluir Credencial"
-            :description="`Esta ação não pode ser desfeita. Isso excluirá permanentemente a credencial '${credentialToDelete?.name}'.`"
-            confirm-text="Excluir Credencial"
+            :title="__('Delete Credential')"
+            :description="__('This action cannot be undone. This will permanently delete the credential \':name\'.', { name: credentialToDelete?.name })"
+            :confirm-text="__('Delete Credential')"
             :confirm-name="credentialToDelete?.name"
             :loading="deleting === credentialToDelete?.id"
             variant="danger"

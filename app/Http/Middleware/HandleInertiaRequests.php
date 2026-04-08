@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\User;
 use App\Services\FeatureFlagService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Inertia\Middleware;
@@ -25,6 +26,22 @@ class HandleInertiaRequests extends Middleware
     public function version(Request $request): ?string
     {
         return parent::version($request);
+    }
+
+    /**
+     * Get translations for the current locale.
+     */
+    protected function getTranslations(): array
+    {
+        $langFile = lang_path(App::currentLocale() . '.json');
+
+        if (!file_exists($langFile)) {
+            return [];
+        }
+
+        $translations = json_decode(file_get_contents($langFile), true);
+
+        return $translations ?? [];
     }
 
     /**
@@ -76,6 +93,8 @@ class HandleInertiaRequests extends Middleware
             'activeFeatures' => $activeFeatures,
             'userPermissions' => $userPermissions,
             'impersonating' => $impersonating,
+            'locale' => App::currentLocale(),
+            'translations' => $this->getTranslations(),
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),

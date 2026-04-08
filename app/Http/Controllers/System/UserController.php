@@ -74,7 +74,7 @@ class UserController extends Controller
             return new SystemUserResource($user->load('roles', 'permissions'));
         }
 
-        return redirect()->back()->with('success', 'User created successfully.');
+        return redirect()->back()->with('success', __('User created successfully'));
     }
 
     /**
@@ -110,7 +110,7 @@ class UserController extends Controller
             return new SystemUserResource($user->load('roles', 'permissions'));
         }
 
-        return redirect()->back()->with('success', 'User updated successfully.');
+        return redirect()->back()->with('success', __('User updated successfully'));
     }
 
     /**
@@ -134,7 +134,7 @@ class UserController extends Controller
             return new UserProfileResource($user);
         }
 
-        return back()->with('success', 'Role updated successfully.');
+        return back()->with('success', __('Role updated successfully'));
     }
 
     /**
@@ -158,7 +158,7 @@ class UserController extends Controller
             return new UserProfileResource($user);
         }
 
-        return back()->with('success', 'Permissions synced successfully.');
+        return back()->with('success', __('Permissions synced successfully'));
     }
 
     /**
@@ -171,7 +171,7 @@ class UserController extends Controller
         // Don't delete the last admin
         if ($user->is_admin && User::where('is_admin', true)->count() <= 1) {
             return redirect()->back()->withErrors([
-                'error' => 'Cannot delete the last admin user.',
+                'error' => __('Cannot delete the last admin user'),
             ]);
         }
 
@@ -179,9 +179,9 @@ class UserController extends Controller
         $user->update(['active' => false]);
 
         if ($request->wantsJson()) {
-            return response()->json(['message' => 'User deactivated successfully.']);
+            return response()->json(['message' => __('User deactivated successfully')]);
         }
 
-        return redirect()->back()->with('success', 'User deactivated successfully.');
+        return redirect()->back()->with('success', __('User deactivated successfully'));
     }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +34,7 @@ const submit = (): void => {
 </script>
 
 <template>
-    <Head title="Criar Database" />
+    <Head :title="__('Create database')" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
@@ -45,10 +46,10 @@ const submit = (): void => {
                 </Link>
                 <div>
                     <h2 class="text-2xl font-semibold text-foreground">
-                        Criar Database
+                        {{ __('Create database') }}
                     </h2>
                     <p class="text-sm text-muted-foreground mt-1">
-                        Adicione um novo database PostgreSQL
+                        {{ __('Add a new PostgreSQL database') }}
                     </p>
                 </div>
             </div>
@@ -58,7 +59,7 @@ const submit = (): void => {
             <form @submit.prevent="submit" class="space-y-6">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <Label for="name">Nome *</Label>
+                        <Label for="name">{{ __('Name') }} *</Label>
                         <Input
                             id="name"
                             v-model="form.name"
@@ -66,11 +67,11 @@ const submit = (): void => {
                             :class="{ 'border-destructive': form.errors.name }"
                         />
                         <p v-if="form.errors.name" class="text-sm text-destructive">{{ form.errors.name }}</p>
-                        <p class="text-xs text-muted-foreground">Apenas letras minúsculas, números, underline e hífen</p>
+                        <p class="text-xs text-muted-foreground">{{ __('Only lowercase letters, numbers, underscore and hyphen') }}</p>
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="database_name">Database Name *</Label>
+                        <Label for="database_name">{{ __('Database Name') }} *</Label>
                         <Input
                             id="database_name"
                             v-model="form.database_name"
@@ -82,7 +83,7 @@ const submit = (): void => {
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="display_name">Display Name</Label>
+                    <Label for="display_name">{{ __('Display Name') }}</Label>
                     <Input
                         id="display_name"
                         v-model="form.display_name"
@@ -91,18 +92,18 @@ const submit = (): void => {
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="description">Descrição</Label>
+                    <Label for="description">{{ __('Description') }}</Label>
                     <Textarea
                         id="description"
                         v-model="form.description"
-                        placeholder="Descrição do database"
+                        :placeholder="__('Database description')"
                         rows="3"
                     />
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <Label for="host">Host</Label>
+                        <Label for="host">{{ __('Host') }}</Label>
                         <Input
                             id="host"
                             v-model="form.host"
@@ -111,7 +112,7 @@ const submit = (): void => {
                     </div>
 
                     <div class="space-y-2">
-                        <Label for="port">Port</Label>
+                        <Label for="port">{{ __('Port') }}</Label>
                         <Input
                             id="port"
                             v-model.number="form.port"
@@ -123,19 +124,19 @@ const submit = (): void => {
 
                 <div class="flex items-center justify-between">
                     <div class="space-y-0.5">
-                        <Label>Ativo</Label>
-                        <p class="text-xs text-muted-foreground">Database disponível para uso</p>
+                        <Label>{{ __('Active') }}</Label>
+                        <p class="text-xs text-muted-foreground">{{ __('Database available for use') }}</p>
                     </div>
                     <Switch v-model:checked="form.is_active" />
                 </div>
 
                 <div class="flex justify-end gap-4 pt-4">
                     <Link :href="route('app.databases.index')">
-                        <Button variant="outline" type="button">Cancelar</Button>
+                        <Button variant="outline" type="button">{{ __('Cancel') }}</Button>
                     </Link>
                     <Button type="submit" :disabled="form.processing">
                         <Loader2 v-if="form.processing" class="h-4 w-4 mr-2 animate-spin" />
-                        Criar Database
+                        {{ __('Create database') }}
                     </Button>
                 </div>
             </form>

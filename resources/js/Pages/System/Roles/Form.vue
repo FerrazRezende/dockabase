@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 import { ref, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Badge } from '@/components/ui/badge';
@@ -140,10 +141,10 @@ const submit = (): void => {
             },
             {
                 onSuccess: () => {
-                    toast.success('Role atualizada com sucesso');
+                    toast.success(__('Role updated successfully'));
                 },
                 onError: () => {
-                    toast.error('Erro ao atualizar role. Tente novamente.');
+                    toast.error(__('Error updating role. Please try again.'));
                 },
                 onFinish: () => {
                     isSaving.value = false;
@@ -159,10 +160,10 @@ const submit = (): void => {
             },
             {
                 onSuccess: () => {
-                    toast.success('Role criada com sucesso');
+                    toast.success(__('Role created successfully'));
                 },
                 onError: () => {
-                    toast.error('Erro ao criar role. Tente novamente.');
+                    toast.error(__('Error updating role. Please try again.'));
                 },
                 onFinish: () => {
                     isSaving.value = false;
@@ -174,7 +175,7 @@ const submit = (): void => {
 </script>
 
 <template>
-    <Head :title="isEditing ? 'Editar Role' : 'Nova Role'" />
+    <Head :title="isEditing ? __('Edit Role') : __('New Role')" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
@@ -186,10 +187,10 @@ const submit = (): void => {
                 </Link>
                 <div>
                     <h2 class="text-2xl font-semibold text-foreground">
-                        {{ isEditing ? 'Editar Role' : 'Nova Role' }}
+                        {{ isEditing ? __('Edit Role') : __('New Role') }}
                     </h2>
                     <p class="text-sm text-muted-foreground mt-1">
-                        {{ isEditing ? 'Altere o nome e as permissões da role.' : 'Crie uma nova role e defina suas permissões.' }}
+                        {{ isEditing ? __('Change the name and permissions of the role.') : __('Create a new role and define its permissions.') }}
                     </p>
                 </div>
             </div>
@@ -203,10 +204,10 @@ const submit = (): void => {
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2">
                                 <Key class="w-5 h-5" />
-                                Permissões
+                                {{ __('Permissions') }}
                             </CardTitle>
                             <CardDescription>
-                                Selecione as permissões que esta role deve ter.
+                                {{ __('Select the permissions this role should have.') }}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -230,7 +231,7 @@ const submit = (): void => {
                                         <AccordionContent class="px-4 pb-4 pt-0">
                                             <div class="flex items-center justify-between mb-3">
                                                 <span class="text-xs text-muted-foreground">
-                                                    Selecione as permissões de {{ getCategoryLabel(category) }}
+                                                    {{ __('Select :category permissions', { category: getCategoryLabel(category) }) }}
                                                 </span>
                                                 <Button
                                                     variant="outline"
@@ -238,7 +239,7 @@ const submit = (): void => {
                                                     class="h-7 text-xs"
                                                     @click="selectAllInCategory(category)"
                                                 >
-                                                    {{ isAllSelectedInCategory(category) ? 'Desmarcar' : 'Marcar' }} todos
+                                                    {{ isAllSelectedInCategory(category) ? __('Unmark all') : __('Mark all') }}
                                                 </Button>
                                             </div>
                                             <div class="grid gap-2 md:grid-cols-2">
@@ -265,7 +266,7 @@ const submit = (): void => {
                                 </Accordion>
                             </div>
                             <p v-else class="text-muted-foreground text-sm text-center py-4">
-                                Nenhuma permissão disponível
+                                {{ __('No permission available') }}
                             </p>
                         </CardContent>
                     </Card>
@@ -277,15 +278,15 @@ const submit = (): void => {
                         <CardHeader>
                             <CardTitle class="flex items-center gap-2">
                                 <Shield class="w-5 h-5" />
-                                Informações da Role
+                                {{ __('Role Information') }}
                             </CardTitle>
                         </CardHeader>
                         <CardContent class="space-y-4">
                             <div class="grid gap-2">
-                                <label class="text-sm font-medium">Nome</label>
+                                <label class="text-sm font-medium">{{ __('Name') }}</label>
                                 <Input
                                     v-model="form.name"
-                                    placeholder="ex: Developer, Manager, Admin"
+                                    :placeholder="__('ex: Developer, Manager, Admin')"
                                     :disabled="isSaving"
                                 />
                             </div>
@@ -293,7 +294,7 @@ const submit = (): void => {
                             <!-- Summary of selected permissions -->
                             <div class="pt-4 border-t">
                                 <p class="text-sm text-muted-foreground mb-2">
-                                    {{ form.permission_ids.length }} permissões selecionadas
+                                    {{ form.permission_ids.length }} {{ __('permissions selected') }}
                                 </p>
                             </div>
 

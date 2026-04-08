@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 import { ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -95,7 +96,7 @@ const searchUsers = (): void => {
 const openCreateDialog = (): void => {
     // Verificar se há roles disponíveis
     if (!props.allRoles || props.allRoles.length === 0) {
-        toast.error('Não é possível criar um usuário sem roles, crie uma role primeiro');
+        toast.error(__('It is not possible to create a user without roles, create a role first'));
         return;
     }
     form.value = { name: '', email: '', role_id: '' };
@@ -105,7 +106,7 @@ const openCreateDialog = (): void => {
 const createUser = (): void => {
     // Validar se uma role foi selecionada
     if (!form.value.role_id) {
-        toast.error('Selecione uma role para o usuário');
+        toast.error(__('Select a role for the user'));
         return;
     }
 
@@ -118,10 +119,10 @@ const createUser = (): void => {
     router.post(route('system.users.store'), payload, {
         onSuccess: () => {
             showCreateDialog.value = false;
-            toast.success('Usuário criado com sucesso');
+            toast.success(__('User created successfully'));
         },
         onError: () => {
-            toast.error('Erro ao criar usuário. Tente novamente.');
+            toast.error(__('Error creating user. Please try again.'));
         },
     });
 };
@@ -160,10 +161,10 @@ const confirmDeactivate = (): void => {
                 showDeactivateDialog.value = false;
                 selectedUserId.value = null;
                 selectedUserName.value = '';
-                toast.success('Usuário desativado com sucesso');
+                toast.success(__('User deactivated successfully'));
             },
             onError: () => {
-                toast.error('Erro ao desativar usuário. Tente novamente.');
+                toast.error(__('Error deactivating user. Please try again.'));
             },
         });
     }
@@ -171,15 +172,15 @@ const confirmDeactivate = (): void => {
 </script>
 
 <template>
-    <Head title="Usuários" />
+    <Head :title="__('Users')" />
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
             <h2 class="text-2xl font-semibold text-foreground">
-                Usuários
+                {{ __('Users') }}
             </h2>
             <p class="text-sm text-muted-foreground mt-1">
-                Gerencie os usuários do sistema
+                {{ __('Manage system users') }}
             </p>
         </template>
 
@@ -190,14 +191,14 @@ const confirmDeactivate = (): void => {
                     <Input
                         v-model="search"
                         type="search"
-                        placeholder="Buscar usuários..."
+                        :placeholder="__('Search users...')"
                         class="pl-9"
                         @keyup.enter="searchUsers"
                     />
                 </div>
                 <Button @click="openCreateDialog">
                     <Plus class="w-4 h-4 mr-2" />
-                    Novo Usuário
+                    {{ __('New User') }}
                 </Button>
             </div>
 
@@ -205,11 +206,11 @@ const confirmDeactivate = (): void => {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Nome</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Roles</TableHead>
-                        <TableHead class="w-[100px]">Status</TableHead>
-                        <TableHead class="w-[200px]">Ações</TableHead>
+                        <TableHead>{{ __('Name') }}</TableHead>
+                        <TableHead>{{ __('Email') }}</TableHead>
+                        <TableHead>{{ __('Roles') }}</TableHead>
+                        <TableHead class="w-[100px]">{{ __('Status') }}</TableHead>
+                        <TableHead class="w-[200px]">{{ __('Actions') }}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -254,13 +255,13 @@ const confirmDeactivate = (): void => {
                                 :variant="user.active ? 'default' : 'outline'"
                                 :class="user.active ? 'bg-green-500' : 'text-muted-foreground'"
                             >
-                                {{ user.active ? 'Ativo' : 'Inativo' }}
+                                {{ user.active ? __('Active') : __('Inactive') }}
                             </Badge>
                         </TableCell>
                         <TableCell>
                             <div class="flex items-center gap-1">
                                 <Link :href="route('system.users.show', user.id)">
-                                    <Button variant="ghost" size="icon" title="Ver perfil">
+                                    <Button variant="ghost" size="icon" :title="__('View profile')">
                                         <Eye class="w-4 h-4" />
                                     </Button>
                                 </Link>
@@ -268,7 +269,7 @@ const confirmDeactivate = (): void => {
                                     v-if="$page.props.auth.user.is_admin && !user.is_admin"
                                     variant="ghost"
                                     size="icon"
-                                    title="Impersonate"
+                                    :title="__('Impersonate')"
                                     @click="impersonate(user.id)"
                                 >
                                     <User class="w-4 h-4" />
@@ -277,7 +278,7 @@ const confirmDeactivate = (): void => {
                                     v-if="!user.is_admin"
                                     variant="ghost"
                                     size="icon"
-                                    title="Desativar"
+                                    :title="__('Deactivate')"
                                     @click="deactivateUser(user.id)"
                                 >
                                     <Trash2 class="w-4 h-4 text-destructive" />
@@ -294,26 +295,26 @@ const confirmDeactivate = (): void => {
         <Dialog v-model:open="showCreateDialog">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Novo Usuário</DialogTitle>
+                    <DialogTitle>{{ __('New User') }}</DialogTitle>
                     <DialogDescription>
-                        Crie um novo usuário. A senha padrão será "password123".
+                        {{ __('Create a new user. The default password will be "password123".') }}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div class="grid gap-4 py-4">
                     <div class="grid gap-2">
-                        <label class="text-sm font-medium">Nome</label>
-                        <Input v-model="form.name" placeholder="Nome do usuário" />
+                        <label class="text-sm font-medium">{{ __('Name') }}</label>
+                        <Input v-model="form.name" :placeholder="__('User name')" />
                     </div>
                     <div class="grid gap-2">
-                        <label class="text-sm font-medium">Email</label>
-                        <Input v-model="form.email" type="email" placeholder="email@exemplo.com" />
+                        <label class="text-sm font-medium">{{ __('Email') }}</label>
+                        <Input v-model="form.email" type="email" :placeholder="__('email@example.com')" />
                     </div>
                     <div class="grid gap-2">
-                        <label class="text-sm font-medium">Role *</label>
+                        <label class="text-sm font-medium">{{ __('Role') }} *</label>
                         <Select v-model="form.role_id">
                             <SelectTrigger>
-                                <SelectValue placeholder="Selecione uma role" />
+                                <SelectValue :placeholder="__('Select a role')" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem
@@ -330,9 +331,9 @@ const confirmDeactivate = (): void => {
 
                 <DialogFooter>
                     <Button variant="outline" @click="showCreateDialog = false">
-                        Cancelar
+                        {{ __('Cancel') }}
                     </Button>
-                    <Button @click="createUser">Criar Usuário</Button>
+                    <Button @click="createUser">{{ __('Create User') }}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -341,17 +342,17 @@ const confirmDeactivate = (): void => {
         <Dialog v-model:open="showImpersonateDialog">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Impersonar Usuário</DialogTitle>
+                    <DialogTitle>{{ __('Impersonate User') }}</DialogTitle>
                     <DialogDescription>
-                        Tem certeza que deseja entrar como {{ selectedUserName }}?
+                        {{ __('Are you sure you want to login as :name?', { name: selectedUserName }) }}
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter>
                     <Button variant="outline" @click="showImpersonateDialog = false">
-                        Cancelar
+                        {{ __('Cancel') }}
                     </Button>
-                    <Button @click="confirmImpersonate">Confirmar</Button>
+                    <Button @click="confirmImpersonate">{{ __('Confirm') }}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -360,17 +361,17 @@ const confirmDeactivate = (): void => {
         <Dialog v-model:open="showDeactivateDialog">
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Desativar Usuário</DialogTitle>
+                    <DialogTitle>{{ __('Deactivate User') }}</DialogTitle>
                     <DialogDescription>
-                        Tem certeza que deseja desativar {{ selectedUserName }}?
+                        {{ __('Are you sure you want to deactivate :name?', { name: selectedUserName }) }}
                     </DialogDescription>
                 </DialogHeader>
 
                 <DialogFooter>
                     <Button variant="outline" @click="showDeactivateDialog = false">
-                        Cancelar
+                        {{ __('Cancel') }}
                     </Button>
-                    <Button variant="destructive" @click="confirmDeactivate">Desativar</Button>
+                    <Button variant="destructive" @click="confirmDeactivate">{{ __('Deactivate') }}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

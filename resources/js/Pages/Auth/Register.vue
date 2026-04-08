@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { __ } from '@/composables/useLang';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,7 +25,7 @@ const { isDark, toggleDark } = useDarkMode();
 </script>
 
 <template>
-    <Head title="Criar conta" />
+    <Head :title="__('Create account')" />
 
     <div class="min-h-screen flex flex-col bg-background">
         <!-- Header -->
@@ -50,15 +51,15 @@ const { isDark, toggleDark } = useDarkMode();
         <main class="flex-1 flex items-center justify-center px-4 pt-24">
             <Card class="w-full max-w-md">
                 <CardHeader class="text-center">
-                    <CardTitle class="text-2xl">Criar conta</CardTitle>
+                    <CardTitle class="text-2xl">{{ __('Create account') }}</CardTitle>
                     <CardDescription>
-                        Preencha os dados para criar sua conta
+                        {{ __('Fill in the data to create your account') }}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form @submit.prevent="submit" class="space-y-4">
                         <div class="space-y-2">
-                            <Label for="name">Nome</Label>
+                            <Label for="name">{{ __('Name') }}</Label>
                             <Input
                                 id="name"
                                 type="text"
@@ -66,7 +67,7 @@ const { isDark, toggleDark } = useDarkMode();
                                 required
                                 autofocus
                                 autocomplete="name"
-                                placeholder="Seu nome"
+                                :placeholder="__('Enter your name')"
                             />
                             <p v-if="form.errors.name" class="text-sm text-destructive">
                                 {{ form.errors.name }}
@@ -74,14 +75,14 @@ const { isDark, toggleDark } = useDarkMode();
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="email">Email</Label>
+                            <Label for="email">{{ __('Email') }}</Label>
                             <Input
                                 id="email"
                                 type="email"
                                 v-model="form.email"
                                 required
                                 autocomplete="email"
-                                placeholder="seu@email.com"
+                                :placeholder="__('Enter your email')"
                             />
                             <p v-if="form.errors.email" class="text-sm text-destructive">
                                 {{ form.errors.email }}
@@ -89,14 +90,14 @@ const { isDark, toggleDark } = useDarkMode();
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="password">Senha</Label>
+                            <Label for="password">{{ __('Password') }}</Label>
                             <Input
                                 id="password"
                                 type="password"
                                 v-model="form.password"
                                 required
                                 autocomplete="new-password"
-                                placeholder="••••••••"
+                                :placeholder="__('Enter your password')"
                             />
                             <p v-if="form.errors.password" class="text-sm text-destructive">
                                 {{ form.errors.password }}
@@ -104,14 +105,14 @@ const { isDark, toggleDark } = useDarkMode();
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="password_confirmation">Confirmar senha</Label>
+                            <Label for="password_confirmation">{{ __('Confirm password') }}</Label>
                             <Input
                                 id="password_confirmation"
                                 type="password"
                                 v-model="form.password_confirmation"
                                 required
                                 autocomplete="new-password"
-                                placeholder="••••••••"
+                                :placeholder="__('Confirm password')"
                             />
                             <p v-if="form.errors.password_confirmation" class="text-sm text-destructive">
                                 {{ form.errors.password_confirmation }}
@@ -123,15 +124,15 @@ const { isDark, toggleDark } = useDarkMode();
                             class="w-full"
                             :disabled="form.processing"
                         >
-                            <span v-if="form.processing">Criando...</span>
-                            <span v-else>Criar conta</span>
+                            <span v-if="form.processing">{{ __('Creating...') }}</span>
+                            <span v-else>{{ __('Create account') }}</span>
                         </Button>
                     </form>
 
                     <div class="mt-6 text-center text-sm text-muted-foreground">
-                        Já tem uma conta?
+                        {{ __('Already have an account?') }}
                         <Link :href="route('login')" class="text-primary hover:underline">
-                            Entrar
+                            {{ __('Sign in') }}
                         </Link>
                     </div>
                 </CardContent>
