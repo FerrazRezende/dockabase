@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { __ } from '@/composables/useLang';
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'vue-toastification';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import {
@@ -15,7 +15,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     Dialog,
     DialogContent,
@@ -38,6 +37,9 @@ import {
     Plus,
     Search,
 } from 'lucide-vue-next';
+import UserAvatarWithStatus from '@/components/user/UserAvatarWithStatus.vue';
+import { useEchoChannels } from '@/composables/useEchoChannels';
+import type { UserStatusChangedEvent, UserStatus } from '@/types/user-status';
 
 interface Role {
     id: number;
@@ -49,11 +51,13 @@ interface User {
     name: string;
     email: string;
     avatar?: string;
+    bio?: string | null;
     is_admin: boolean;
     active: boolean;
     roles?: string[];
     password_changed_at: string | null;
     created_at: string;
+    status?: UserStatus;
 }
 
 interface Props {
@@ -71,6 +75,58 @@ const showImpersonateDialog = ref(false);
 const showDeactivateDialog = ref(false);
 const selectedUserId = ref<number | null>(null);
 const selectedUserName = ref('');
+
+// Local reactive status map for real-time updates
+const userStatuses = ref<Record<number, UserStatus>>({});
+
+// Initialize statuses from props
+if (props.users) {
+    props.users.forEach(user => {
+        if (user.status) {
+            userStatuses.value[user.id] = user.status;
+        }
+    });
+}
+
+// WebSocket connection for real-time status updates
+const { connect, listenToStatusUpdates, disconnect, isConnected } = useEchoChannels();
+
+// Connect to WebSocket and listen for status updates
+onMounted(async () => {
+    try {
+        await connect();
+
+        // Listen to status updates for all visible users
+        if (props.users) {
+            props.users.forEach(user => {
+                const unsubscribe = listenToStatusUpdates(user.id, (event: UserStatusChangedEvent) => {
+                    // Update local status when user status changes
+                    const userId = Number(event.user_id);
+                    if (userStatuses.value[userId] !== undefined) {
+                        userStatuses.value[userId] = event.to;
+                    }
+                });
+
+                // Store unsubscribe function for cleanup (optional, for future use)
+                if (unsubscribe) {
+                    (user as any)._unsubscribe = unsubscribe;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('[Users/Index] Failed to connect to WebSocket:', error);
+        // Non-blocking: continue without real-time updates
+    }
+});
+
+// Cleanup WebSocket connection on unmount
+onUnmounted(() => {
+    try {
+        disconnect();
+    } catch (error) {
+        console.error('[Users/Index] Error disconnecting WebSocket:', error);
+    }
+});
 
 // Form state
 const form = ref({
@@ -171,6 +227,14 @@ const confirmDeactivate = (): void => {
         });
     }
 };
+
+/**
+ * Get user status from local reactive state
+ * Defaults to 'offline' if not set
+ */
+const getUserStatus = (userId: number): UserStatus => {
+    return userStatuses.value[userId] || 'offline';
+};
 </script>
 
 <template>
@@ -212,6 +276,7 @@ const confirmDeactivate = (): void => {
                         <TableHead>{{ __('Name') }}</TableHead>
                         <TableHead>{{ __('Email') }}</TableHead>
                         <TableHead>{{ __('Roles') }}</TableHead>
+                        <TableHead class="w-[120px]">{{ __('Presence') }}</TableHead>
                         <TableHead class="w-[100px]">{{ __('Status') }}</TableHead>
                         <TableHead class="w-[200px]">{{ __('Actions') }}</TableHead>
                     </TableRow>
@@ -222,12 +287,14 @@ const confirmDeactivate = (): void => {
                         :key="user.id"
                     >
                         <TableCell>
-                            <Avatar class="h-8 w-8">
-                                <AvatarImage v-if="user.avatar" :src="user.avatar" />
-                                <AvatarFallback class="bg-primary text-primary-foreground text-xs">
-                                    {{ user.name.substring(0, 2).toUpperCase() }}
-                                </AvatarFallback>
-                            </Avatar>
+                            <UserAvatarWithStatus
+                                :user-id="String(user.id)"
+                                :user-name="user.name"
+                                :avatar-url="user.avatar"
+                                :status="getUserStatus(user.id)"
+                                :clickable="false"
+                                size="sm"
+                            />
                         </TableCell>
                         <TableCell class="font-medium">
                             <Link :href="route('system.users.show', user.id)" class="hover:underline">
@@ -260,6 +327,14 @@ const confirmDeactivate = (): void => {
                                     -
                                 </span>
                             </div>
+                        </TableCell>
+                        <TableCell>
+                            <Badge
+                                variant="outline"
+                                class="text-xs"
+                            >
+                                {{ getUserStatus(user.id) === 'online' ? __('Online') : getUserStatus(user.id) === 'away' ? __('Away') : getUserStatus(user.id) === 'busy' ? __('Busy') : __('Offline') }}
+                            </Badge>
                         </TableCell>
                         <TableCell>
                             <Badge
