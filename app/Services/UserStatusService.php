@@ -53,7 +53,7 @@ final readonly class UserStatusService
         Redis::setex($statusKey, self::STATUS_TTL, json_encode($data));
 
         // Set heartbeat
-        $this->refreshHeartbeat($user);
+        $this->updateHeartbeat($user);
 
         return [
             'from' => $previousStatus,
@@ -90,14 +90,6 @@ final readonly class UserStatusService
         $decoded = json_decode($data, true);
 
         return UserStatusEnum::from($decoded['status']);
-    }
-
-    public function refreshHeartbeat(User $user): void
-    {
-        $userId = $user->id;
-        $heartbeatKey = "user:{$userId}:heartbeat";
-
-        Redis::setex($heartbeatKey, self::HEARTBEAT_TTL, now()->toIso8601String());
     }
 
     public function updateHeartbeat(User $user): void
@@ -254,7 +246,7 @@ final readonly class UserStatusService
             return null;
         }
 
-        // If heartbeat doesn't exist, return null
+        // If heartbeat doesn't exist, return null (user is inactive)
         if (! Redis::exists($heartbeatKey)) {
             return null;
         }
@@ -267,6 +259,10 @@ final readonly class UserStatusService
         }
 
         $decoded = json_decode($statusData, true);
+
+        if (! isset($decoded['status']) || ! isset($decoded['updated_at'])) {
+            return null;
+        }
 
         // Get heartbeat data
         $heartbeat = Redis::get($heartbeatKey);

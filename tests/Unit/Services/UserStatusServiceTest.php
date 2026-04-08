@@ -94,7 +94,7 @@ final class UserStatusServiceTest extends TestCase
         $this->assertEquals(UserStatusEnum::BUSY, $status);
     }
 
-    public function test_refresh_heartbeat_updates_timestamp(): void
+    public function test_update_heartbeat_updates_timestamp(): void
     {
         $this->service->setOnline($this->user);
 
@@ -107,7 +107,7 @@ final class UserStatusServiceTest extends TestCase
         sleep(1); // 1 second
 
         // Refresh heartbeat
-        $this->service->refreshHeartbeat($this->user);
+        $this->service->updateHeartbeat($this->user);
 
         // Get new heartbeat
         $newHeartbeat = Redis::get($heartbeatKey);
@@ -116,7 +116,7 @@ final class UserStatusServiceTest extends TestCase
         $this->assertTrue($this->service->isOnline($this->user));
     }
 
-    public function test_refresh_heartbeat_brings_user_back_online_if_expired(): void
+    public function test_update_heartbeat_brings_user_back_online_if_expired(): void
     {
         // Set user online
         $this->service->setOnline($this->user);
@@ -131,8 +131,8 @@ final class UserStatusServiceTest extends TestCase
         // isOnline() returns true for AWAY (since AWAY !== OFFLINE)
         $this->assertTrue($this->service->isOnline($this->user));
 
-        // Refresh heartbeat should bring user back to original status
-        $this->service->refreshHeartbeat($this->user);
+        // Update heartbeat should bring user back to original status
+        $this->service->updateHeartbeat($this->user);
 
         // User should be online again
         $this->assertEquals(UserStatusEnum::ONLINE, $this->service->getStatus($this->user));
