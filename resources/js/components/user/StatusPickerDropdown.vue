@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Circle, MoreHorizontal } from 'lucide-vue-next';
 import { useUserStatus } from '@/composables/useUserStatus';
 import type { UserStatus } from '@/types/user-status';
+import { __ } from '@/utils/lang';
 
 interface Props {
   /** Avatar URL to display */

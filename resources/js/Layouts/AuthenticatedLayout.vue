@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NotificationCenter from '@/components/NotificationCenter.vue';
-import StatusPickerDropdown from '@/components/user/StatusPickerDropdown.vue';
 import {
     Database,
     Home,
@@ -243,35 +242,42 @@ const initials = (name: string): string => {
             </nav>
 
             <!-- Footer -->
-            <div class="border-t border-border p-2 space-y-2">
-                <!-- Status Picker (only show when not collapsed) -->
-                <div v-if="!collapsed" class="px-1">
-                    <StatusPickerDropdown
-                        :avatar-url="auth.user.avatar"
-                        :user-name="auth.user.name"
-                        :initial-status="userStatus"
-                        compact
-                    />
-                </div>
-
-                <!-- User Menu -->
+            <div class="border-t border-border p-2">
+                <!-- User Menu with Status -->
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button
                             variant="ghost"
                             :class="[
-                                'w-full',
+                                'w-full relative',
                                 collapsed
                                     ? 'h-10 w-10 p-0 justify-center'
                                     : 'justify-start gap-2 h-10 px-2',
                             ]"
                         >
-                            <Avatar class="h-8 w-8 shrink-0">
-                                <AvatarImage :src="auth.user.avatar" />
-                                <AvatarFallback class="bg-primary text-primary-foreground text-xs">
-                                    {{ initials(auth.user.name) }}
-                                </AvatarFallback>
-                            </Avatar>
+                            <div class="relative">
+                                <Avatar class="h-8 w-8 shrink-0">
+                                    <AvatarImage :src="auth.user.avatar" />
+                                    <AvatarFallback class="bg-primary text-primary-foreground text-xs">
+                                        {{ initials(auth.user.name) }}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <!-- Status indicator dot -->
+                                <span
+                                    v-if="userStatus"
+                                    class="absolute bottom-0 right-0 flex size-3 items-center justify-center rounded-full bg-background"
+                                >
+                                    <span
+                                        class="size-2 rounded-full"
+                                        :class="{
+                                            'bg-green-500': userStatus === 'online',
+                                            'bg-yellow-500': userStatus === 'away',
+                                            'bg-red-500': userStatus === 'busy',
+                                            'bg-gray-400': userStatus === 'offline',
+                                        }"
+                                    />
+                                </span>
+                            </div>
                             <template v-if="!collapsed">
                                 <div class="flex flex-1 flex-col items-start text-left truncate">
                                     <span class="text-sm font-medium leading-none">

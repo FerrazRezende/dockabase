@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { UserStatus } from '@/types/user-status';
+import { __ } from '@/utils/lang';
 
 interface Props {
   /** User ID for link generation */

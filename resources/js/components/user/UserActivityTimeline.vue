@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, MoreVertical, ChevronDown } from 'lucide-vue-next';
 import type { UserActivity, UserActivityType } from '@/types/user-status';
+import { __ } from '@/utils/lang';
 
 interface Props {
   userId?: string;
