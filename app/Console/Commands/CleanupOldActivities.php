@@ -16,11 +16,32 @@ final class CleanupOldActivities extends Command
     public function handle(): int
     {
         $days = (int) $this->argument('days');
+
+        // Validate days parameter
+        if ($days < 1) {
+            $this->error('Days must be at least 1.');
+
+            return Command::FAILURE;
+        }
+
+        if ($days > 3650) {
+            $this->error('Days cannot exceed 3650 (10 years).');
+
+            return Command::FAILURE;
+        }
+
         $cutoff = Carbon::now()->subDays($days);
 
         $this->info("Cleaning up activities older than {$days} days...");
 
-        $deleted = UserActivity::where('created_at', '<', $cutoff)->delete();
+        // Use chunked processing for large datasets
+        $deleted = 0;
+        UserActivity::where('created_at', '<', $cutoff)
+            ->chunkById(1000, function ($activities) use (&$deleted) {
+                $count = $activities->count();
+                $activities->each->delete();
+                $deleted += $count;
+            });
 
         $this->info("Deleted {$deleted} old activity records.");
 

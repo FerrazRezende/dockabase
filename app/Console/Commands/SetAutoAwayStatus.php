@@ -40,17 +40,26 @@ final class SetAutoAwayStatus extends Command
                     $data = Redis::get($statusKey);
                     if ($data !== false) {
                         $decoded = json_decode($data, true);
-                        $currentStatus = UserStatusEnum::from($decoded['status']);
+                        if (! isset($decoded['status'])) {
+                            continue;
+                        }
 
-                        // Only set to AWAY if not already AWAY or OFFLINE
-                        if ($currentStatus !== UserStatusEnum::AWAY && $currentStatus !== UserStatusEnum::OFFLINE) {
-                            $this->statusService->setStatus($user, UserStatusEnum::AWAY);
-                            $this->activityService->logStatusChange(
-                                user: $user,
-                                from: $currentStatus,
-                                to: UserStatusEnum::AWAY,
-                            );
-                            $affected++;
+                        try {
+                            $currentStatus = UserStatusEnum::from($decoded['status']);
+
+                            // Only set to AWAY if not already AWAY or OFFLINE
+                            if ($currentStatus !== UserStatusEnum::AWAY && $currentStatus !== UserStatusEnum::OFFLINE) {
+                                $this->statusService->setStatus($user, UserStatusEnum::AWAY);
+                                $this->activityService->logStatusChange(
+                                    user: $user,
+                                    from: $currentStatus,
+                                    to: UserStatusEnum::AWAY,
+                                );
+                                $affected++;
+                            }
+                        } catch (\ValueError $e) {
+                            // Skip users with invalid status
+                            continue;
                         }
                     }
                 }
