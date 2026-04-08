@@ -67,9 +67,18 @@ final readonly class UserStatusService
         $statusKey = "user:{$userId}:status";
         $heartbeatKey = "user:{$userId}:heartbeat";
 
-        // If status key doesn't exist or heartbeat expired, user is offline
-        if (! Redis::exists($statusKey) || ! Redis::exists($heartbeatKey)) {
+        // If status key doesn't exist, user is offline
+        if (! Redis::exists($statusKey)) {
+            // But if heartbeat exists, return AWAY (user was online but status expired)
+            if (Redis::exists($heartbeatKey)) {
+                return UserStatusEnum::AWAY;
+            }
             return UserStatusEnum::OFFLINE;
+        }
+
+        // If heartbeat expired, user is away (not offline)
+        if (! Redis::exists($heartbeatKey)) {
+            return UserStatusEnum::AWAY;
         }
 
         $data = Redis::get($statusKey);
@@ -136,5 +145,140 @@ final readonly class UserStatusService
         }
 
         return $statuses;
+    }
+
+    /**
+     * Get all user IDs with a specific status.
+     *
+     * @param  string  $status  The status value (online, away, busy, offline)
+     * @return array<string> Array of user IDs (strings for KSUID)
+     */
+    public function getUserIdsWithStatus(string $status): array
+    {
+        $userIds = [];
+
+        // Search for all status keys in Redis
+        // We need to use the connection directly to get keys with prefix
+        $pattern = 'user:*:status';
+        $redis = Redis::connection();
+        $keys = $redis->keys($pattern);
+
+        foreach ($keys as $key) {
+            // Remove the Redis prefix to get the clean key
+            $prefix = config('database.redis.options.prefix', '');
+            $cleanKey = $prefix ? str_replace($prefix, '', $key) : $key;
+
+            // Extract user ID from key pattern "user:{id}:status"
+            $keyParts = explode(':', $cleanKey);
+            $userId = $keyParts[1]; // Keep as string (KSUID)
+
+            // Get the status data using the facade (which handles prefix automatically)
+            $data = Redis::get($cleanKey);
+
+            if ($data === false || $data === null) {
+                continue;
+            }
+
+            $decoded = json_decode($data, true);
+
+            // Check if heartbeat still exists
+            $heartbeatKey = "user:{$userId}:heartbeat";
+            if (! Redis::exists($heartbeatKey)) {
+                // User's heartbeat expired, they are AWAY
+                if ($status === 'away') {
+                    $userIds[] = $userId;
+                }
+                continue;
+            }
+
+            // Match the requested status
+            if ($decoded['status'] === $status) {
+                $userIds[] = $userId;
+            }
+        }
+
+        return $userIds;
+    }
+
+    /**
+     * Get all cached statuses as an array indexed by user ID.
+     *
+     * @return array<string, string> Array where key is user ID (string for KSUID) and value is status
+     */
+    public function getAllStatuses(): array
+    {
+        $statuses = [];
+
+        // Search for all status keys in Redis
+        // We need to use the connection directly to get keys with prefix
+        $pattern = 'user:*:status';
+        $redis = Redis::connection();
+        $keys = $redis->keys($pattern);
+
+        foreach ($keys as $key) {
+            // Remove the Redis prefix to get the clean key
+            $prefix = config('database.redis.options.prefix', '');
+            $cleanKey = $prefix ? str_replace($prefix, '', $key) : $key;
+
+            // Extract user ID from key pattern "user:{id}:status"
+            $keyParts = explode(':', $cleanKey);
+            $userId = $keyParts[1]; // Keep as string (KSUID)
+
+            // Get the status data using the facade (which handles prefix automatically)
+            $data = Redis::get($cleanKey);
+
+            if ($data === false || $data === null) {
+                continue;
+            }
+
+            $decoded = json_decode($data, true);
+            $statuses[$userId] = $decoded['status'];
+        }
+
+        return $statuses;
+    }
+
+    /**
+     * Get status with full metadata for a user.
+     *
+     * @param  string  $userId  The user ID (string for KSUID)
+     * @return ?array{status: string, updated_at: string, heartbeat: string}|null
+     */
+    public function getStatusWithMetadata(string $userId): ?array
+    {
+        $statusKey = "user:{$userId}:status";
+        $heartbeatKey = "user:{$userId}:heartbeat";
+
+        // If status key doesn't exist, return null
+        if (! Redis::exists($statusKey)) {
+            return null;
+        }
+
+        // If heartbeat doesn't exist, return null
+        if (! Redis::exists($heartbeatKey)) {
+            return null;
+        }
+
+        // Get status data
+        $statusData = Redis::get($statusKey);
+
+        if ($statusData === false || $statusData === null) {
+            return null;
+        }
+
+        $decoded = json_decode($statusData, true);
+
+        // Get heartbeat data
+        $heartbeat = Redis::get($heartbeatKey);
+
+        if ($heartbeat === false || $heartbeat === null) {
+            return null;
+        }
+
+        return [
+            'status' => $decoded['status'],
+            'updated_at' => $decoded['updated_at'],
+            'heartbeat' => $heartbeat,
+        ];
     }
 }

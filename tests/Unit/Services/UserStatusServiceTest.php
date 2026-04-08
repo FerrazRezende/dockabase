@@ -125,13 +125,17 @@ final class UserStatusServiceTest extends TestCase
         $heartbeatKey = "user:{$this->user->id}:heartbeat";
         Redis::del($heartbeatKey);
 
-        // User should be offline without heartbeat
-        $this->assertFalse($this->service->isOnline($this->user));
+        // User should be AWAY (not offline) when heartbeat expires but status exists
+        $status = $this->service->getStatus($this->user);
+        $this->assertEquals(UserStatusEnum::AWAY, $status);
+        // isOnline() returns true for AWAY (since AWAY !== OFFLINE)
+        $this->assertTrue($this->service->isOnline($this->user));
 
-        // Refresh heartbeat should bring user back online
+        // Refresh heartbeat should bring user back to original status
         $this->service->refreshHeartbeat($this->user);
 
         // User should be online again
+        $this->assertEquals(UserStatusEnum::ONLINE, $this->service->getStatus($this->user));
         $this->assertTrue($this->service->isOnline($this->user));
     }
 
