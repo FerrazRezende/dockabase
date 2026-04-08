@@ -8,7 +8,6 @@ use App\Events\UserStatusUpdatedEvent;
 use App\Enums\UserStatusEnum;
 use App\Listeners\LogUserStatusChangeListener;
 use App\Models\User;
-use App\Services\UserActivityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -25,6 +24,7 @@ final class LogUserStatusChangeListenerTest extends TestCase
 
     public function test_listener_calls_activity_service_with_correct_data(): void
     {
+        // Integration test: use real service and database
         $user = User::factory()->create();
 
         $event = new UserStatusUpdatedEvent(
@@ -33,17 +33,15 @@ final class LogUserStatusChangeListenerTest extends TestCase
             message: 'Grabbing lunch',
         );
 
-        $activityService = $this->mock(UserActivityService::class);
-        $activityService->shouldReceive('logStatusChange')
-            ->once()
-            ->with(
-                \Mockery::on(fn ($u) => $u->id === $user->id),
-                \Mockery::on(fn ($from) => $from === UserStatusEnum::OFFLINE),
-                \Mockery::on(fn ($to) => $to === UserStatusEnum::AWAY),
-            );
-
-        $listener = new LogUserStatusChangeListener($activityService);
+        $listener = app(LogUserStatusChangeListener::class);
         $listener->handle($event);
+
+        // Verify activity was logged to database
+        $this->assertDatabaseHas('user_activities', [
+            'user_id' => $user->id,
+            'activity_type' => 'status_changed',
+            'to_status' => 'away',
+        ]);
     }
 
     public function test_listener_implements_should_queue(): void

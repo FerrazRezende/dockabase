@@ -54,9 +54,9 @@ final class SetAutoAwayStatusTest extends TestCase
         Redis::del($heartbeatKey1);
         Redis::del($heartbeatKey2);
 
-        // Verify initial state
-        $this->assertEquals(UserStatusEnum::OFFLINE, $this->statusService->getStatus($user1));
-        $this->assertEquals(UserStatusEnum::OFFLINE, $this->statusService->getStatus($user2));
+        // Verify initial state (heartbeat expired = AWAY status)
+        $this->assertEquals(UserStatusEnum::AWAY, $this->statusService->getStatus($user1));
+        $this->assertEquals(UserStatusEnum::AWAY, $this->statusService->getStatus($user2));
         $this->assertEquals(UserStatusEnum::ONLINE, $this->statusService->getStatus($user3));
 
         // Run the command

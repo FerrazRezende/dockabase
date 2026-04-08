@@ -38,8 +38,9 @@ final class CacheUserStatusListenerTest extends TestCase
             $listener->handle($event);
 
             // Verify Redis was updated via the service
-            $cachedStatus = \Illuminate\Support\Facades\Redis::hget("user:{$user->id}:status", 'status');
-            $this->assertSame('busy', $cachedStatus);
+            $cachedData = \Illuminate\Support\Facades\Redis::get("user:{$user->id}:status");
+            $decoded = json_decode($cachedData, true);
+            $this->assertSame('busy', $decoded['status']);
 
             // Cleanup
             \Illuminate\Support\Facades\Redis::del("user:{$user->id}:status");
