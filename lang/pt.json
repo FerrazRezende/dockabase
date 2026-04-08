@@ -546,5 +546,15 @@
     "Press Enter to set status": "Pressione Enter para definir o status",
     "user_activity.status_changed": "Status alterado",
     "user_activity.page_view": "Visualizou",
-    "user_activity.database_created": "Criou database"
+    "user_activity.database_created": "Criou database",
+    "user_activity.credential_created": "Criou credencial",
+    "Just now": "Agora",
+    "Load more": "Carregar mais",
+    ":count minute ago | :count minutes ago": ":count minuto atrás | :count minutos atrás",
+    ":count hour ago | :count hours ago": ":count hora atrás | :count horas atrás",
+    ":count day ago | :count days ago": ":count dia atrás | :count dias atrás",
+    ":count week ago | :count weeks ago": ":count semana atrás | :count semanas atrás",
+    ":count month ago | :count months ago": ":count mês atrás | :count meses atrás",
+    ":count year ago | :count years ago": ":count ano atrás | :count anos atrás",
+    "Credential created": "Credencial criada"
 }
