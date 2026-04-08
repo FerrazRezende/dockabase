@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NotificationCenter from '@/components/NotificationCenter.vue';
+import StatusPickerDropdown from '@/components/user/StatusPickerDropdown.vue';
 import {
     Database,
     Home,
@@ -28,6 +29,7 @@ import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
 import { usePermissions } from '@/composables/usePermissions';
 import { ref, computed } from 'vue';
+import type { UserStatus } from '@/types/user-status';
 
 defineProps<{
     auth: {
@@ -39,6 +41,7 @@ defineProps<{
             avatar?: string;
         };
     };
+    userStatus?: UserStatus;
     title?: string;
 }>();
 
@@ -240,7 +243,18 @@ const initials = (name: string): string => {
             </nav>
 
             <!-- Footer -->
-            <div class="border-t border-border p-2">
+            <div class="border-t border-border p-2 space-y-2">
+                <!-- Status Picker (only show when not collapsed) -->
+                <div v-if="!collapsed" class="px-1">
+                    <StatusPickerDropdown
+                        :avatar-url="auth.user.avatar"
+                        :user-name="auth.user.name"
+                        :initial-status="userStatus"
+                        compact
+                    />
+                </div>
+
+                <!-- User Menu -->
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
                         <Button
