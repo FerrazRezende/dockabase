@@ -539,9 +539,11 @@
     "user_status.focused": "Focused work",
     "user_status.stepped_out": "Stepped out",
     "user_status.set_status": "Set status",
+    "user_status.set_status_message": "Add a message (optional)",
     "user_status.clear_status": "Clear status",
     "user_status.activity_log": "Activity Log",
     "user_status.no_recent_activity": "No recent activity",
+    "Press Enter to set status": "Press Enter to set status",
     "user_activity.status_changed": "Status changed",
     "user_activity.page_view": "Viewed",
     "user_activity.database_created": "Created database"
