@@ -15,7 +15,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Shield, ShieldCheck, Key, Loader2, Activity } from 'lucide-vue-next';
+import { ArrowLeft, Shield, ShieldCheck, Key, Loader2, Activity, User } from 'lucide-vue-next';
 import PvTabs from '@/components/ui/pv-tabs/PvTabs.vue';
 import PvTabsContent from '@/components/ui/pv-tabs/PvTabsContent.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -396,7 +396,10 @@ const userInitials = computed(() => {
                         <!-- Informações Básicas -->
                         <Card>
                             <CardHeader>
-                                <CardTitle>{{ __('Basic Information') }}</CardTitle>
+                                <CardTitle class="flex items-center gap-2">
+                                    <User class="w-5 h-5" />
+                                    {{ __('Basic Information') }}
+                                </CardTitle>
                             </CardHeader>
                             <CardContent class="space-y-4">
                                 <div class="flex justify-between">
