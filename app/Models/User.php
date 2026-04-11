@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\UserActivity;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 use App\Traits\HasKsuid;
 
@@ -29,6 +32,8 @@ class User extends Authenticatable
         'active',
         'denied_permissions',
         'locale',
+        'avatar',
+        'bio',
     ];
 
     /**
@@ -61,7 +66,15 @@ class User extends Authenticatable
 
     public function getAvatarAttribute(): ?string
     {
-        return $this->attributes['avatar'] ?? null;
+        $avatar = $this->attributes['avatar'] ?? null;
+
+        if (!$avatar) {
+            return null;
+        }
+
+        // Serve avatar through the application proxy endpoint
+        // This avoids issues with MinIO presigned URL host mismatches
+        return url("/avatars/{$this->id}");
     }
 
     /**
@@ -141,5 +154,13 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Credential::class, 'credential_user', 'user_id', 'credential_id')
             ->withTimestamps();
+    }
+
+    /**
+     * Activities logged for the user.
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(UserActivity::class)->latest();
     }
 }

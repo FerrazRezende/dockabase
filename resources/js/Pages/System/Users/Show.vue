@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { __ } from '@/composables/useLang';
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'vue-toastification';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Badge } from '@/components/ui/badge';
@@ -15,9 +15,14 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Shield, ShieldCheck, Key, Loader2 } from 'lucide-vue-next';
+import { ArrowLeft, Shield, ShieldCheck, Key, Loader2, Activity, User } from 'lucide-vue-next';
 import PvTabs from '@/components/ui/pv-tabs/PvTabs.vue';
 import PvTabsContent from '@/components/ui/pv-tabs/PvTabsContent.vue';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import UserActivityTimeline from '@/components/user/UserActivityTimeline.vue';
+import { useEchoChannels } from '@/composables/useEchoChannels';
+import type { UserActivity, UserActivityCollection, UserStatus, UserStatusChangedEvent } from '@/types/user-status';
+import axios from 'axios';
 
 interface Role {
     id: number;
@@ -52,12 +57,22 @@ interface Database {
     permission: string;
 }
 
+interface PaginatedActivities {
+    data: UserActivity[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
 interface UserProfile {
     id: number;
     name: string;
     email: string;
+    avatar?: string;
     is_admin: boolean;
     active: boolean;
+    status?: UserStatus;
     password_changed_at: string | null;
     created_at: string;
     roles: Role[];
@@ -78,6 +93,98 @@ const props = defineProps<{
 const toast = useToast();
 const activeTab = ref('info');
 const isSavingPermissions = ref(false);
+
+// User status - reactive for real-time updates
+const userStatus = ref<UserStatus>(props.user.status || 'offline');
+
+const statusRingColor = computed(() => {
+  const colors: Record<UserStatus, string> = {
+    online: 'ring-green-500',
+    away: 'ring-yellow-500',
+    busy: 'ring-red-500',
+    offline: 'ring-gray-300',
+  };
+  return colors[userStatus.value] || colors.offline;
+});
+
+// WebSocket for real-time status of the viewed user
+const { connect, listenToPresenceChannel, disconnect } = useEchoChannels();
+
+onMounted(async () => {
+  try {
+    await connect();
+    listenToPresenceChannel((event: UserStatusChangedEvent) => {
+      if (String(event.user_id) === String(props.user.id)) {
+        userStatus.value = event.status as UserStatus;
+      }
+    });
+  } catch {
+    // Non-blocking: continue without real-time updates
+  }
+});
+
+onUnmounted(() => {
+  try {
+    disconnect();
+  } catch {
+    // Ignore
+  }
+});
+
+// Activities state
+const activities = ref<UserActivity[]>([]);
+const isLoadingActivities = ref(false);
+const activitiesCurrentPage = ref(1);
+const activitiesLastPage = ref(1);
+const hasLoadedActivities = ref(false);
+
+// Fetch user activities
+const fetchActivities = async (page: number = 1): Promise<void> => {
+    if (isLoadingActivities.value) return;
+
+    isLoadingActivities.value = true;
+
+    try {
+        const response = await axios.get<PaginatedActivities>(
+            route('system.users.activities', props.user.id),
+            {
+                params: {
+                    page,
+                    per_page: 20,
+                },
+            }
+        );
+
+        if (page === 1) {
+            activities.value = response.data.data;
+        } else {
+            activities.value = [...activities.value, ...response.data.data];
+        }
+
+        activitiesCurrentPage.value = response.data.current_page;
+        activitiesLastPage.value = response.data.last_page;
+        hasLoadedActivities.value = true;
+    } catch (error) {
+        console.error('Error fetching activities:', error);
+        toast.error(__('Error loading activities'));
+    } finally {
+        isLoadingActivities.value = false;
+    }
+};
+
+// Load more activities
+const loadMoreActivities = (): void => {
+    if (activitiesCurrentPage.value < activitiesLastPage.value) {
+        fetchActivities(activitiesCurrentPage.value + 1);
+    }
+};
+
+// Watch for tab changes to load activities
+watch(activeTab, (newTab) => {
+    if (newTab === 'updates' && !hasLoadedActivities.value) {
+        fetchActivities(1);
+    }
+});
 
 // Roles from backend - use computed for reactivity
 const userRoles = computed(() => props.user.roles ?? []);
@@ -282,8 +389,13 @@ const formatDate = (date: string): string => {
 const tabs = [
     { value: 'info', label: __('Information'), icon: 'User' },
     { value: 'roles', label: __('Roles and Permissions'), icon: 'Shield' },
+    { value: 'updates', label: __('Updates'), icon: 'Activity' },
 ];
-</script>
+
+// Get user initials for avatar fallback
+const userInitials = computed(() => {
+    return props.user.name.slice(0, 2).toUpperCase();
+});</script>
 
 <template>
     <Head :title="__('Profile: :name', { name: user.name })" />
@@ -296,13 +408,21 @@ const tabs = [
                         <ArrowLeft class="w-4 h-4" />
                     </Button>
                 </Link>
-                <div>
-                    <h2 class="text-2xl font-semibold text-foreground">
-                        {{ user.name }}
-                    </h2>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        {{ user.email }}
-                    </p>
+                <div class="flex items-center gap-4">
+                    <Avatar class="h-11 w-11 ring-3 ring-border" :class="statusRingColor">
+                        <AvatarImage v-if="user.avatar" :src="user.avatar" />
+                        <AvatarFallback class="bg-primary text-primary-foreground text-xl">
+                            {{ userInitials }}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-foreground">
+                            {{ user.name }}
+                        </h2>
+                        <p class="text-sm text-muted-foreground mt-1">
+                            {{ user.email }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </template>
@@ -315,7 +435,10 @@ const tabs = [
                         <!-- Informações Básicas -->
                         <Card>
                             <CardHeader>
-                                <CardTitle>{{ __('Basic Information') }}</CardTitle>
+                                <CardTitle class="flex items-center gap-2">
+                                    <User class="w-5 h-5" />
+                                    {{ __('Basic Information') }}
+                                </CardTitle>
                             </CardHeader>
                             <CardContent class="space-y-4">
                                 <div class="flex justify-between">
@@ -377,7 +500,7 @@ const tabs = [
                         <Card>
                             <CardHeader>
                                 <CardTitle>{{ __('Credentials') }}</CardTitle>
-                                <CardDescription>{{ __('API access credentials') }}</CardDescription>
+                                <CardDescription>{{ __('Database access permissions via credentials') }}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div v-if="userCredentials.length > 0" class="space-y-2">
@@ -564,6 +687,30 @@ const tabs = [
                             </CardContent>
                         </Card>
                     </div>
+                </PvTabsContent>
+
+                <!-- Aba Updates -->
+                <PvTabsContent value="updates" :active-tab="activeTab">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle class="flex items-center gap-2">
+                                <Activity class="w-5 h-5" />
+                                {{ __('Activity Log') }}
+                            </CardTitle>
+                            <CardDescription>
+                                {{ __('Recent activities and updates for this user') }}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <UserActivityTimeline
+                                :user-id="String(user.id)"
+                                :activities="activities"
+                                :loading="isLoadingActivities"
+                                :has-more-pages="activitiesCurrentPage < activitiesLastPage"
+                                @load-more="loadMoreActivities"
+                            />
+                        </CardContent>
+                    </Card>
                 </PvTabsContent>
             </PvTabs>
         </div>

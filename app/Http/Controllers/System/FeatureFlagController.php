@@ -56,7 +56,7 @@ class FeatureFlagController extends Controller
         }
 
         $history = $this->featureService->getHistory($feature);
-        $users = User::select(['id', 'name', 'email'])
+        $users = User::select(['id', 'name', 'email', 'avatar'])
             ->orderBy('name')
             ->get();
 

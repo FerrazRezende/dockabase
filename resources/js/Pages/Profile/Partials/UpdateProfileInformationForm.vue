@@ -2,20 +2,29 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { __ } from '@/composables/useLang';
+import { computed } from 'vue';
 
 defineProps<{
     mustVerifyEmail: boolean;
     status?: string;
 }>();
 
-const user = usePage().props.auth.user as { name: string; email: string; email_verified_at?: string | null };
+const user = usePage().props.auth.user as { name: string; email: string; email_verified_at?: string | null; bio?: string | null };
 
 const form = useForm({
     name: user.name,
     email: user.email,
+    bio: user.bio ?? '',
+});
+
+const MAX_BIO_LENGTH = 500;
+
+const remainingCharacters = computed(() => {
+    return MAX_BIO_LENGTH - (form.bio?.length ?? 0);
 });
 </script>
 
@@ -60,6 +69,33 @@ const form = useForm({
                 <p v-if="form.errors.email" class="text-sm text-destructive">
                     {{ form.errors.email }}
                 </p>
+            </div>
+
+            <div class="space-y-2">
+                <Label for="bio">{{ __('About me') }}</Label>
+                <Textarea
+                    id="bio"
+                    v-model="form.bio"
+                    :disabled="form.processing"
+                    :placeholder="__('Tell us a little about yourself...')"
+                    rows="4"
+                    :maxlength="MAX_BIO_LENGTH"
+                    class="resize-none"
+                />
+                <div class="flex items-center justify-between">
+                    <p v-if="form.errors.bio" class="text-sm text-destructive">
+                        {{ form.errors.bio }}
+                    </p>
+                    <p v-else class="text-sm text-muted-foreground">
+                        {{ __('Optional') }}
+                    </p>
+                    <p :class="[
+                        'text-sm',
+                        remainingCharacters < 0 ? 'text-destructive' : remainingCharacters < 50 ? 'text-warning' : 'text-muted-foreground'
+                    ]">
+                        {{ remainingCharacters }}/{{ MAX_BIO_LENGTH }}
+                    </p>
+                </div>
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
