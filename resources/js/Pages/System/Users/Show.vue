@@ -461,7 +461,7 @@ const userInitials = computed(() => {
                         <Card>
                             <CardHeader>
                                 <CardTitle>{{ __('Credentials') }}</CardTitle>
-                                <CardDescription>{{ __('API access credentials') }}</CardDescription>
+                                <CardDescription>{{ __('Database access permissions via credentials') }}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div v-if="userCredentials.length > 0" class="space-y-2">

@@ -283,6 +283,7 @@
     "No active features": "No active features",
     "Credentials": "Credentials",
     "API access credentials": "API access credentials",
+    "Database access permissions via credentials": "Database access permissions via credentials",
     "No credentials": "No credentials",
     "Databases accessible via credentials": "Databases accessible via credentials",
     "No accessible databases": "No accessible databases",
