@@ -259,28 +259,25 @@ const initials = (name: string): string => {
             <!-- Footer -->
             <div class="border-t border-border p-2">
                 <!-- User Status Picker -->
-                <div class="flex items-center gap-1">
-                    <StatusPickerDropdown
-                        :avatar-url="auth.user.avatar"
-                        :user-name="auth.user.name"
-                        :initial-status="userStatus"
-                        :compact="collapsed"
-                        class="flex-1"
-                    />
-                    <!-- Settings button -->
-                    <Button
-                        v-if="!collapsed"
-                        variant="ghost"
-                        size="icon"
-                        class="h-9 w-9 shrink-0"
-                        :title="__('Settings')"
-                        as-child
-                    >
-                        <Link :href="route('profile.edit')">
-                            <Settings class="h-4 w-4" />
-                        </Link>
-                    </Button>
-                </div>
+                <StatusPickerDropdown
+                    :avatar-url="auth.user.avatar"
+                    :user-name="auth.user.name"
+                    :initial-status="userStatus"
+                    :compact="collapsed"
+                />
+                <!-- Settings button (shown when not collapsed) -->
+                <Button
+                    v-if="!collapsed"
+                    variant="ghost"
+                    size="icon"
+                    class="h-9 w-9 shrink-0"
+                    :title="__('Settings')"
+                    as-child
+                >
+                    <Link :href="route('profile.edit')">
+                        <Settings class="h-4 w-4" />
+                    </Link>
+                </Button>
             </div>
         </aside>
 

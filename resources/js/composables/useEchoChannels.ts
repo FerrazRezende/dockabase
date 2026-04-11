@@ -124,8 +124,6 @@ export function useEchoChannels() {
           connectionError.value = error instanceof Error ? error : new Error('Connection error');
           isConnected.value = false;
         });
-
-        window.Echo = echoInstance;
       } catch (error) {
         connectionState.value = 'error';
         connectionError.value = error instanceof Error ? error : new Error('Failed to initialize Echo');
@@ -237,8 +235,9 @@ export function useEchoChannels() {
       // Return unsubscribe function
       return () => {
         try {
-          if (echoInstance) {
-            echoInstance.leave(channelName);
+          // Use window.Echo directly to avoid closure capturing Echo instance
+          if (window.Echo) {
+            window.Echo.leave(channelName);
             activeChannels.delete(channelName);
             activeListeners.delete(channelName);
           }
@@ -316,6 +315,14 @@ export function useEchoChannels() {
   // Cleanup on component unmount
   onUnmounted(() => {
     disconnect();
+    // Clear Echo instance reference to avoid Inertia serialization issues
+    if (echoInstance) {
+      echoInstance = null;
+    }
+    // Clear global Echo reference to prevent history state cloning issues
+    if ((window as any).Echo) {
+      delete (window as any).Echo;
+    }
   });
 
   return {
