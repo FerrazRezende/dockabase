@@ -27,8 +27,22 @@ import {
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
 import { usePermissions } from '@/composables/usePermissions';
-import { ref, computed } from 'vue';
+import { useUserStatus } from '@/composables/useUserStatus';
+import { ref, computed, onMounted } from 'vue';
 import type { UserStatus } from '@/types/user-status';
+
+const { setStatus } = useUserStatus();
+
+// Track if status has been set this session to avoid unnecessary requests on navigation
+const statusHasBeenSet = ref(false);
+
+// Set user status to online on page load (only once per session)
+onMounted(async () => {
+  if (!statusHasBeenSet.value) {
+    await setStatus('online');
+    statusHasBeenSet.value = true;
+  }
+});
 
 defineProps<{
     auth: {
