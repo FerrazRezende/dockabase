@@ -1,4 +1,4 @@
-import { ref, onUnmounted } from 'vue';
+import { ref } from 'vue';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import type { UserStatusChangedEvent } from '../types/user-status';
@@ -44,7 +44,7 @@ interface ChannelCallbacks {
  * onMounted(async () => {
  *   await connect();
  *   listenToUserChannel('user-123', (event) => {
- *     console.log(`User ${event.user_id} is now ${event.to}`);
+ *     console.log(`User ${event.user_id} is now ${event.status}`);
  *   });
  * });
  * </script>
@@ -312,18 +312,41 @@ export function useEchoChannels() {
     await connect();
   }
 
-  // Cleanup on component unmount
-  onUnmounted(() => {
-    disconnect();
-    // Clear Echo instance reference to avoid Inertia serialization issues
-    if (echoInstance) {
-      echoInstance = null;
+  /**
+   * Listen to the global presence channel for status updates from any user.
+   * @param callback - Called with the status update event data
+   * @returns Unsubscribe function
+   */
+  function listenToPresenceChannel(callback: StatusUpdateCallback): (() => void) | null {
+    const channelName = 'private-presence';
+
+    if (activeChannels.has(channelName)) {
+      return null;
     }
-    // Clear global Echo reference to prevent history state cloning issues
-    if ((window as any).Echo) {
-      delete (window as any).Echo;
+
+    try {
+      const echo = getEcho();
+      const channel = echo.private(channelName);
+
+      channel.listen('.status.updated', callback);
+
+      activeChannels.set(channelName, channel);
+      activeListeners.set(channelName, ['.status.updated']);
+
+      return () => {
+        try {
+          echo.leave(channelName);
+          activeChannels.delete(channelName);
+          activeListeners.delete(channelName);
+        } catch (error) {
+          console.error('[useEchoChannels] Error leaving presence channel:', error);
+        }
+      };
+    } catch (error) {
+      console.error('[useEchoChannels] Error subscribing to presence channel:', error);
+      return null;
     }
-  });
+  }
 
   return {
     // State
@@ -339,6 +362,7 @@ export function useEchoChannels() {
     // Channel methods
     listenToUserChannel,
     listenToStatusUpdates,
+    listenToPresenceChannel,
     leaveUserChannel,
     isSubscribedToUser,
     getActiveChannels,

@@ -89,30 +89,20 @@ if (props.users) {
 }
 
 // WebSocket connection for real-time status updates
-const { connect, listenToStatusUpdates, disconnect, isConnected } = useEchoChannels();
+const { connect, listenToPresenceChannel, disconnect } = useEchoChannels();
 
 // Connect to WebSocket and listen for status updates
 onMounted(async () => {
     try {
         await connect();
 
-        // Listen to status updates for all visible users
-        if (props.users) {
-            props.users.forEach(user => {
-                const unsubscribe = listenToStatusUpdates(user.id, (event: UserStatusChangedEvent) => {
-                    // Update local status when user status changes
-                    const userId = Number(event.user_id);
-                    if (userStatuses.value[userId] !== undefined) {
-                        userStatuses.value[userId] = event.to;
-                    }
-                });
-
-                // Store unsubscribe function for cleanup (optional, for future use)
-                if (unsubscribe) {
-                    (user as any)._unsubscribe = unsubscribe;
-                }
-            });
-        }
+        // Listen to global presence channel for all status updates
+        listenToPresenceChannel((event: UserStatusChangedEvent) => {
+            const userId = Number(event.user_id);
+            if (userStatuses.value[userId] !== undefined) {
+                userStatuses.value[userId] = event.status as UserStatus;
+            }
+        });
     } catch (error) {
         console.error('[Users/Index] Failed to connect to WebSocket:', error);
         // Non-blocking: continue without real-time updates

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { __ } from '@/composables/useLang';
-import { ref, computed, watch, nextTick, onMounted, watchEffect } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useToast } from 'vue-toastification';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,8 @@ import PvTabs from '@/components/ui/pv-tabs/PvTabs.vue';
 import PvTabsContent from '@/components/ui/pv-tabs/PvTabsContent.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import UserActivityTimeline from '@/components/user/UserActivityTimeline.vue';
-import type { UserActivity, UserActivityCollection } from '@/types/user-status';
+import { useEchoChannels } from '@/composables/useEchoChannels';
+import type { UserActivity, UserActivityCollection, UserStatus, UserStatusChangedEvent } from '@/types/user-status';
 import axios from 'axios';
 
 interface Role {
@@ -71,6 +72,7 @@ interface UserProfile {
     avatar?: string;
     is_admin: boolean;
     active: boolean;
+    status?: UserStatus;
     password_changed_at: string | null;
     created_at: string;
     roles: Role[];
@@ -91,6 +93,43 @@ const props = defineProps<{
 const toast = useToast();
 const activeTab = ref('info');
 const isSavingPermissions = ref(false);
+
+// User status - reactive for real-time updates
+const userStatus = ref<UserStatus>(props.user.status || 'offline');
+
+const statusRingColor = computed(() => {
+  const colors: Record<UserStatus, string> = {
+    online: 'ring-green-500',
+    away: 'ring-yellow-500',
+    busy: 'ring-red-500',
+    offline: 'ring-gray-300',
+  };
+  return colors[userStatus.value] || colors.offline;
+});
+
+// WebSocket for real-time status of the viewed user
+const { connect, listenToPresenceChannel, disconnect } = useEchoChannels();
+
+onMounted(async () => {
+  try {
+    await connect();
+    listenToPresenceChannel((event: UserStatusChangedEvent) => {
+      if (String(event.user_id) === String(props.user.id)) {
+        userStatus.value = event.status as UserStatus;
+      }
+    });
+  } catch {
+    // Non-blocking: continue without real-time updates
+  }
+});
+
+onUnmounted(() => {
+  try {
+    disconnect();
+  } catch {
+    // Ignore
+  }
+});
 
 // Activities state
 const activities = ref<UserActivity[]>([]);
@@ -370,7 +409,7 @@ const userInitials = computed(() => {
                     </Button>
                 </Link>
                 <div class="flex items-center gap-4">
-                    <Avatar class="h-12 w-12 ring-2 ring-border">
+                    <Avatar class="h-11 w-11 ring-3 ring-border" :class="statusRingColor">
                         <AvatarImage v-if="user.avatar" :src="user.avatar" />
                         <AvatarFallback class="bg-primary text-primary-foreground text-xl">
                             {{ userInitials }}

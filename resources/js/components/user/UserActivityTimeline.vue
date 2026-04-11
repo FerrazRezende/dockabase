@@ -2,7 +2,17 @@
 import { computed } from 'vue';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, MoreVertical, ChevronDown, Eye } from 'lucide-vue-next';
+import {
+  Loader2,
+  ChevronDown,
+  Eye,
+  CircleDot,
+  Database,
+  KeyRound,
+  Clock,
+  ArrowRightLeft,
+  FileText,
+} from 'lucide-vue-next';
 import type { UserActivity, UserActivityType } from '@/types/user-status';
 import { __ } from '@/utils/lang';
 
@@ -22,24 +32,24 @@ const emit = defineEmits<{
   loadMore: [];
 }>();
 
-const getActivityIcon = (type: UserActivityType): string | typeof Eye => {
-  const icons: Record<UserActivityType, string | typeof Eye> = {
-    status_changed: '🔄',
-    database_created: '🗄️',
-    credential_created: '🔑',
+const getActivityIcon = (type: UserActivityType) => {
+  const icons: Record<UserActivityType, typeof Eye> = {
+    status_changed: ArrowRightLeft,
+    database_created: Database,
+    credential_created: KeyRound,
     page_view: Eye,
   };
-  return icons[type] || '📝';
+  return icons[type] || FileText;
 };
 
 const getActivityColor = (type: UserActivityType): string => {
   const colors: Record<UserActivityType, string> = {
-    status_changed: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-    database_created: 'bg-green-500/10 text-green-500 border-green-500/20',
-    credential_created: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-    page_view: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
+    status_changed: 'text-blue-500 bg-blue-500 border-blue-500',
+    database_created: 'text-emerald-500 bg-emerald-500 border-emerald-500',
+    credential_created: 'text-violet-500 bg-violet-500 border-violet-500',
+    page_view: 'text-slate-400 bg-slate-400 border-slate-400',
   };
-  return colors[type] || 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+  return colors[type] || 'text-slate-400 bg-slate-400 border-slate-400';
 };
 
 const formatRelativeTime = (dateString: string): string => {
@@ -90,7 +100,6 @@ const getActivityLabel = (activity: UserActivity): string => {
 
   const baseLabel = labels[activity.activity_type] || activity.activity_type;
 
-  // Add metadata to label
   if (activity.metadata) {
     if (activity.activity_type === 'database_created' && activity.metadata.database_name) {
       return `${baseLabel}: ${activity.metadata.database_name}`;
@@ -103,11 +112,10 @@ const getActivityLabel = (activity: UserActivity): string => {
     }
   }
 
-  // Add status change details
   if (activity.activity_type === 'status_changed' && activity.from_status && activity.to_status) {
     const fromLabel = __(activity.from_status);
     const toLabel = __(activity.to_status);
-    return `${baseLabel}: ${fromLabel} → ${toLabel}`;
+    return `${baseLabel}: ${fromLabel} \u2192 ${toLabel}`;
   }
 
   return baseLabel;
@@ -144,7 +152,7 @@ const showLoadMore = computed(() => {
       v-else-if="showEmptyState"
       class="flex flex-col items-center justify-center py-12"
     >
-      <div class="text-6xl mb-4">📭</div>
+      <Clock class="h-12 w-12 text-muted-foreground/50 mb-4" />
       <p class="text-lg font-medium mb-2">{{ __('user_status.activity_log') }}</p>
       <p class="text-sm text-muted-foreground">{{ __('user_status.no_recent_activity') }}</p>
     </div>
@@ -153,55 +161,41 @@ const showLoadMore = computed(() => {
     <div v-else class="relative">
       <!-- Vertical Line -->
       <div
-        class="absolute left-[19px] top-0 bottom-0 w-0.5 bg-border"
+        class="absolute left-[19px] top-3 bottom-3 w-px bg-border"
         v-if="sortedActivities.length > 0"
       />
 
       <!-- Activities -->
       <div class="space-y-4">
         <div
-          v-for="(activity, index) in sortedActivities"
+          v-for="activity in sortedActivities"
           :key="activity.id"
           class="relative flex gap-4"
         >
-          <!-- Icon -->
+          <!-- Icon node - solid bg to cover the line -->
           <div
             :class="[
-              'relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-lg',
+              'relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 bg-card',
               getActivityColor(activity.activity_type)
             ]"
           >
             <component
               :is="getActivityIcon(activity.activity_type)"
-              v-if="activity.activity_type === 'page_view'"
-              class="h-5 w-5"
+              class="h-4.5 w-4.5"
             />
-            <template v-else>
-              {{ getActivityIcon(activity.activity_type) }}
-            </template>
           </div>
 
           <!-- Content -->
           <Card class="flex-1">
             <CardContent class="p-4">
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex-1 space-y-1">
-                  <p class="text-sm font-medium leading-none">
-                    {{ getActivityLabel(activity) }}
-                  </p>
-                  <p class="text-xs text-muted-foreground">
-                    {{ formatRelativeTime(activity.created_at) }}
-                  </p>
+              <div class="space-y-1">
+                <p class="text-sm font-medium leading-none">
+                  {{ getActivityLabel(activity) }}
+                </p>
+                <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock class="h-3 w-3" />
+                  {{ formatRelativeTime(activity.created_at) }}
                 </div>
-
-                <!-- Action Menu -->
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="h-8 w-8 shrink-0"
-                >
-                  <MoreVertical class="h-4 w-4" />
-                </Button>
               </div>
 
               <!-- Additional Details -->

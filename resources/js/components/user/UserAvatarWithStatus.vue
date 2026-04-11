@@ -97,7 +97,7 @@ const statusColorClass = computed(() => {
  * Get status border color (for contrast with avatar)
  */
 const statusBorderColorClass = computed(() => {
-  return 'bg-white dark:bg-gray-900';
+  return 'ring-2 ring-card';
 });
 
 /**
@@ -167,8 +167,7 @@ const tooltipText = computed(() => {
 
           <!-- Status indicator dot -->
           <span
-            class="absolute bottom-0 right-0 flex items-center justify-center rounded-full"
-            :class="[statusDotSize, statusBorderColorClass]"
+            class="absolute bottom-0 right-0 flex items-center justify-center rounded-full ring-2 ring-card"
             :aria-hidden="true"
           >
             <span
@@ -214,8 +213,7 @@ const tooltipText = computed(() => {
 
     <!-- Status indicator dot -->
     <span
-      class="absolute bottom-0 right-0 flex items-center justify-center rounded-full"
-      :class="[statusDotSize, statusBorderColorClass]"
+      class="absolute bottom-0 right-0 flex items-center justify-center rounded-full ring-2 ring-card"
       :aria-hidden="true"
     >
       <span

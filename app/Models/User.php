@@ -72,9 +72,9 @@ class User extends Authenticatable
             return null;
         }
 
-        // Generate temporary signed URL for private bucket access
-        return Storage::disk('minio')
-            ->temporaryUrl($avatar, \Illuminate\Support\Carbon::now()->addMinutes(60));
+        // Serve avatar through the application proxy endpoint
+        // This avoids issues with MinIO presigned URL host mismatches
+        return url("/avatars/{$this->id}");
     }
 
     /**

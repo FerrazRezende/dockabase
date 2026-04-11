@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NotificationCenter from '@/components/NotificationCenter.vue';
 import StatusPickerDropdown from '@/components/user/StatusPickerDropdown.vue';
 import {
@@ -16,10 +9,8 @@ import {
     Sun,
     Moon,
     LogOut,
-    Settings,
     PanelLeftClose,
     PanelLeft,
-    ChevronDown,
     Flag,
     Key,
     Users,
@@ -29,20 +20,46 @@ import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
 import { usePermissions } from '@/composables/usePermissions';
 import { useUserStatus } from '@/composables/useUserStatus';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { UserStatus } from '@/types/user-status';
 
-const { setStatus } = useUserStatus();
+const { setStatus, refreshStatus, currentStatus } = useUserStatus();
 
-// Track if status has been set this session to avoid unnecessary requests on navigation
-const statusHasBeenSet = ref(false);
+// Only set online on first mount if user has no status yet in Redis.
+// On subsequent Inertia navigations the layout remounts, so we check
+// the current status first to avoid overwriting a manual status like "busy".
+const hasInitialized = ref(false);
 
-// Set user status to online on page load (only once per session)
 onMounted(async () => {
-  if (!statusHasBeenSet.value) {
-    await setStatus('online');
-    statusHasBeenSet.value = true;
+  if (!hasInitialized.value) {
+    hasInitialized.value = true;
+    await refreshStatus();
+    // Only set online if user has no active status in Redis
+    if (!currentStatus.value || currentStatus.value === 'offline') {
+      await setStatus('online');
+    }
   }
+});
+
+// Set status to offline when tab is closed or navigated away
+const handleBeforeUnload = () => {
+  fetch('/api/user/status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+    },
+    body: JSON.stringify({ status: 'offline' }),
+    keepalive: true,
+  });
+};
+
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBeforeUnload);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 
 defineProps<{
@@ -258,26 +275,12 @@ const initials = (name: string): string => {
 
             <!-- Footer -->
             <div class="border-t border-border p-2">
-                <!-- User Status Picker -->
                 <StatusPickerDropdown
                     :avatar-url="auth.user.avatar"
                     :user-name="auth.user.name"
                     :initial-status="userStatus"
                     :compact="collapsed"
                 />
-                <!-- Settings button (shown when not collapsed) -->
-                <Button
-                    v-if="!collapsed"
-                    variant="ghost"
-                    size="icon"
-                    class="h-9 w-9 shrink-0"
-                    :title="__('Settings')"
-                    as-child
-                >
-                    <Link :href="route('profile.edit')">
-                        <Settings class="h-4 w-4" />
-                    </Link>
-                </Button>
             </div>
         </aside>
 

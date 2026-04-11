@@ -69,7 +69,11 @@ final class UserStatusController extends Controller
         ]);
 
         // Broadcast the status change
-        // broadcast(new \App\Events\UserStatusChanged($user->id, $previousStatus->value, $statusEnum->value));
+        broadcast(new \App\Events\UserStatusUpdatedEvent(
+            $user,
+            $statusEnum,
+            $request->input('message', ''),
+        ));
 
         return response()->json([
             'status' => $statusEnum->value,

@@ -121,12 +121,22 @@ export type UserStatusMap = Record<string, UserStatus>;
 export interface UserStatusChangedEvent {
   /** User ID whose status changed */
   user_id: string;
-  /** Previous status */
-  from: UserStatus;
+  /** User display name */
+  name: string;
+  /** User email */
+  email: string;
   /** New status */
-  to: UserStatus;
+  status: UserStatus;
+  /** Status display label */
+  status_label: string;
+  /** Status color */
+  status_color: string;
+  /** Optional status message */
+  message: string;
+  /** User avatar URL */
+  avatar_url: string | null;
   /** ISO 8601 timestamp of change */
-  timestamp: string;
+  updated_at: string;
 }
 
 /**

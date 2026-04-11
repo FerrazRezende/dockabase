@@ -16,6 +16,8 @@ class SystemUserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $statusService = app(\App\Services\UserStatusService::class);
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -24,6 +26,7 @@ class SystemUserResource extends JsonResource
             'bio' => $this->bio,
             'is_admin' => $this->is_admin,
             'active' => $this->active,
+            'status' => $statusService->getStatus($this->resource)->value,
             'roles' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')),
             'permissions' => $this->whenLoaded('permissions', fn () => $this->permissions->pluck('name')),
             'password_changed_at' => $this->password_changed_at?->toISOString(),
