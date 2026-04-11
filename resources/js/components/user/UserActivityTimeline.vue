@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, MoreVertical, ChevronDown } from 'lucide-vue-next';
+import { Loader2, MoreVertical, ChevronDown, Eye } from 'lucide-vue-next';
 import type { UserActivity, UserActivityType } from '@/types/user-status';
 import { __ } from '@/utils/lang';
 
@@ -22,12 +22,12 @@ const emit = defineEmits<{
   loadMore: [];
 }>();
 
-const getActivityIcon = (type: UserActivityType): string => {
-  const icons: Record<UserActivityType, string> = {
+const getActivityIcon = (type: UserActivityType): string | typeof Eye => {
+  const icons: Record<UserActivityType, string | typeof Eye> = {
     status_changed: '🔄',
     database_created: '🗄️',
     credential_created: '🔑',
-    page_view: '👁️',
+    page_view: Eye,
   };
   return icons[type] || '📝';
 };
@@ -171,7 +171,14 @@ const showLoadMore = computed(() => {
               getActivityColor(activity.activity_type)
             ]"
           >
-            {{ getActivityIcon(activity.activity_type) }}
+            <component
+              :is="getActivityIcon(activity.activity_type)"
+              v-if="activity.activity_type === 'page_view'"
+              class="h-5 w-5"
+            />
+            <template v-else>
+              {{ getActivityIcon(activity.activity_type) }}
+            </template>
           </div>
 
           <!-- Content -->
