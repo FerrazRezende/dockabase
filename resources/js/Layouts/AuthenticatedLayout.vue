@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NotificationCenter from '@/components/NotificationCenter.vue';
+import StatusPickerDropdown from '@/components/user/StatusPickerDropdown.vue';
 import {
     Database,
     Home,
@@ -257,63 +258,29 @@ const initials = (name: string): string => {
 
             <!-- Footer -->
             <div class="border-t border-border p-2">
-                <!-- User Menu with Status -->
-                <DropdownMenu>
-                    <DropdownMenuTrigger as-child>
-                        <Button
-                            variant="ghost"
-                            :class="[
-                                'w-full relative',
-                                collapsed
-                                    ? 'h-10 w-10 p-0 justify-center'
-                                    : 'justify-start gap-2 h-10 px-2',
-                            ]"
-                        >
-                            <div class="relative">
-                                <Avatar class="h-8 w-8 shrink-0">
-                                    <AvatarImage :src="auth.user.avatar" />
-                                    <AvatarFallback class="bg-primary text-primary-foreground text-xs">
-                                        {{ initials(auth.user.name) }}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <!-- Status indicator dot -->
-                                <span
-                                    v-if="userStatus"
-                                    class="absolute bottom-0 right-0 flex size-3 items-center justify-center rounded-full bg-background"
-                                >
-                                    <span
-                                        class="size-2 rounded-full"
-                                        :class="{
-                                            'bg-green-500': userStatus === 'online',
-                                            'bg-yellow-500': userStatus === 'away',
-                                            'bg-red-500': userStatus === 'busy',
-                                            'bg-gray-400': userStatus === 'offline',
-                                        }"
-                                    />
-                                </span>
-                            </div>
-                            <template v-if="!collapsed">
-                                <div class="flex flex-1 flex-col items-start text-left truncate">
-                                    <span class="text-sm font-medium leading-none">
-                                        {{ auth.user.name }}
-                                    </span>
-                                    <span class="text-xs text-muted-foreground truncate">
-                                        {{ auth.user.email }}
-                                    </span>
-                                </div>
-                                <ChevronDown class="h-4 w-4 shrink-0 text-muted-foreground" />
-                            </template>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" side="top" :side-offset="8" class="w-56">
-                        <DropdownMenuItem as-child>
-                            <Link :href="route('profile.edit')" class="flex items-center gap-2">
-                                <Settings class="h-4 w-4" />
-                                Configurações
-                            </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <!-- User Status Picker -->
+                <div class="flex items-center gap-1">
+                    <StatusPickerDropdown
+                        :avatar-url="auth.user.avatar"
+                        :user-name="auth.user.name"
+                        :initial-status="userStatus"
+                        :compact="collapsed"
+                        class="flex-1"
+                    />
+                    <!-- Settings button -->
+                    <Button
+                        v-if="!collapsed"
+                        variant="ghost"
+                        size="icon"
+                        class="h-9 w-9 shrink-0"
+                        :title="__('Settings')"
+                        as-child
+                    >
+                        <Link :href="route('profile.edit')">
+                            <Settings class="h-4 w-4" />
+                        </Link>
+                    </Button>
+                </div>
             </div>
         </aside>
 
@@ -338,7 +305,7 @@ const initials = (name: string): string => {
                     <Link :href="route('logout')" method="post" as="button">
                         <Button variant="ghost" size="sm" class="gap-2">
                             <LogOut class="h-4 w-4" />
-                            Sair
+                            {{ __('Sign out') }}
                         </Button>
                     </Link>
                 </div>
