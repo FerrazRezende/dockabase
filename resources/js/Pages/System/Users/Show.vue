@@ -370,7 +370,7 @@ const userInitials = computed(() => {
                     </Button>
                 </Link>
                 <div class="flex items-center gap-4">
-                    <Avatar class="h-16 w-16 ring-2 ring-border">
+                    <Avatar class="h-12 w-12 ring-2 ring-border">
                         <AvatarImage v-if="user.avatar" :src="user.avatar" />
                         <AvatarFallback class="bg-primary text-primary-foreground text-xl">
                             {{ userInitials }}
