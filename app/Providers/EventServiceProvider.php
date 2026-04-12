@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Events\UserStatusUpdatedEvent;
-use App\Listeners\LogUserStatusChangeListener;
 use App\Listeners\CacheUserStatusListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -20,7 +19,6 @@ final class EventServiceProvider extends ServiceProvider
         ],
 
         UserStatusUpdatedEvent::class => [
-            LogUserStatusChangeListener::class,
             CacheUserStatusListener::class,
         ],
     ];

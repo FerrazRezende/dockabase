@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\DTOs\FeatureConfigDTO;
 use App\Enums\RolloutStrategyEnum;
 use App\Models\FeatureHistory;
 use App\Models\FeatureSetting;
@@ -18,7 +17,7 @@ class FeatureFlagService
     /**
      * Get all available features with their current status.
      *
-     * @return Collection<int, FeatureConfigDTO>
+     * @return Collection<int, array>
      */
     public function getAllFeatures(): Collection
     {
@@ -39,7 +38,7 @@ class FeatureFlagService
                 $strategy = $setting?->strategy ??
                     ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
 
-                return FeatureConfigDTO::fromDefinition(
+                return $this->buildFeatureArray(
                     name: $name,
                     definition: $definition,
                     strategy: $strategy,
@@ -54,7 +53,7 @@ class FeatureFlagService
     /**
      * Get a single feature's configuration.
      */
-    public function getFeature(string $featureName): ?FeatureConfigDTO
+    public function getFeature(string $featureName): ?array
     {
         $definition = config("features.definitions.{$featureName}");
 
@@ -72,7 +71,7 @@ class FeatureFlagService
         $strategy = $setting?->strategy ??
             ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
 
-        return FeatureConfigDTO::fromDefinition(
+        return $this->buildFeatureArray(
             name: $featureName,
             definition: $definition,
             strategy: $strategy,
@@ -85,7 +84,7 @@ class FeatureFlagService
     /**
      * Activate a feature with the given strategy.
      */
-    public function activate(string $featureName, array $options, User $actor): FeatureConfigDTO
+    public function activate(string $featureName, array $options, User $actor): array
     {
         $definition = config("features.definitions.{$featureName}");
         abort_unless($definition, 404, "Feature {$featureName} not found");
@@ -119,7 +118,7 @@ class FeatureFlagService
     /**
      * Deactivate a feature.
      */
-    public function deactivate(string $featureName, User $actor): FeatureConfigDTO
+    public function deactivate(string $featureName, User $actor): array
     {
         $definition = config("features.definitions.{$featureName}");
         abort_unless($definition, 404, "Feature {$featureName} not found");
@@ -148,7 +147,7 @@ class FeatureFlagService
     /**
      * Update feature rollout settings.
      */
-    public function update(string $featureName, array $options, User $actor): FeatureConfigDTO
+    public function update(string $featureName, array $options, User $actor): array
     {
         $definition = config("features.definitions.{$featureName}");
         abort_unless($definition, 404, "Feature {$featureName} not found");
@@ -175,7 +174,7 @@ class FeatureFlagService
     /**
      * Add a user to the feature's allowlist.
      */
-    public function addUser(string $featureName, string $userId, User $actor): FeatureConfigDTO
+    public function addUser(string $featureName, string $userId, User $actor): array
     {
         $setting = FeatureSetting::where('feature_name', $featureName)->firstOrFail();
         $previousState = $setting->toArray();
@@ -196,7 +195,7 @@ class FeatureFlagService
     /**
      * Remove a user from the feature's allowlist.
      */
-    public function removeUser(string $featureName, string $userId, User $actor): FeatureConfigDTO
+    public function removeUser(string $featureName, string $userId, User $actor): array
     {
         $setting = FeatureSetting::where('feature_name', $featureName)->firstOrFail();
         $previousState = $setting->toArray();
@@ -252,8 +251,8 @@ class FeatureFlagService
         $allFeatures = $this->getAllFeatures();
 
         return $allFeatures
-            ->filter(fn (FeatureConfigDTO $feature) => $this->isActiveForUser($feature->name, $user))
-            ->map(fn (FeatureConfigDTO $feature) => $feature->name)
+            ->filter(fn (array $feature) => $this->isActiveForUser($feature['name'], $user))
+            ->map(fn (array $feature) => $feature['name'])
             ->values()
             ->toArray();
     }
@@ -306,6 +305,29 @@ class FeatureFlagService
 
         return Carbon::parse($feature['implemented_at'])
             ->lte(Carbon::parse($deployDate));
+    }
+
+    /**
+     * Build a feature array from definition and settings.
+     */
+    private function buildFeatureArray(
+        string $name,
+        array $definition,
+        RolloutStrategyEnum $strategy,
+        bool $isActive,
+        int $percentage = 0,
+        ?array $userIds = null
+    ): array {
+        return [
+            'name' => $name,
+            'display_name' => $definition['name'],
+            'description' => $definition['description'],
+            'is_active' => $isActive,
+            'strategy' => $strategy->value,
+            'strategy_label' => $strategy->label(),
+            'percentage' => $percentage,
+            'user_ids' => $userIds,
+        ];
     }
 
     /**

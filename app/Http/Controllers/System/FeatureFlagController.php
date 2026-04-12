@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\System;
 
-use App\DTOs\FeatureConfigDTO;
 use App\Enums\RolloutStrategyEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\System\ActivateFeatureRequest;
@@ -74,20 +73,20 @@ class FeatureFlagController extends Controller
     /**
      * Get users who have access to the feature based on strategy.
      */
-    private function getUsersWithAccess(FeatureConfigDTO $feature, $allUsers): array
+    private function getUsersWithAccess(array $feature, $allUsers): array
     {
-        if (! $feature->isActive) {
+        if (! $feature['is_active']) {
             return [];
         }
 
-        return match ($feature->strategy) {
+        return match (RolloutStrategyEnum::from($feature['strategy'])) {
             RolloutStrategyEnum::All => $allUsers->toArray(),
             RolloutStrategyEnum::Percentage => $allUsers
-                ->filter(fn ($user) => $this->checkPercentage((string) $user->id, $feature->percentage))
+                ->filter(fn ($user) => $this->checkPercentage((string) $user->id, $feature['percentage']))
                 ->values()
                 ->toArray(),
             RolloutStrategyEnum::Users => $allUsers
-                ->filter(fn ($user) => ($feature->userIds?->contains((string) $user->id) ?? false))
+                ->filter(fn ($user) => in_array((string) $user->id, $feature['user_ids'] ?? []))
                 ->values()
                 ->toArray(),
             default => [],

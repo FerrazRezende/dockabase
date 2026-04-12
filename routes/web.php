@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AvatarController;
+use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\Profile\LocaleController as ProfileLocaleController;
 use App\Http\Controllers\Profile\ProfilePhotoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -17,7 +19,7 @@ Route::get('/', function () {
 });
 
 // Public locale route for guests
-Route::patch('/locale', [App\Http\Controllers\LocaleController::class, 'set'])->name('locale.set');
+Route::patch('/locale', [LocaleController::class, 'set'])->name('locale.set');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -30,16 +32,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::patch('/profile/locale', [App\Http\Controllers\Profile\LocaleController::class, 'update'])
+    Route::patch('/profile/locale', [ProfileLocaleController::class, 'update'])
         ->name('profile.locale.update')
         ->middleware(['auth', 'verified']);
     Route::post('/profile/photo', [ProfilePhotoController::class, 'store'])
         ->name('profile.photo.store');
     Route::delete('/profile/photo', [ProfilePhotoController::class, 'destroy'])
         ->name('profile.photo.destroy');
-    // TODO: Uncomment when ProfilePhotoRefreshController is implemented
-    // Route::get('/profile/photo/refresh', \App\Http\Controllers\Profile\ProfilePhotoRefreshController::class)
-    //     ->name('profile.photo.refresh');
 });
 
 require __DIR__.'/auth.php';
