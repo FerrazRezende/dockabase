@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import LocaleForm from './Partials/LocaleForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
+import ProfilePhotoCard from './Partials/ProfilePhotoCard.vue';
 import { Head } from '@inertiajs/vue3';
 
 defineProps({
@@ -41,8 +42,14 @@ defineProps({
                     </div>
                 </div>
 
-                <div class="bg-card shadow-sm rounded-lg border border-border p-6">
-                    <LocaleForm class="max-w-xl" />
+                <div class="space-y-6">
+                    <div class="bg-card shadow-sm rounded-lg border border-border p-6">
+                        <ProfilePhotoCard />
+                    </div>
+
+                    <div class="bg-card shadow-sm rounded-lg border border-border p-6">
+                        <LocaleForm class="max-w-xl" />
+                    </div>
                 </div>
             </div>
         </div>

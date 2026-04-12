@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ])
     ->withCommands([
         \App\Console\Commands\InitMinioBucketsCommand::class,
+        \App\Console\Commands\SetAutoAwayStatus::class,
+        \App\Console\Commands\CleanupOldActivities::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -32,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleImpersonation::class,
             \App\Http\Middleware\EnsurePasswordChanged::class,
             \App\Http\Middleware\CheckDeniedPermissions::class,
+            \App\Http\Middleware\TrackUserPresence::class,
         ]);
 
         $middleware->alias([

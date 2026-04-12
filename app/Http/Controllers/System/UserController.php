@@ -12,6 +12,7 @@ use App\Http\Requests\System\UpdateUserRoleRequest;
 use App\Http\Resources\UserProfileResource;
 use App\Http\Resources\SystemUserResource;
 use App\Models\User;
+use App\Services\UserActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
@@ -183,5 +184,26 @@ class UserController extends Controller
         }
 
         return redirect()->back()->with('success', __('User deactivated successfully'));
+    }
+
+    /**
+     * Get activities for the specified user.
+     */
+    public function activities(Request $request, User $user, UserActivityService $activityService)
+    {
+        abort_unless($request->user()->is_admin, 403);
+
+        $page = (int) $request->input('page', 1);
+        $perPage = (int) $request->input('per_page', 20);
+
+        $activities = $activityService->getUserActivities($user, $perPage);
+
+        return response()->json([
+            'data' => $activities->items(),
+            'current_page' => $activities->currentPage(),
+            'last_page' => $activities->lastPage(),
+            'per_page' => $activities->perPage(),
+            'total' => $activities->total(),
+        ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\User;
 use App\Services\FeatureFlagService;
+use App\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
@@ -54,6 +55,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
         $activeFeatures = [];
         $userPermissions = [];
+        $userStatus = null;
 
         if ($user) {
             $featureService = app(FeatureFlagService::class);
@@ -61,6 +63,11 @@ class HandleInertiaRequests extends Middleware
 
             // Get all permissions for the user (excluding denied)
             $userPermissions = $user->getActualPermissions()->pluck('name')->toArray();
+
+            // Get user's current status
+            $statusService = app(UserStatusService::class);
+            $statusWithMeta = $statusService->getStatusWithMetadata($user->id);
+            $userStatus = $statusWithMeta ? $statusWithMeta['status'] : 'offline';
         }
 
         // Build impersonation data
@@ -92,6 +99,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'activeFeatures' => $activeFeatures,
             'userPermissions' => $userPermissions,
+            'userStatus' => $userStatus,
             'impersonating' => $impersonating,
             'locale' => App::currentLocale(),
             'translations' => $this->getTranslations(),

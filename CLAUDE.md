@@ -73,9 +73,11 @@ Para **System Users** que acessam o painel administrativo do DockaBase.
 
 **Uso:** Controle de quem pode fazer o que no painel administrativo.
 
-### Nível 2: API (Credentials)
+### Nível 2: Database Access (Credentials)
 
-Para **End Users** que consomem a API (frontend-only apps, DBeaver, etc).
+Para **End Users** que acessam databases PostgreSQL (frontend-only apps, DBeaver, etc).
+
+**ATENÇÃO:** Credentials definem permissões de acesso aos databases. O acesso via API será implementado através da Dynamic REST API (Fase 5 - planejada).
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

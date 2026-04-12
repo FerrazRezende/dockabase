@@ -9,11 +9,31 @@ import Toast from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
 import { __, transChoice } from './utils/lang';
 
+// Clear corrupted history state that may contain non-clonable Echo references
+// This prevents DataCloneError when Inertia tries to restoreState on page reload
+try {
+    const state = window.history.state;
+    if (state && typeof state === 'object') {
+        const cleaned = {};
+        for (const key of Object.keys(state)) {
+            try {
+                structuredClone(state[key]);
+                cleaned[key] = state[key];
+            } catch {
+                // Skip non-clonable values (e.g., Echo references)
+            }
+        }
+        window.history.replaceState(cleaned, '');
+    }
+} catch {
+    // Ignore errors during cleanup
+}
+
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 const toastOptions = {
     position: 'top-right',
-    timeout: 5000,
+    timeout: 2000,
     closeOnClick: true,
     pauseOnFocusLoss: true,
     pauseOnHover: true,

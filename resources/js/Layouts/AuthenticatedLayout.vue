@@ -1,24 +1,16 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NotificationCenter from '@/components/NotificationCenter.vue';
+import StatusPickerDropdown from '@/components/user/StatusPickerDropdown.vue';
 import {
     Database,
     Home,
     Sun,
     Moon,
     LogOut,
-    Settings,
     PanelLeftClose,
     PanelLeft,
-    ChevronDown,
     Flag,
     Key,
     Users,
@@ -27,7 +19,48 @@ import {
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
 import { usePermissions } from '@/composables/usePermissions';
-import { ref, computed } from 'vue';
+import { useUserStatus } from '@/composables/useUserStatus';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import type { UserStatus } from '@/types/user-status';
+
+const { setStatus, refreshStatus, currentStatus } = useUserStatus();
+
+// Only set online on first mount if user has no status yet in Redis.
+// On subsequent Inertia navigations the layout remounts, so we check
+// the current status first to avoid overwriting a manual status like "busy".
+const hasInitialized = ref(false);
+
+onMounted(async () => {
+  if (!hasInitialized.value) {
+    hasInitialized.value = true;
+    await refreshStatus();
+    // Only set online if user has no active status in Redis
+    if (!currentStatus.value || currentStatus.value === 'offline') {
+      await setStatus('online');
+    }
+  }
+});
+
+// Set status to offline when tab is closed or navigated away
+const handleBeforeUnload = () => {
+  fetch('/api/user/status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+    },
+    body: JSON.stringify({ status: 'offline' }),
+    keepalive: true,
+  });
+};
+
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBeforeUnload);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+});
 
 defineProps<{
     auth: {
@@ -39,6 +72,7 @@ defineProps<{
             avatar?: string;
         };
     };
+    userStatus?: UserStatus;
     title?: string;
 }>();
 
@@ -241,45 +275,12 @@ const initials = (name: string): string => {
 
             <!-- Footer -->
             <div class="border-t border-border p-2">
-                <DropdownMenu>
-                    <DropdownMenuTrigger as-child>
-                        <Button
-                            variant="ghost"
-                            :class="[
-                                'w-full',
-                                collapsed
-                                    ? 'h-10 w-10 p-0 justify-center'
-                                    : 'justify-start gap-2 h-10 px-2',
-                            ]"
-                        >
-                            <Avatar class="h-8 w-8 shrink-0">
-                                <AvatarImage :src="auth.user.avatar" />
-                                <AvatarFallback class="bg-primary text-primary-foreground text-xs">
-                                    {{ initials(auth.user.name) }}
-                                </AvatarFallback>
-                            </Avatar>
-                            <template v-if="!collapsed">
-                                <div class="flex flex-1 flex-col items-start text-left truncate">
-                                    <span class="text-sm font-medium leading-none">
-                                        {{ auth.user.name }}
-                                    </span>
-                                    <span class="text-xs text-muted-foreground truncate">
-                                        {{ auth.user.email }}
-                                    </span>
-                                </div>
-                                <ChevronDown class="h-4 w-4 shrink-0 text-muted-foreground" />
-                            </template>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" side="top" :side-offset="8" class="w-56">
-                        <DropdownMenuItem as-child>
-                            <Link :href="route('profile.edit')" class="flex items-center gap-2">
-                                <Settings class="h-4 w-4" />
-                                Configurações
-                            </Link>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <StatusPickerDropdown
+                    :avatar-url="auth.user.avatar"
+                    :user-name="auth.user.name"
+                    :initial-status="userStatus"
+                    :compact="collapsed"
+                />
             </div>
         </aside>
 
@@ -304,7 +305,7 @@ const initials = (name: string): string => {
                     <Link :href="route('logout')" method="post" as="button">
                         <Button variant="ghost" size="sm" class="gap-2">
                             <LogOut class="h-4 w-4" />
-                            Sair
+                            {{ __('Sign out') }}
                         </Button>
                     </Link>
                 </div>
