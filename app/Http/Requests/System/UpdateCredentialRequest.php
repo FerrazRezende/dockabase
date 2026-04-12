@@ -22,7 +22,7 @@ class UpdateCredentialRequest extends FormRequest
             'permission' => ['nullable', Rule::enum(CredentialPermissionEnum::class)],
             'description' => ['nullable', 'string'],
             'user_ids' => ['nullable', 'array'],
-            'user_ids.*' => ['integer', 'exists:users,id'],
+            'user_ids.*' => ['string', 'exists:users,id'],
         ];
     }
 }

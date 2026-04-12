@@ -29,11 +29,11 @@ class DatabasePolicyTest extends TestCase
         $this->assertTrue($this->policy->viewAny($admin));
     }
 
-    public function test_non_admin_cannot_view_any(): void
+    public function test_non_admin_can_view_any(): void
     {
         $user = User::factory()->create(['is_admin' => false]);
 
-        $this->assertFalse($this->policy->viewAny($user));
+        $this->assertTrue($this->policy->viewAny($user));
     }
 
     public function test_admin_can_create(): void

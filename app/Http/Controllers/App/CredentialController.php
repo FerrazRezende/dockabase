@@ -112,7 +112,7 @@ class CredentialController extends Controller
         $this->authorize('update', $credential);
 
         $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'user_id' => ['required', 'string', 'exists:users,id'],
         ]);
 
         $user = User::findOrFail($request->input('user_id'));

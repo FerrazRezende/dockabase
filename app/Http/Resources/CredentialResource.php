@@ -19,8 +19,8 @@ class CredentialResource extends JsonResource
             'description' => $this->description,
             'users_count' => $this->users_count ?? $this->users()->count(),
             'databases_count' => $this->databases_count ?? $this->databases()->count(),
-            'users' => UserResource::collection($this->whenLoaded('users') ?? collect)->collection->toArray() ?? [],
-            'databases' => DatabaseResource::collection($this->whenLoaded('databases') ?? collect)->collection->toArray() ?? [],
+            'users' => $this->whenLoaded('users') ? UserResource::collection($this->users)->toArray($request) : [],
+            'databases' => $this->whenLoaded('databases') ? DatabaseResource::collection($this->databases)->toArray($request) : [],
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

@@ -44,11 +44,11 @@ class ProfilePhotoTest extends TestCase
         Storage::fake('minio');
 
         $user = User::factory()->create(['avatar' => 'test-avatar.jpg']);
-        // The avatar accessor returns a signed URL, not the raw path
+        // The avatar accessor returns a proxy URL (/avatars/{id}), not the raw path
         $avatarUrl = $user->avatar;
         $this->assertNotEmpty($avatarUrl);
-        $this->assertStringContainsString('test-avatar.jpg', $avatarUrl);
-        $this->assertStringContainsString('expiration', $avatarUrl);
+        $this->assertStringContainsString('/avatars/', $avatarUrl);
+        $this->assertStringContainsString($user->id, $avatarUrl);
     }
 
     public function test_avatar_defaults_to_null(): void
@@ -180,9 +180,9 @@ class ProfilePhotoTest extends TestCase
         // Verify file stored
         Storage::disk('minio')->assertExists($avatarPath);
 
-        // Verify signed URL is generated (contains expiration signature)
+        // Verify proxy URL is generated (contains /avatars/ path)
         $avatarUrl = $this->user->avatar;
-        $this->assertStringContainsString('expiration', $avatarUrl);
+        $this->assertStringContainsString('/avatars/', $avatarUrl);
 
         // User uploads different photo (old one should be deleted)
         $oldPath = $avatarPath;
@@ -212,7 +212,7 @@ class ProfilePhotoTest extends TestCase
         $this->assertNull($this->user->getAttributes()['avatar']);
     }
 
-    public function test_avatar_url_expires(): void
+    public function test_avatar_url_is_proxy_url(): void
     {
         Storage::fake('minio');
 
@@ -224,8 +224,8 @@ class ProfilePhotoTest extends TestCase
         $this->user->refresh();
         $avatarUrl = $this->user->avatar;
 
-        // Parse URL to get expiration time
-        $this->assertStringContainsString('expiration', $avatarUrl);
+        // The avatar accessor returns a proxy URL
         $this->assertIsString($avatarUrl);
+        $this->assertStringContainsString('/avatars/', $avatarUrl);
     }
 }

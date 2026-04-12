@@ -26,7 +26,7 @@ class DatabaseCreatedNotificationTest extends TestCase
         $this->assertDatabaseHas('notifications', [
             'user_id' => $user->id,
             'type' => 'database_created',
-            'title' => 'Database criado com sucesso',
+            'title' => 'Database created successfully',
         ]);
     }
 
