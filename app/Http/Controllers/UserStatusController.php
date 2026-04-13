@@ -43,6 +43,22 @@ final class UserStatusController extends Controller
     }
 
     /**
+     * Send a heartbeat ping to keep the user marked as online.
+     */
+    public function heartbeat(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $this->statusService->updateHeartbeat($user);
+
+        return response()->json([
+            'status' => 'ok',
+            'heartbeat' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
      * Set the current user's status.
      */
     public function store(Request $request): JsonResponse
