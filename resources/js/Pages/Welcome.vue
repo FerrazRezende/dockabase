@@ -312,7 +312,7 @@ const plans = [
             <!-- Scroll indicator -->
             <div class="absolute bottom-12 left-1/2 -translate-x-1/2">
                 <div class="flex flex-col items-center gap-3">
-                    <span class="text-[10px] uppercase tracking-[0.2em] text-white/20">Scroll</span>
+                    <span class="text-[10px] uppercase tracking-[0.2em] text-white/20">{{ __('Scroll') }}</span>
                     <div class="h-16 w-px bg-gradient-to-b from-white/20 via-white/10 to-transparent" />
                 </div>
             </div>

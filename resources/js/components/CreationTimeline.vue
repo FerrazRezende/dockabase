@@ -2,6 +2,7 @@
 
 import { Check, Loader2, Circle } from 'lucide-vue-next';
 import type { CreationStep, DatabaseStatus } from '@/types/database';
+import { __ } from '@/utils/lang';
 
 interface Step {
   key: CreationStep;
@@ -15,13 +16,13 @@ const props = defineProps<{
 }>();
 
 const steps: Step[] = [
-  { key: 'validating', label: 'Validando' },
-  { key: 'creating', label: 'Criando' },
-  { key: 'configuring', label: 'Config' },
-  { key: 'migrating', label: 'Migra' },
-  { key: 'permissions', label: 'Perms' },
-  { key: 'testing', label: 'Teste' },
-  { key: 'ready', label: 'Pronto' },
+  { key: 'validating', label: __('Validating') },
+  { key: 'creating', label: __('Creating') },
+  { key: 'configuring', label: __('Configuring') },
+  { key: 'migrating', label: __('Migrating') },
+  { key: 'permissions', label: __('Permissions') },
+  { key: 'testing', label: __('Testing') },
+  { key: 'ready', label: __('Ready') },
 ];
 
 const stepOrder = steps.map(s => s.key);
@@ -74,7 +75,7 @@ const getLineColor = (index: number): string => {
     <!-- Progress bar -->
     <div class="mb-4">
       <div class="flex justify-between text-sm text-muted-foreground mb-1">
-        <span>Progresso</span>
+        <span>{{ __('Progress') }}</span>
         <span>{{ progress }}%</span>
       </div>
       <div class="h-2 bg-muted rounded-full overflow-hidden">

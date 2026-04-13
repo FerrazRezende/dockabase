@@ -568,5 +568,19 @@
     "Specific Users": "Usuarios Específicos",
     "Status Changed": "Estado Cambiado",
     "Database Created": "Base de Datos Creada",
-    "Page View": "Vista de Página"
+    "Page View": "Vista de Página",
+    "Home": "Inicio",
+    "System": "Sistema",
+    "Notifications": "Notificaciones",
+    "Mark all as read": "Marcar todas como leídas",
+    "No notifications": "Sin notificaciones",
+    "Progress": "Progreso",
+    "Deleting...": "Eliminando...",
+    "confirm_name_prefix": "Escribe",
+    "confirm_name_suffix": "para confirmar:",
+    "You are now impersonating :name.": "Estás ahora impersonando a :name.",
+    "You are no longer impersonating.": "Ya no estás impersonando.",
+    "Only admins can impersonate users.": "Solo los administradores pueden impersonar usuarios.",
+    "Cannot impersonate another admin user.": "No es posible impersonar a otro usuario administrador.",
+    "This feature is not available for your account": "Esta característica no está disponible para tu cuenta"
 }

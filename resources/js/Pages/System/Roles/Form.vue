@@ -302,12 +302,12 @@ const submit = (): void => {
                             <div class="flex flex-col gap-2 pt-4 border-t">
                                 <Link :href="route('system.permissions.index')" class="w-full">
                                     <Button variant="outline" class="w-full" :disabled="isSaving">
-                                        Cancelar
+                                        {{ __('Cancel') }}
                                     </Button>
                                 </Link>
                                 <Button @click="submit" class="w-full" :disabled="isSaving || !form.name.trim()">
                                     <Loader2 v-if="isSaving" class="w-4 h-4 mr-2 animate-spin" />
-                                    {{ isEditing ? 'Salvar' : 'Criar' }} Role
+                                    {{ isEditing ? __('Save') : __('Create') }} {{ __('Role') }}
                                 </Button>
                             </div>
                         </CardContent>

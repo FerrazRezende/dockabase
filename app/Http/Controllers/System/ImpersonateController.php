@@ -17,12 +17,12 @@ class ImpersonateController extends Controller
      */
     public function start(Request $request, User $user)
     {
-        abort_unless($request->user()->is_admin, 403, 'Only admins can impersonate users.');
+        abort_unless($request->user()->is_admin, 403, __('Only admins can impersonate users.'));
 
         // Cannot impersonate another admin
         if ($user->is_admin) {
             return redirect()->back()->withErrors([
-                'error' => 'Cannot impersonate another admin user.',
+                'error' => __('Cannot impersonate another admin user.'),
             ]);
         }
 
@@ -34,7 +34,7 @@ class ImpersonateController extends Controller
         Auth::login($user);
 
         return redirect()->route('dashboard')
-            ->with('info', "You are now impersonating {$user->name}.");
+            ->with('info', __('You are now impersonating :name.', ['name' => $user->name]));
     }
 
     /**
@@ -57,6 +57,6 @@ class ImpersonateController extends Controller
         Auth::login($originalUser);
 
         return redirect()->route('system.users.index')
-            ->with('success', 'You are no longer impersonating.');
+            ->with('success', __('You are no longer impersonating.'));
     }
 }

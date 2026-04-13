@@ -84,7 +84,7 @@ watch(isOpen, (value) => {
 
             <div v-if="requiresNameInput" class="space-y-2">
                 <Label for="confirm-name" class="text-sm">
-                    Digite <span class="font-mono font-bold">{{ confirmName }}</span> para confirmar:
+                    <span>{{ __('confirm_name_prefix') }} <span class="font-mono font-bold">{{ confirmName }}</span> {{ __('confirm_name_suffix') }}</span>
                 </Label>
                 <Input
                     id="confirm-name"
@@ -100,7 +100,7 @@ watch(isOpen, (value) => {
                     @click="handleCancel"
                     :disabled="loading"
                 >
-                    Cancelar
+                    {{ __('Cancel') }}
                 </Button>
                 <Button
                     v-if="variant === 'danger'"
@@ -108,8 +108,8 @@ watch(isOpen, (value) => {
                     @click="handleConfirm"
                     :disabled="!canConfirm || loading"
                 >
-                    <span v-if="loading">Excluindo...</span>
-                    <span v-else>{{ confirmText || 'Excluir' }}</span>
+                    <span v-if="loading">{{ __('Deleting...') }}</span>
+                    <span v-else>{{ confirmText || __('Delete') }}</span>
                 </Button>
                 <Button
                     v-else
@@ -117,8 +117,8 @@ watch(isOpen, (value) => {
                     @click="handleConfirm"
                     :disabled="!canConfirm || loading"
                 >
-                    <span v-if="loading">Processando...</span>
-                    <span v-else>{{ confirmText || 'Confirmar' }}</span>
+                    <span v-if="loading">{{ __('Processing') }}</span>
+                    <span v-else>{{ confirmText || __('Confirm') }}</span>
                 </Button>
             </DialogFooter>
         </DialogContent>

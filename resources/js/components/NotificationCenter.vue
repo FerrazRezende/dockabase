@@ -142,7 +142,7 @@ onMounted(() => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" class="w-80">
             <DropdownMenuLabel class="flex items-center justify-between">
-                <span>Notificacoes</span>
+                <span>{{ __('Notifications') }}</span>
                 <Button
                     v-if="unreadCount > 0"
                     variant="ghost"
@@ -151,7 +151,7 @@ onMounted(() => {
                     @click="markAllAsRead"
                 >
                     <CheckCheck class="h-3 w-3 mr-1" />
-                    Marcar todas
+                    {{ __('Mark all as read') }}
                 </Button>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -161,7 +161,7 @@ onMounted(() => {
             </div>
 
             <div v-else-if="notifications.length === 0" class="p-4 text-center text-sm text-muted-foreground">
-                Nenhuma notificacao
+                {{ __('No notifications') }}
             </div>
 
             <template v-else>

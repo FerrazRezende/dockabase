@@ -18,6 +18,7 @@ import {
 } from 'lucide-vue-next';
 import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
+import { useLang, __ } from '@/composables/useLang';
 import { usePermissions } from '@/composables/usePermissions';
 import { useUserStatus } from '@/composables/useUserStatus';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
@@ -162,7 +163,7 @@ const initials = (name: string): string => {
                     ]"
                 >
                     <Home class="h-5 w-5 shrink-0" />
-                    <span v-if="!collapsed">Home</span>
+                    <span v-if="!collapsed">{{ __('Home') }}</span>
                 </Link>
 
                 <!-- Databases - requires database-creator feature AND databases.view permission -->
@@ -180,7 +181,7 @@ const initials = (name: string): string => {
                     ]"
                 >
                     <Database class="h-5 w-5 shrink-0" />
-                    <span v-if="!collapsed">Databases</span>
+                    <span v-if="!collapsed">{{ __('Databases') }}</span>
                 </Link>
 
                 <!-- Credentials - requires credentials-manager feature AND credentials.view permission -->
@@ -198,7 +199,7 @@ const initials = (name: string): string => {
                     ]"
                 >
                     <Key class="h-5 w-5 shrink-0" />
-                    <span v-if="!collapsed">Credentials</span>
+                    <span v-if="!collapsed">{{ __('Credentials') }}</span>
                 </Link>
 
                 <!-- Admin Section -->
@@ -216,13 +217,13 @@ const initials = (name: string): string => {
                         ]"
                     >
                         <Home class="h-5 w-5 shrink-0" />
-                        <span v-if="!collapsed">Home</span>
+                        <span v-if="!collapsed">{{ __('Home') }}</span>
                     </Link>
 
                     <!-- System Section -->
                     <div class="pt-4 mt-4 border-t border-border">
                     <p v-if="!collapsed" class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Sistema
+                        {{ __('System') }}
                     </p>
                     <Link
                         :href="route('system.features.index')"
@@ -237,7 +238,7 @@ const initials = (name: string): string => {
                         ]"
                     >
                         <Flag class="h-5 w-5 shrink-0" />
-                        <span v-if="!collapsed">Features</span>
+                        <span v-if="!collapsed">{{ __('Features') }}</span>
                     </Link>
                     <Link
                         :href="route('system.permissions.index')"
@@ -252,7 +253,7 @@ const initials = (name: string): string => {
                         ]"
                     >
                         <Shield class="h-5 w-5 shrink-0" />
-                        <span v-if="!collapsed">Permissões</span>
+                        <span v-if="!collapsed">{{ __('Permissions') }}</span>
                     </Link>
                     <Link
                         :href="route('system.users.index')"
@@ -267,7 +268,7 @@ const initials = (name: string): string => {
                         ]"
                     >
                         <Users class="h-5 w-5 shrink-0" />
-                        <span v-if="!collapsed">Usuários</span>
+                        <span v-if="!collapsed">{{ __('Users') }}</span>
                     </Link>
                 </div>
                 </template>
