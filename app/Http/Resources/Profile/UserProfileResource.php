@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Profile;
 
+use App\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Laravel\Pennant\Feature;
@@ -99,7 +100,7 @@ class UserProfileResource extends JsonResource
             'bio' => $this->bio,
             'is_admin' => $this->is_admin,
             'active' => $this->active,
-            'status' => app(\App\Services\UserStatusService::class)->getStatus($this->resource)->value,
+            'status' => app(UserStatusService::class)->getStatus($this->resource)->value,
             'password_changed_at' => $this->password_changed_at?->toISOString(),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),

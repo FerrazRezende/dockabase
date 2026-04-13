@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserStatusEnum;
+use App\Events\UserStatusUpdatedEvent;
 use App\Models\User;
+use App\Models\UserActivity;
 use App\Services\UserStatusService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -52,7 +55,7 @@ final class UserStatusController extends Controller
             'message' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $statusEnum = \App\Enums\UserStatusEnum::from($request->input('status'));
+        $statusEnum = UserStatusEnum::from($request->input('status'));
 
         $previousStatus = $this->statusService->getStatus($user);
 
@@ -60,7 +63,7 @@ final class UserStatusController extends Controller
         $this->statusService->setStatus($user, $statusEnum);
 
         // Log the activity
-        \App\Models\UserActivity::create([
+        UserActivity::create([
             'user_id' => $user->id,
             'activity_type' => 'status_changed',
             'from_status' => $previousStatus->value,
@@ -69,7 +72,7 @@ final class UserStatusController extends Controller
         ]);
 
         // Broadcast the status change
-        broadcast(new \App\Events\UserStatusUpdatedEvent(
+        broadcast(new UserStatusUpdatedEvent(
             $user,
             $statusEnum,
             $request->input('message', ''),

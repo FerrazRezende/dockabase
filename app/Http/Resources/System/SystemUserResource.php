@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\System;
 
+use App\Services\UserStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,7 +17,7 @@ class SystemUserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $statusService = app(\App\Services\UserStatusService::class);
+        $statusService = app(UserStatusService::class);
 
         return [
             'id' => $this->id,

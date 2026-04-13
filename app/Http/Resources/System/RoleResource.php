@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\System;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,7 @@ class RoleResource extends JsonResource
     public function toArray(Request $request): array
     {
         $permissions = $this->whenLoaded('permissions');
-        if ($permissions instanceof \Illuminate\Database\Eloquent\Collection) {
+        if ($permissions instanceof EloquentCollection) {
             $permissionsArray = $permissions->map(fn($p) => [
                 'id' => $p->id,
                 'name' => $p->name,

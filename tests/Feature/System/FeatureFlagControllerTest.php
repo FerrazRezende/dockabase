@@ -47,7 +47,7 @@ class FeatureFlagControllerTest extends TestCase
                 ],
             ]);
 
-        $this->assertCount(2, $response->json('data'));
+        $this->assertCount(12, $response->json('data'));
     }
 
     public function test_index_forbidden_for_non_admin(): void

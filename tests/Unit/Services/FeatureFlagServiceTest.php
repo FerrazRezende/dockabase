@@ -26,7 +26,7 @@ class FeatureFlagServiceTest extends TestCase
     {
         $features = $this->service->getAllFeatures();
 
-        $this->assertCount(2, $features); // Apenas database-creator e credentials-manager
+        $this->assertCount(12, $features); // All defined features from config/features.php
         $this->assertIsArray($features->first());
     }
 
