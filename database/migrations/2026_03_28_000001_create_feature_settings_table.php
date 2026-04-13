@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('feature_settings', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('feature_name')->unique();
-            $table->string('strategy')->default(RolloutStrategyEnum::Inactive->value);
+            $table->string('strategy')->default(RolloutStrategyEnum::INACTIVE->value);
             $table->unsignedInteger('percentage')->default(0);
             $table->json('user_ids')->nullable();
             $table->boolean('is_active')->default(false);

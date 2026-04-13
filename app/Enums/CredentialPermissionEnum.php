@@ -6,16 +6,16 @@ namespace App\Enums;
 
 enum CredentialPermissionEnum: string
 {
-    case Read = 'read';
-    case Write = 'write';
-    case ReadWrite = 'read-write';
+    case READ = 'read';
+    case WRITE = 'write';
+    case READ_WRITE = 'read-write';
 
     public function label(): string
     {
         return match ($this) {
-            self::Read => 'Read Only',
-            self::Write => 'Write Only',
-            self::ReadWrite => 'Read & Write',
+            self::READ => __('Read Only'),
+            self::WRITE => __('Write Only'),
+            self::READ_WRITE => __('Read & Write'),
         };
     }
 }

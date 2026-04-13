@@ -30,12 +30,12 @@ class CredentialServiceTest extends TestCase
 
         $result = $this->service->create([
             'name' => 'Dev Team',
-            'permission' => CredentialPermissionEnum::ReadWrite,
+            'permission' => CredentialPermissionEnum::READ_WRITE,
             'user_ids' => [$user->id],
         ]);
 
         $this->assertEquals('Dev Team', $result->name);
-        $this->assertEquals(CredentialPermissionEnum::ReadWrite, $result->permission);
+        $this->assertEquals(CredentialPermissionEnum::READ_WRITE, $result->permission);
         $this->assertTrue($result->users->contains($user));
     }
 
@@ -64,7 +64,7 @@ class CredentialServiceTest extends TestCase
     {
         $user = User::factory()->create();
         $credential = Credential::factory()->create([
-            'permission' => CredentialPermissionEnum::ReadWrite,
+            'permission' => CredentialPermissionEnum::READ_WRITE,
         ]);
         $database = Database::factory()->create();
 
@@ -73,7 +73,7 @@ class CredentialServiceTest extends TestCase
 
         $result = $this->service->getUserPermissionForDatabase($user, $database->name);
 
-        $this->assertEquals(CredentialPermissionEnum::ReadWrite, $result);
+        $this->assertEquals(CredentialPermissionEnum::READ_WRITE, $result);
     }
 
     public function test_get_user_permission_for_database_returns_null_if_no_access(): void

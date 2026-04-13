@@ -38,7 +38,7 @@ class FeatureFlagServiceTest extends TestCase
 
         // Sem setting no banco, usa default do ambiente (testing = true)
         $this->assertTrue($databaseCreator['is_active']);
-        $this->assertEquals(RolloutStrategyEnum::All->value, $databaseCreator['strategy']);
+        $this->assertEquals(RolloutStrategyEnum::ALL->value, $databaseCreator['strategy']);
     }
 
     public function test_get_feature_returns_null_for_unknown(): void

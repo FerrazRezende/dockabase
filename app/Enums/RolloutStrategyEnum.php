@@ -6,23 +6,23 @@ namespace App\Enums;
 
 enum RolloutStrategyEnum: string
 {
-    case Inactive = 'inactive';
-    case Percentage = 'percentage';
-    case Users = 'users';
-    case All = 'all';
+    case INACTIVE = 'inactive';
+    case PERCENTAGE = 'percentage';
+    case USERS = 'users';
+    case ALL = 'all';
 
     public function label(): string
     {
         return match ($this) {
-            self::Inactive => 'Inativo',
-            self::Percentage => 'Percentual',
-            self::Users => 'Usuários Específicos',
-            self::All => 'Todos',
+            self::INACTIVE => __('Inactive'),
+            self::PERCENTAGE => __('Percentage'),
+            self::USERS => __('Specific Users'),
+            self::ALL => __('All'),
         };
     }
 
     public function isActive(): bool
     {
-        return $this !== self::Inactive;
+        return $this !== self::INACTIVE;
     }
 }

@@ -13,10 +13,10 @@ return new class extends Migration
             $table->char('id', 27)->primary();
             $table->string('name', 255);
             $table->enum('permission', [
-                CredentialPermissionEnum::Read->value,
-                CredentialPermissionEnum::Write->value,
-                CredentialPermissionEnum::ReadWrite->value,
-            ])->default(CredentialPermissionEnum::Read->value);
+                CredentialPermissionEnum::READ->value,
+                CredentialPermissionEnum::WRITE->value,
+                CredentialPermissionEnum::READ_WRITE->value,
+            ])->default(CredentialPermissionEnum::READ->value);
             $table->text('description')->nullable();
             $table->timestamps();
 

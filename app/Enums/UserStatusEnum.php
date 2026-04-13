@@ -14,10 +14,10 @@ enum UserStatusEnum: string
     public function label(): string
     {
         return match ($this) {
-            self::ONLINE => 'Online',
-            self::AWAY => 'Ausente',
-            self::BUSY => 'Ocupado',
-            self::OFFLINE => 'Offline',
+            self::ONLINE => __('Online'),
+            self::AWAY => __('Away'),
+            self::BUSY => __('Busy'),
+            self::OFFLINE => __('Offline'),
         };
     }
 

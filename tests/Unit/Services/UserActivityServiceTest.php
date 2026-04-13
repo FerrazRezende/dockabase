@@ -43,7 +43,7 @@ class UserActivityServiceTest extends TestCase
         $activity = $this->service->logStatusChange($this->user, UserStatusEnum::ONLINE, UserStatusEnum::BUSY);
 
         $this->assertInstanceOf(UserActivity::class, $activity);
-        $this->assertEquals(\App\Enums\UserActivityTypeEnum::StatusChanged, $activity->activity_type);
+        $this->assertEquals(\App\Enums\UserActivityTypeEnum::STATUS_CHANGED, $activity->activity_type);
         $this->assertEquals('online', $activity->from_status);
         $this->assertEquals('busy', $activity->to_status);
     }

@@ -19,11 +19,11 @@ class CredentialTest extends TestCase
     {
         $credential = Credential::factory()->create([
             'name' => 'Dev Team',
-            'permission' => CredentialPermissionEnum::ReadWrite,
+            'permission' => CredentialPermissionEnum::READ_WRITE,
         ]);
 
         $this->assertEquals('Dev Team', $credential->name);
-        $this->assertEquals(CredentialPermissionEnum::ReadWrite, $credential->permission);
+        $this->assertEquals(CredentialPermissionEnum::READ_WRITE, $credential->permission);
         $this->assertMatchesRegularExpression('/^[0-9a-zA-Z]{27}$/', $credential->id);
     }
 
@@ -52,7 +52,7 @@ class CredentialTest extends TestCase
     public function test_permission_is_cast_to_enum(): void
     {
         $credential = Credential::factory()->create([
-            'permission' => CredentialPermissionEnum::Read,
+            'permission' => CredentialPermissionEnum::READ,
         ]);
 
         $this->assertInstanceOf(CredentialPermissionEnum::class, $credential->permission);
@@ -60,9 +60,9 @@ class CredentialTest extends TestCase
 
     public function test_has_read_permission(): void
     {
-        $readCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::Read]);
-        $writeCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::Write]);
-        $rwCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::ReadWrite]);
+        $readCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::READ]);
+        $writeCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::WRITE]);
+        $rwCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::READ_WRITE]);
 
         $this->assertTrue($readCredential->hasReadPermission());
         $this->assertFalse($writeCredential->hasReadPermission());
@@ -71,9 +71,9 @@ class CredentialTest extends TestCase
 
     public function test_has_write_permission(): void
     {
-        $readCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::Read]);
-        $writeCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::Write]);
-        $rwCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::ReadWrite]);
+        $readCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::READ]);
+        $writeCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::WRITE]);
+        $rwCredential = Credential::factory()->create(['permission' => CredentialPermissionEnum::READ_WRITE]);
 
         $this->assertFalse($readCredential->hasWritePermission());
         $this->assertTrue($writeCredential->hasWritePermission());

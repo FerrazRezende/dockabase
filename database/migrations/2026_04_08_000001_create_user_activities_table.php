@@ -15,10 +15,10 @@ return new class extends Migration
             $table->char('id', 27)->primary();
             $table->char('user_id', 27);
             $table->enum('activity_type', [
-                UserActivityTypeEnum::StatusChanged->value,
-                UserActivityTypeEnum::DatabaseCreated->value,
-                UserActivityTypeEnum::CredentialCreated->value,
-                UserActivityTypeEnum::PageView->value,
+                UserActivityTypeEnum::STATUS_CHANGED->value,
+                UserActivityTypeEnum::DATABASE_CREATED->value,
+                UserActivityTypeEnum::CREDENTIAL_CREATED->value,
+                UserActivityTypeEnum::PAGE_VIEW->value,
             ]);
             $table->string('from_status', 20)->nullable();
             $table->string('to_status', 20)->nullable();

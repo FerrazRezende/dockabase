@@ -80,12 +80,12 @@ class FeatureFlagController extends Controller
         }
 
         return match (RolloutStrategyEnum::from($feature['strategy'])) {
-            RolloutStrategyEnum::All => $allUsers->toArray(),
-            RolloutStrategyEnum::Percentage => $allUsers
+            RolloutStrategyEnum::ALL => $allUsers->toArray(),
+            RolloutStrategyEnum::PERCENTAGE => $allUsers
                 ->filter(fn ($user) => $this->checkPercentage((string) $user->id, $feature['percentage']))
                 ->values()
                 ->toArray(),
-            RolloutStrategyEnum::Users => $allUsers
+            RolloutStrategyEnum::USERS => $allUsers
                 ->filter(fn ($user) => in_array((string) $user->id, $feature['user_ids'] ?? []))
                 ->values()
                 ->toArray(),

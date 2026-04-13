@@ -15,7 +15,7 @@ class CredentialService
     {
         $credential = Credential::create([
             'name' => $data['name'],
-            'permission' => $data['permission'] ?? CredentialPermissionEnum::Read,
+            'permission' => $data['permission'] ?? CredentialPermissionEnum::READ,
             'description' => $data['description'] ?? null,
         ]);
 

@@ -37,17 +37,17 @@ class UserActivity extends Model
 
     public function scopeStatusChanged($query)
     {
-        return $query->where('activity_type', UserActivityTypeEnum::StatusChanged);
+        return $query->where('activity_type', UserActivityTypeEnum::STATUS_CHANGED);
     }
 
     public function scopeDatabaseCreated($query)
     {
-        return $query->where('activity_type', UserActivityTypeEnum::DatabaseCreated);
+        return $query->where('activity_type', UserActivityTypeEnum::DATABASE_CREATED);
     }
 
     public function scopeCredentialCreated($query)
     {
-        return $query->where('activity_type', UserActivityTypeEnum::CredentialCreated);
+        return $query->where('activity_type', UserActivityTypeEnum::CREDENTIAL_CREATED);
     }
 
     public function scopeForUser($query, $userId)

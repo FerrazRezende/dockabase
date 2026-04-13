@@ -41,13 +41,13 @@ class Credential extends Model
 
     public function hasReadPermission(): bool
     {
-        return $this->permission === CredentialPermissionEnum::Read
-            || $this->permission === CredentialPermissionEnum::ReadWrite;
+        return $this->permission === CredentialPermissionEnum::READ
+            || $this->permission === CredentialPermissionEnum::READ_WRITE;
     }
 
     public function hasWritePermission(): bool
     {
-        return $this->permission === CredentialPermissionEnum::Write
-            || $this->permission === CredentialPermissionEnum::ReadWrite;
+        return $this->permission === CredentialPermissionEnum::WRITE
+            || $this->permission === CredentialPermissionEnum::READ_WRITE;
     }
 }

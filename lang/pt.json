@@ -560,5 +560,13 @@
     "Credential created": "Credencial criada",
     "Updates": "Atualizações",
     "Recent activities and updates for this user": "Atividades e atualizações recentes deste usuário",
-    "Error loading activities": "Erro ao carregar atividades"
+    "Error loading activities": "Erro ao carregar atividades",
+    "Online": "Online",
+    "Away": "Ausente",
+    "Busy": "Ocupado",
+    "Offline": "Offline",
+    "Specific Users": "Usuários Específicos",
+    "Status Changed": "Status Alterado",
+    "Database Created": "Database Criado",
+    "Page View": "Visualização de Página"
 }

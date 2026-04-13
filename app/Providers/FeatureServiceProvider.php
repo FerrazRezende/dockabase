@@ -60,10 +60,10 @@ class FeatureServiceProvider extends ServiceProvider
         }
 
         return match ($setting->strategy) {
-            RolloutStrategyEnum::All => true,
-            RolloutStrategyEnum::Percentage => $this->checkPercentage((string) $user->id, $setting->percentage),
-            RolloutStrategyEnum::Users => in_array((string) $user->id, $setting->user_ids ?? []),
-            RolloutStrategyEnum::Inactive => false,
+            RolloutStrategyEnum::ALL => true,
+            RolloutStrategyEnum::PERCENTAGE => $this->checkPercentage((string) $user->id, $setting->percentage),
+            RolloutStrategyEnum::USERS => in_array((string) $user->id, $setting->user_ids ?? []),
+            RolloutStrategyEnum::INACTIVE => false,
         };
     }
 

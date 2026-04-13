@@ -36,7 +36,7 @@ class FeatureFlagService
 
                 // Se está ativo por padrão (sem setting), estratégia é "all"
                 $strategy = $setting?->strategy ??
-                    ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
+                    ($isActive ? RolloutStrategyEnum::ALL : RolloutStrategyEnum::INACTIVE);
 
                 return $this->buildFeatureArray(
                     name: $name,
@@ -69,7 +69,7 @@ class FeatureFlagService
             : $this->isFeatureActiveByDefault($featureName);
 
         $strategy = $setting?->strategy ??
-            ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
+            ($isActive ? RolloutStrategyEnum::ALL : RolloutStrategyEnum::INACTIVE);
 
         return $this->buildFeatureArray(
             name: $featureName,
@@ -95,7 +95,7 @@ class FeatureFlagService
 
         $setting = FeatureSetting::firstOrCreate(
             ['feature_name' => $featureName],
-            ['strategy' => RolloutStrategyEnum::Inactive, 'is_active' => false]
+            ['strategy' => RolloutStrategyEnum::INACTIVE, 'is_active' => false]
         );
 
         $previousState = $setting->toArray();
@@ -125,13 +125,13 @@ class FeatureFlagService
 
         $setting = FeatureSetting::firstOrCreate(
             ['feature_name' => $featureName],
-            ['strategy' => RolloutStrategyEnum::Inactive, 'is_active' => false]
+            ['strategy' => RolloutStrategyEnum::INACTIVE, 'is_active' => false]
         );
 
         $previousState = $setting->toArray();
 
         $setting->update([
-            'strategy' => RolloutStrategyEnum::Inactive,
+            'strategy' => RolloutStrategyEnum::INACTIVE,
             'percentage' => 0,
             'is_active' => false,
         ]);
@@ -236,10 +236,10 @@ class FeatureFlagService
 
         // Se há setting ativo, segue a estratégia definida
         return match ($setting->strategy) {
-            RolloutStrategyEnum::All => true,
-            RolloutStrategyEnum::Percentage => $this->checkPercentage($user->id, $setting->percentage),
-            RolloutStrategyEnum::Users => in_array((string) $user->id, $setting->user_ids ?? []),
-            RolloutStrategyEnum::Inactive => false,
+            RolloutStrategyEnum::ALL => true,
+            RolloutStrategyEnum::PERCENTAGE => $this->checkPercentage($user->id, $setting->percentage),
+            RolloutStrategyEnum::USERS => in_array((string) $user->id, $setting->user_ids ?? []),
+            RolloutStrategyEnum::INACTIVE => false,
         };
     }
 

@@ -560,5 +560,13 @@
     "Credential created": "Credential created",
     "Updates": "Updates",
     "Recent activities and updates for this user": "Recent activities and updates for this user",
-    "Error loading activities": "Error loading activities"
+    "Error loading activities": "Error loading activities",
+    "Online": "Online",
+    "Away": "Away",
+    "Busy": "Busy",
+    "Offline": "Offline",
+    "Specific Users": "Specific Users",
+    "Status Changed": "Status Changed",
+    "Database Created": "Database Created",
+    "Page View": "Page View"
 }
