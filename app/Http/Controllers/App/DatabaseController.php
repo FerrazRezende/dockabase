@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\System\CreateDatabaseRequest;
-use App\Http\Requests\System\UpdateDatabaseRequest;
-use App\Http\Resources\DatabaseCollection;
-use App\Http\Resources\DatabaseResource;
+use App\Http\Requests\Database\CreateDatabaseRequest;
+use App\Http\Requests\Database\UpdateDatabaseRequest;
+use App\Http\Resources\App\DatabaseCollection;
+use App\Http\Resources\App\DatabaseResource;
 use App\Jobs\CreateDatabaseJob;
 use App\Models\Credential;
 use App\Models\Database;

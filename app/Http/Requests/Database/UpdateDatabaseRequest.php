@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\System;
+namespace App\Http\Requests\Database;
 
 use Illuminate\Foundation\Http\FormRequest;
 

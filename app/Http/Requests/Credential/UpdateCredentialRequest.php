@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\System;
+namespace App\Http\Requests\Credential;
 
 use App\Enums\CredentialPermissionEnum;
 use Illuminate\Foundation\Http\FormRequest;

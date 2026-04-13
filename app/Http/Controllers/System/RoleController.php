@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\System\StoreRoleRequest;
 use App\Http\Requests\System\SyncRolePermissionsRequest;
 use App\Http\Requests\System\UpdateRoleRequest;
-use App\Http\Resources\RoleResource;
+use App\Http\Resources\System\RoleResource;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Profile;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdateProfilePhotoRequest;
+use App\Http\Requests\Profile\UpdateProfilePhotoRequest;
 use App\Services\ProfilePictureService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

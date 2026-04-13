@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\AvatarController;
-use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\GuestLocaleController;
 use App\Http\Controllers\Profile\LocaleController as ProfileLocaleController;
 use App\Http\Controllers\Profile\ProfilePhotoController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Profile\ProfileInformationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,7 +19,7 @@ Route::get('/', function () {
 });
 
 // Public locale route for guests
-Route::patch('/locale', [LocaleController::class, 'set'])->name('locale.set');
+Route::patch('/locale', [GuestLocaleController::class, 'set'])->name('locale.set');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -28,10 +28,10 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     // Avatar proxy - serves images from MinIO (auth required)
     Route::get('/avatars/{userId}', [AvatarController::class, 'show'])->name('avatar.show');
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileInformationController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileInformationController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [ProfileInformationController::class, 'updatePassword'])->name('profile.password.update');
+    Route::delete('/profile', [ProfileInformationController::class, 'destroy'])->name('profile.destroy');
     Route::patch('/profile/locale', [ProfileLocaleController::class, 'update'])
         ->name('profile.locale.update')
         ->middleware(['auth', 'verified']);
