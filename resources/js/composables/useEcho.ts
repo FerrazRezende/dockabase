@@ -1,12 +1,4 @@
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-declare global {
-  interface Window {
-    Echo: Echo;
-    Pusher: typeof Pusher;
-  }
-}
+import { getEcho } from './echo';
 
 interface DatabaseStepUpdated {
     database: {
@@ -39,33 +31,12 @@ interface DatabaseCallbacks {
     onDatabaseFailed?: (data: DatabaseFailed) => void;
 }
 
-// Initialize Echo lazily
-let echoInstance: Echo | null = null;
-
-function getEcho(): Echo {
-    if (!echoInstance) {
-        window.Pusher = Pusher;
-        echoInstance = new Echo({
-            broadcaster: 'reverb',
-            key: import.meta.env.VITE_REVERB_APP_KEY || 'app-key',
-            wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
-            wsPort: Number(import.meta.env.VITE_REVERB_PORT) || 8080,
-            wssPort: Number(import.meta.env.VITE_REVERB_PORT) || 8080,
-            forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
-            enabledTransports: ['ws', 'wss'],
-        });
-        window.Echo = echoInstance;
-    }
-    return echoInstance;
-}
-
 const activeChannels = new Set<string>();
 
 export function useEcho() {
     const subscribeToDatabase = (databaseId: string, callbacks: DatabaseCallbacks) => {
         const channelName = `database.${databaseId}`;
 
-        // Avoid duplicate subscriptions
         if (activeChannels.has(channelName)) {
             return null;
         }
