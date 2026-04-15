@@ -15,15 +15,7 @@ class UserProfileResource extends JsonResource
     {
         // Get features active for this user
         $features = [];
-        $featureNames = [
-            'database-creator',
-            'schema-builder',
-            'table-manager',
-            'dynamic-api',
-            'realtime',
-            'storage',
-            'otp-auth',
-        ];
+        $featureNames = array_keys(config('features.definitions', []));
 
         foreach ($featureNames as $feature) {
             if (Feature::for($this->resource)->active($feature)) {

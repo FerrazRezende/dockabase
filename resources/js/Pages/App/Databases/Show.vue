@@ -27,15 +27,29 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import CreationTimeline from '@/components/CreationTimeline.vue';
+import UserAvatarWithStatus from '@/components/user/UserAvatarWithStatus.vue';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { Database, DatabaseStatus, CreationStep } from '@/types/database';
 import type { Credential } from '@/types/credential';
-import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, Link2, AlertCircle, CheckCircle2, Loader2, Plus, Trash2, Key } from 'lucide-vue-next';
+import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, Link2, AlertCircle, CheckCircle2, Loader2, Plus, Trash2, Key, Mail, Pencil } from 'lucide-vue-next';
 import { useEcho } from '@/composables/useEcho';
 import { useToast } from 'vue-toastification';
 import { usePage } from '@inertiajs/vue3';
+import { usePermissions } from '@/composables/usePermissions';
 
 interface Props {
     database: Database;
@@ -46,6 +60,7 @@ const props = defineProps<Props>();
 
 const page = usePage();
 const toast = useToast();
+const { canEdit } = usePermissions();
 
 const currentStep = ref<CreationStep | null>(props.database.current_step);
 const progress = ref(props.database.progress);
@@ -64,7 +79,7 @@ const attaching = ref(false);
 // Detach credential
 const detaching = ref<string | null>(null);
 const credentialToDelete = ref<{ id: string; name: string } | null>(null);
-const deleteDialogOpen = ref(false);
+const detachDialogOpen = ref(false);
 
 // Flash message on mount
 onMounted(() => {
@@ -154,7 +169,7 @@ const attachCredential = async () => {
 
 const openDeleteCredentialDialog = (credential: { id: string; name: string }) => {
     credentialToDelete.value = credential;
-    deleteDialogOpen.value = true;
+    detachDialogOpen.value = true;
 };
 
 const confirmDetachCredential = () => {
@@ -166,7 +181,7 @@ const confirmDetachCredential = () => {
         {
             preserveScroll: true,
             onSuccess: () => {
-                deleteDialogOpen.value = false;
+                detachDialogOpen.value = false;
                 credentialToDelete.value = null;
                 toast.success(__('Credential removed successfully!'));
             },
@@ -187,6 +202,52 @@ const getPermissionBadgeClass = (permission: string): string => {
 };
 
 const credentials = computed(() => props.database.credentials || []);
+
+// Edit database dialog
+const editDialogOpen = ref(false);
+const editForm = ref({
+    display_name: '',
+    description: '',
+    host: '',
+    port: '',
+    is_active: false,
+});
+const saving = ref(false);
+
+const openEditDialog = () => {
+    editForm.value = {
+        display_name: props.database.display_name || '',
+        description: props.database.description || '',
+        host: props.database.host || '',
+        port: String(props.database.port || ''),
+        is_active: props.database.is_active ?? true,
+    };
+    editDialogOpen.value = true;
+};
+
+const saveDatabase = () => {
+    saving.value = true;
+    const data: Record<string, unknown> = { ...editForm.value };
+    data.port = data.port ? Number(data.port) : undefined;
+    router.patch(
+        route('app.databases.update', props.database.id),
+        data,
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                editDialogOpen.value = false;
+                toast.success(__('Database updated successfully'));
+            },
+            onError: () => {
+                toast.error(__('Error updating database'));
+            },
+            onFinish: () => {
+                saving.value = false;
+            },
+        }
+    );
+};
+
 </script>
 
 <template>
@@ -194,20 +255,28 @@ const credentials = computed(() => props.database.credentials || []);
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
-            <div class="flex items-center gap-4">
-                <Link :href="route('app.databases.index')">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft class="h-4 w-4" />
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center gap-4">
+                    <Link :href="route('app.databases.index')">
+                        <Button variant="ghost" size="icon">
+                            <ArrowLeft class="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
+                            <DatabaseIcon class="h-6 w-6 text-muted-foreground" />
+                            {{ database.display_name || database.name }}
+                        </h2>
+                        <p class="text-sm text-muted-foreground mt-1">
+                            {{ __('Database details') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <Button v-if="canEdit('databases')" variant="outline" size="sm" @click="openEditDialog">
+                        <Pencil class="h-4 w-4 mr-2" />
+                        {{ __('Edit') }}
                     </Button>
-                </Link>
-                <div>
-                    <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
-                        <DatabaseIcon class="h-6 w-6 text-muted-foreground" />
-                        {{ database.display_name || database.name }}
-                    </h2>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        {{ __('Database details') }}
-                    </p>
                 </div>
             </div>
         </template>
@@ -320,35 +389,62 @@ const credentials = computed(() => props.database.credentials || []);
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div v-if="credentials.length > 0" class="space-y-3">
+                        <div v-if="credentials.length > 0" class="space-y-6">
                             <div
                                 v-for="credential in credentials"
                                 :key="credential.id"
-                                class="flex items-center justify-between p-3 rounded-lg border bg-card"
+                                class="rounded-lg border bg-card"
                             >
-                                <div class="flex items-center gap-3">
-                                    <Key class="h-4 w-4 text-muted-foreground" />
-                                    <div>
-                                        <p class="font-medium">{{ credential.name }}</p>
-                                        <p class="text-xs text-muted-foreground">
-                                            {{ __(':count user(s)', { count: credential.users?.length || 0 }) }}
-                                        </p>
+                                <div class="flex items-center justify-between p-3 border-b">
+                                    <div class="flex items-center gap-2">
+                                        <Key class="h-4 w-4 text-muted-foreground" />
+                                        <span class="font-medium">{{ credential.name }}</span>
+                                        <Badge :class="getPermissionBadgeClass(credential.permission)" class="ml-2">
+                                            {{ credential.permission_label || credential.permission }}
+                                        </Badge>
                                     </div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <Badge :class="getPermissionBadgeClass(credential.permission)">
-                                        {{ credential.permission_label || credential.permission }}
-                                    </Badge>
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        class="text-destructive hover:text-destructive"
+                                        class="text-destructive hover:text-destructive h-8 w-8"
                                         @click="openDeleteCredentialDialog(credential)"
                                         :disabled="detaching === credential.id"
                                     >
                                         <Trash2 class="h-4 w-4" />
                                     </Button>
                                 </div>
+                                <Table v-if="credential.users && credential.users.length > 0">
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>{{ __('User') }}</TableHead>
+                                            <TableHead>{{ __('Email') }}</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        <TableRow v-for="user in credential.users" :key="user.id">
+                                            <TableCell>
+                                                <div class="flex items-center gap-3">
+                                                    <UserAvatarWithStatus
+                                                        :user-id="user.id"
+                                                        :user-name="user.name"
+                                                        :avatar-url="user.avatar"
+                                                        size="sm"
+                                                    />
+                                                    <span class="font-medium">{{ user.name }}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <span class="flex items-center gap-1 text-muted-foreground">
+                                                    <Mail class="h-3 w-3" />
+                                                    {{ user.email }}
+                                                </span>
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableBody>
+                                </Table>
+                                <p v-else class="text-muted-foreground text-sm text-center py-3">
+                                    {{ __('No users in this credential') }}
+                                </p>
                             </div>
                         </div>
                         <p v-else class="text-muted-foreground text-center py-4">
@@ -424,7 +520,7 @@ const credentials = computed(() => props.database.credentials || []);
 
         <!-- Detach Credential Dialog -->
         <ConfirmDialog
-            v-model:open="deleteDialogOpen"
+            v-model:open="detachDialogOpen"
             :title="__('Remove Credential')"
             :description="__('Are you sure you want to remove the credential \':name\' from this database?', { name: credentialToDelete?.name })"
             :confirm-text="__('Remove')"
@@ -432,5 +528,49 @@ const credentials = computed(() => props.database.credentials || []);
             variant="danger"
             @confirm="confirmDetachCredential"
         />
+
+        <!-- Edit Database Dialog -->
+        <Dialog v-model:open="editDialogOpen">
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>{{ __('Edit Database') }}</DialogTitle>
+                    <DialogDescription>{{ __('Update database fields') }}</DialogDescription>
+                </DialogHeader>
+                <div class="space-y-4 py-4">
+                    <div class="space-y-2">
+                        <Label for="edit-display-name">{{ __('Display Name') }}</Label>
+                        <Input id="edit-display-name" v-model="editForm.display_name" />
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="edit-description">{{ __('Description') }}</Label>
+                        <Textarea id="edit-description" v-model="editForm.description" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <Label for="edit-host">{{ __('Host') }}</Label>
+                            <Input id="edit-host" v-model="editForm.host" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="edit-port">{{ __('Port') }}</Label>
+                            <Input id="edit-port" v-model="editForm.port" type="number" />
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <Switch id="edit-active" v-model:model-value="editForm.is_active" />
+                        <Label for="edit-active">{{ __('Active') }}</Label>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" @click="editDialogOpen = false">
+                        {{ __('Cancel') }}
+                    </Button>
+                    <Button @click="saveDatabase" :disabled="saving">
+                        <Loader2 v-if="saving" class="h-4 w-4 mr-2 animate-spin" />
+                        <span v-if="saving">{{ __('Saving...') }}</span>
+                        <span v-else>{{ __('Save') }}</span>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

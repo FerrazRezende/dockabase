@@ -10,7 +10,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bell, CheckCheck, Loader2 } from 'lucide-vue-next';
+import { Bell, Loader2 } from 'lucide-vue-next';
 import type { Notification } from '@/types/notification';
 
 const notifications = ref<Notification[]>([]);
@@ -120,6 +120,12 @@ const formatTime = (dateString: string): string => {
     return date.toLocaleDateString('pt-BR');
 };
 
+const onDropdownOpen = (open: boolean) => {
+    if (open && unreadCount.value > 0) {
+        markAllAsRead();
+    }
+};
+
 onMounted(() => {
     fetchNotifications();
     fetchUnreadCount();
@@ -127,7 +133,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <DropdownMenu>
+    <DropdownMenu @update:open="onDropdownOpen">
         <DropdownMenuTrigger as-child>
             <Button variant="ghost" size="icon" class="relative">
                 <Bell class="h-5 w-5" />
@@ -141,18 +147,8 @@ onMounted(() => {
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" class="w-80">
-            <DropdownMenuLabel class="flex items-center justify-between">
+            <DropdownMenuLabel>
                 <span>{{ __('Notifications') }}</span>
-                <Button
-                    v-if="unreadCount > 0"
-                    variant="ghost"
-                    size="sm"
-                    class="h-auto py-1 px-2 text-xs"
-                    @click="markAllAsRead"
-                >
-                    <CheckCheck class="h-3 w-3 mr-1" />
-                    {{ __('Mark all as read') }}
-                </Button>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
 
@@ -171,7 +167,6 @@ onMounted(() => {
                         :key="notification.id"
                         class="flex flex-col items-start gap-1 p-3 cursor-pointer"
                         :class="{ 'bg-muted/50': !notification.read }"
-                        @click="!notification.read && markAsRead(notification.id)"
                     >
                         <div class="flex items-center gap-2 w-full">
                             <span class="font-medium text-sm flex-1">{{ notification.title }}</span>

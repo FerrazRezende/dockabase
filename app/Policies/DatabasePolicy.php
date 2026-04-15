@@ -7,41 +7,57 @@ namespace App\Policies;
 use App\Models\Database;
 use App\Models\User;
 
-/**
- * Database Policy - RBAC permissions within the database-creator feature.
- *
- * Feature flag access is controlled by middleware.
- * This policy handles fine-grained permissions (create, update, delete).
- */
 class DatabasePolicy
 {
     public function viewAny(User $user): bool
     {
-        // All users with feature access can view databases
-        return true;
+        return $user->checkPermission('databases.view');
     }
 
     public function view(User $user, Database $database): bool
     {
-        // All users with feature access can view databases
-        return true;
+        if (! $user->checkPermission('databases.view')) {
+            return false;
+        }
+
+        return $this->canAccess($user, $database);
     }
 
     public function create(User $user): bool
     {
-        // Only admins can create databases
-        return $user->is_admin === true;
+        return $user->checkPermission('databases.create');
     }
 
     public function update(User $user, Database $database): bool
     {
-        // Only admins can update databases
-        return $user->is_admin === true;
+        if (! $user->checkPermission('databases.update')) {
+            return false;
+        }
+
+        return $this->canAccess($user, $database);
     }
 
     public function delete(User $user, Database $database): bool
     {
-        // Only admins can delete databases
-        return $user->is_admin === true;
+        if (! $user->checkPermission('databases.delete')) {
+            return false;
+        }
+
+        return $this->canAccess($user, $database);
+    }
+
+    private function canAccess(User $user, Database $database): bool
+    {
+        if ($user->is_admin) {
+            return true;
+        }
+
+        if ($database->created_by === $user->id) {
+            return true;
+        }
+
+        return $database->credentials()
+            ->whereHas('users', fn ($q) => $q->where('users.id', $user->id))
+            ->exists();
     }
 }

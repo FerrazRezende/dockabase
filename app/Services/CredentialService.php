@@ -17,6 +17,7 @@ class CredentialService
             'name' => $data['name'],
             'permission' => $data['permission'] ?? CredentialPermissionEnum::READ,
             'description' => $data['description'] ?? null,
+            'created_by' => $data['created_by'] ?? null,
         ]);
 
         if (! empty($data['user_ids'])) {

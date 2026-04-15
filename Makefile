@@ -56,7 +56,7 @@ migrate:
 	docker compose exec app php artisan migrate
 
 migrate-fresh:
-	docker compose exec app php artisan migrate:fresh --seed
+	docker compose exec app php artisan dockabase:migrate-fresh --seed
 
 migrate-rollback:
 	docker compose exec app php artisan migrate:rollback

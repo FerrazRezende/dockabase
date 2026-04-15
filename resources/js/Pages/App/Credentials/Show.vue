@@ -35,17 +35,24 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import UserAvatarWithStatus from '@/components/user/UserAvatarWithStatus.vue';
 import type { Credential, CredentialPermission } from '@/types/credential';
 import type { User } from '@/types/user';
-import { ArrowLeft, Key, Shield, Users, Database, Calendar, Mail, Plus, Trash2, UserPlus } from 'lucide-vue-next';
+import { ArrowLeft, Key, Shield, Users, Database, Calendar, Mail, Plus, Trash2, UserPlus, Pencil, Loader2 } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
+import { usePermissions } from '@/composables/usePermissions';
 
 const props = defineProps<{
     credential: Credential;
 }>();
 
 const toast = useToast();
+const { canEdit } = usePermissions();
 const isAddUserDialogOpen = ref(false);
 const selectedUserId = ref<string>('');
 const availableUsers = ref<User[]>([]);
@@ -68,7 +75,7 @@ const getPermissionBadgeClass = (permission: CredentialPermission): string => {
 const fetchAvailableUsers = async () => {
     loadingUsers.value = true;
     try {
-        const response = await fetch(route('users.index'), {
+        const response = await fetch(route('app.users.index'), {
             headers: { 'Accept': 'application/json' },
         });
         const data = await response.json();
@@ -137,6 +144,46 @@ const openAddUserDialog = () => {
     fetchAvailableUsers();
     isAddUserDialogOpen.value = true;
 };
+
+// Edit credential dialog
+const editDialogOpen = ref(false);
+const editForm = ref({
+    name: '',
+    permission: '' as CredentialPermission | '',
+    description: '',
+});
+const saving = ref(false);
+
+const openEditDialog = () => {
+    editForm.value = {
+        name: props.credential.name,
+        permission: props.credential.permission,
+        description: props.credential.description || '',
+    };
+    editDialogOpen.value = true;
+};
+
+const saveCredential = () => {
+    saving.value = true;
+    router.patch(
+        route('app.credentials.update', props.credential.id),
+        { ...editForm.value },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                editDialogOpen.value = false;
+                toast.success(__('Credential updated successfully'));
+            },
+            onError: () => {
+                toast.error(__('Error updating credential'));
+            },
+            onFinish: () => {
+                saving.value = false;
+            },
+        }
+    );
+};
+
 </script>
 
 <template>
@@ -144,20 +191,28 @@ const openAddUserDialog = () => {
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
-            <div class="flex items-center gap-4">
-                <Link :href="route('app.credentials.index')">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft class="h-4 w-4" />
+            <div class="flex items-center justify-between w-full">
+                <div class="flex items-center gap-4">
+                    <Link :href="route('app.credentials.index')">
+                        <Button variant="ghost" size="icon">
+                            <ArrowLeft class="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
+                            <Key class="h-6 w-6 text-muted-foreground" />
+                            {{ credential.name }}
+                        </h2>
+                        <p class="text-sm text-muted-foreground mt-1">
+                            {{ __('Credential details') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <Button v-if="canEdit('credentials')" variant="outline" size="sm" @click="openEditDialog">
+                        <Pencil class="h-4 w-4 mr-2" />
+                        {{ __('Edit') }}
                     </Button>
-                </Link>
-                <div>
-                    <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
-                        <Key class="h-6 w-6 text-muted-foreground" />
-                        {{ credential.name }}
-                    </h2>
-                    <p class="text-sm text-muted-foreground mt-1">
-                        {{ __('Credential details') }}
-                    </p>
                 </div>
             </div>
         </template>
@@ -282,7 +337,17 @@ const openAddUserDialog = () => {
                         </TableHeader>
                         <TableBody>
                             <TableRow v-for="user in credential.users" :key="user.id">
-                                <TableCell class="font-medium">{{ user.name }}</TableCell>
+                                <TableCell>
+                                    <div class="flex items-center gap-3">
+                                        <UserAvatarWithStatus
+                                            :user-id="user.id"
+                                            :user-name="user.name"
+                                            :avatar-url="user.avatar"
+                                            size="sm"
+                                        />
+                                        <span class="font-medium">{{ user.name }}</span>
+                                    </div>
+                                </TableCell>
                                 <TableCell>
                                     <span class="flex items-center gap-1">
                                         <Mail class="h-3 w-3 text-muted-foreground" />
@@ -332,5 +397,48 @@ const openAddUserDialog = () => {
                 </CardContent>
             </Card>
         </div>
+
+        <!-- Edit Credential Dialog -->
+        <Dialog v-model:open="editDialogOpen">
+            <DialogContent class="sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>{{ __('Edit Credential') }}</DialogTitle>
+                    <DialogDescription>{{ __('Update credential fields') }}</DialogDescription>
+                </DialogHeader>
+                <div class="space-y-4 py-4">
+                    <div class="space-y-2">
+                        <Label for="edit-name">{{ __('Name') }}</Label>
+                        <Input id="edit-name" v-model="editForm.name" />
+                    </div>
+                    <div class="space-y-2">
+                        <Label>{{ __('Permission') }}</Label>
+                        <Select v-model="editForm.permission">
+                            <SelectTrigger>
+                                <SelectValue :placeholder="__('Select permission')" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="read">{{ __('Read') }}</SelectItem>
+                                <SelectItem value="write">{{ __('Write') }}</SelectItem>
+                                <SelectItem value="read-write">{{ __('Read & Write') }}</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="edit-description">{{ __('Description') }}</Label>
+                        <Textarea id="edit-description" v-model="editForm.description" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" @click="editDialogOpen = false">
+                        {{ __('Cancel') }}
+                    </Button>
+                    <Button @click="saveCredential" :disabled="saving">
+                        <Loader2 v-if="saving" class="h-4 w-4 mr-2 animate-spin" />
+                        <span v-if="saving">{{ __('Saving...') }}</span>
+                        <span v-else>{{ __('Save') }}</span>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AuthenticatedLayout>
 </template>

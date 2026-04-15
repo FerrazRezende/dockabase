@@ -20,8 +20,9 @@ class DatabaseService
             'host' => $data['host'] ?? 'localhost',
             'port' => $data['port'] ?? 5432,
             'database_name' => $data['database_name'],
-            'is_active' => $data['is_active'] ?? true,
+            'is_active' => $data['is_active'] ?? false,
             'settings' => $data['settings'] ?? null,
+            'created_by' => $data['created_by'] ?? null,
         ]);
     }
 

@@ -24,9 +24,10 @@ class DatabaseResource extends JsonResource
             'current_step' => $this->current_step,
             'progress' => $this->progress,
             'error_message' => $this->error_message,
+            'created_by' => $this->created_by,
             'settings' => $this->settings,
             'credentials_count' => $this->whenCounted('credentials'),
-            'credentials' => $this->whenLoaded('credentials', fn () => CredentialResource::collection($this->credentials)),
+            'credentials' => $this->whenLoaded('credentials', fn () => CredentialResource::collection($this->credentials)->toArray($request)),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];
