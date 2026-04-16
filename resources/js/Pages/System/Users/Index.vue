@@ -252,7 +252,7 @@ const getUserStatus = (userId: number): UserStatus => {
                         @keyup.enter="searchUsers"
                     />
                 </div>
-                <Button @click="openCreateDialog">
+                <Button v-if="$page.props.auth.user.is_admin" @click="openCreateDialog">
                     <Plus class="w-4 h-4 mr-2" />
                     {{ __('New User') }}
                 </Button>
@@ -336,7 +336,7 @@ const getUserStatus = (userId: number): UserStatus => {
                         </TableCell>
                         <TableCell>
                             <div class="flex items-center gap-1">
-                                <Link :href="route('system.users.show', user.id)">
+                                <Link v-if="$page.props.auth.user.is_admin" :href="route('system.users.show', user.id)">
                                     <Button variant="ghost" size="icon" :title="__('View profile')">
                                         <Eye class="w-4 h-4" />
                                     </Button>
@@ -351,7 +351,7 @@ const getUserStatus = (userId: number): UserStatus => {
                                     <User class="w-4 h-4" />
                                 </Button>
                                 <Button
-                                    v-if="!user.is_admin"
+                                    v-if="$page.props.auth.user.is_admin && !user.is_admin"
                                     variant="ghost"
                                     size="icon"
                                     :title="__('Deactivate')"
