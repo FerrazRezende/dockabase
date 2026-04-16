@@ -45,7 +45,7 @@ import {
 } from '@/components/ui/table';
 import type { Database, DatabaseStatus, CreationStep } from '@/types/database';
 import type { Credential } from '@/types/credential';
-import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, Link2, AlertCircle, CheckCircle2, Loader2, Plus, Trash2, Key, Mail, Pencil } from 'lucide-vue-next';
+import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, Link2, AlertCircle, CheckCircle2, Loader2, Plus, Trash2, Key, Mail, Pencil, X } from 'lucide-vue-next';
 import { useEcho } from '@/composables/useEcho';
 import { useToast } from 'vue-toastification';
 import { usePage } from '@inertiajs/vue3';
@@ -202,6 +202,7 @@ const getPermissionBadgeClass = (permission: string): string => {
 };
 
 const credentials = computed(() => props.database.credentials || []);
+const showReadyAlert = ref(true);
 
 // Edit database dialog
 const editDialogOpen = ref(false);
@@ -255,28 +256,20 @@ const saveDatabase = () => {
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
-            <div class="flex items-center justify-between w-full">
-                <div class="flex items-center gap-4">
-                    <Link :href="route('app.databases.index')">
-                        <Button variant="ghost" size="icon">
-                            <ArrowLeft class="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <div>
-                        <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
-                            <DatabaseIcon class="h-6 w-6 text-muted-foreground" />
-                            {{ database.display_name || database.name }}
-                        </h2>
-                        <p class="text-sm text-muted-foreground mt-1">
-                            {{ __('Database details') }}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <Button v-if="canEdit('databases')" variant="outline" size="sm" @click="openEditDialog">
-                        <Pencil class="h-4 w-4 mr-2" />
-                        {{ __('Edit') }}
+            <div class="flex items-center gap-4">
+                <Link :href="route('app.databases.index')">
+                    <Button variant="ghost" size="icon">
+                        <ArrowLeft class="h-4 w-4" />
                     </Button>
+                </Link>
+                <div>
+                    <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
+                        <DatabaseIcon class="h-6 w-6 text-muted-foreground" />
+                        {{ database.display_name || database.name }}
+                    </h2>
+                    <p class="text-sm text-muted-foreground mt-1">
+                        {{ __('Database details') }}
+                    </p>
                 </div>
             </div>
         </template>
@@ -312,18 +305,32 @@ const saveDatabase = () => {
             </Alert>
 
             <!-- Success Alert -->
-            <Alert v-if="status === 'ready'" class="border-green-500/50 bg-green-500/10">
+            <Alert v-if="status === 'ready' && showReadyAlert" class="border-green-500/50 bg-green-500/10 relative">
                 <CheckCircle2 class="h-4 w-4 text-green-500" />
                 <AlertTitle class="text-green-500">{{ __('Database ready') }}</AlertTitle>
                 <AlertDescription>
                     {{ __('The database is created and available for use.') }}
                 </AlertDescription>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    class="absolute top-2 right-2 h-6 w-6 text-green-600 hover:text-green-800"
+                    @click="showReadyAlert = false"
+                >
+                    <X class="h-3 w-3" />
+                </Button>
             </Alert>
 
             <div class="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle>{{ __('Information') }}</CardTitle>
+                        <CardTitle class="flex items-center justify-between">
+                            {{ __('Information') }}
+                            <Button v-if="canEdit('databases')" variant="outline" size="sm" @click="openEditDialog">
+                                <Pencil class="h-4 w-4 mr-2" />
+                                {{ __('Edit') }}
+                            </Button>
+                        </CardTitle>
                         <CardDescription>{{ __('Database details') }}</CardDescription>
                     </CardHeader>
                     <CardContent class="space-y-4">

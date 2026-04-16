@@ -119,6 +119,21 @@ class User extends Authenticatable
      */
     public function checkPermission(string $permission): bool
     {
+        // Admins bypass all permission checks (unless explicitly denied)
+        if ($this->is_admin) {
+            // But denied permissions still override
+            $deniedPermissionIds = $this->denied_permissions ?? [];
+            if (!empty($deniedPermissionIds)) {
+                $deniedNames = SpatiePermission::whereIn('id', $deniedPermissionIds)
+                    ->pluck('name')
+                    ->toArray();
+                if (in_array($permission, $deniedNames, true)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         // Check denied permissions first (they override everything)
         $deniedPermissionIds = $this->denied_permissions ?? [];
         if (!empty($deniedPermissionIds)) {

@@ -191,28 +191,20 @@ const saveCredential = () => {
 
     <AuthenticatedLayout :auth="$page.props.auth">
         <template #header>
-            <div class="flex items-center justify-between w-full">
-                <div class="flex items-center gap-4">
-                    <Link :href="route('app.credentials.index')">
-                        <Button variant="ghost" size="icon">
-                            <ArrowLeft class="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <div>
-                        <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
-                            <Key class="h-6 w-6 text-muted-foreground" />
-                            {{ credential.name }}
-                        </h2>
-                        <p class="text-sm text-muted-foreground mt-1">
-                            {{ __('Credential details') }}
-                        </p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <Button v-if="canEdit('credentials')" variant="outline" size="sm" @click="openEditDialog">
-                        <Pencil class="h-4 w-4 mr-2" />
-                        {{ __('Edit') }}
+            <div class="flex items-center gap-4">
+                <Link :href="route('app.credentials.index')">
+                    <Button variant="ghost" size="icon">
+                        <ArrowLeft class="h-4 w-4" />
                     </Button>
+                </Link>
+                <div>
+                    <h2 class="text-2xl font-semibold text-foreground flex items-center gap-2">
+                        <Key class="h-6 w-6 text-muted-foreground" />
+                        {{ credential.name }}
+                    </h2>
+                    <p class="text-sm text-muted-foreground mt-1">
+                        {{ __('Credential details') }}
+                    </p>
                 </div>
             </div>
         </template>
@@ -220,7 +212,13 @@ const saveCredential = () => {
         <div class="grid gap-6 md:grid-cols-2">
             <Card>
                 <CardHeader>
-                    <CardTitle>{{ __('Information') }}</CardTitle>
+                    <CardTitle class="flex items-center justify-between">
+                        {{ __('Information') }}
+                        <Button v-if="canEdit('credentials')" variant="outline" size="sm" @click="openEditDialog">
+                            <Pencil class="h-4 w-4 mr-2" />
+                            {{ __('Edit') }}
+                        </Button>
+                    </CardTitle>
                     <CardDescription>{{ __('Credential details') }}</CardDescription>
                 </CardHeader>
                 <CardContent class="space-y-4">

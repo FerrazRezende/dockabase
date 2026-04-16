@@ -41,7 +41,7 @@ export function usePermissions() {
     };
 
     const canEdit = (resource: string): boolean => {
-        return hasPermission(`${resource}.edit`);
+        return hasPermission(`${resource}.update`);
     };
 
     const canDelete = (resource: string): boolean => {

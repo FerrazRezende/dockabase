@@ -293,11 +293,15 @@ const initials = (name: string): string => {
                 class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-amber-500/30 bg-amber-500/10 backdrop-blur-sm px-6"
             >
                 <div class="flex items-center gap-3 min-w-0">
-                    <AlertTriangle class="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
-                    <span class="text-sm font-medium text-amber-900 dark:text-amber-100 truncate">
-                        {{ __('You are accessing as :name.', { name: auth.user.name }) }}
-                    </span>
                     <slot name="header" />
+                </div>
+                <div class="absolute inset-x-0 flex items-center justify-center pointer-events-none">
+                    <div class="flex items-center gap-2 pointer-events-auto">
+                        <AlertTriangle class="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span class="text-sm font-medium text-amber-900 dark:text-amber-100">
+                            {{ __('You are accessing as :name.', { name: auth.user.name }) }}
+                        </span>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <NotificationCenter />

@@ -16,6 +16,7 @@ class FeatureResource extends JsonResource
             'display_name' => $this->resource['display_name'],
             'description' => $this->resource['description'],
             'is_active' => $this->resource['is_active'],
+            'implemented' => $this->resource['implemented'],
             'strategy' => $this->resource['strategy'],
             'strategy_label' => $this->resource['strategy_label'],
             'percentage' => $this->resource['percentage'],

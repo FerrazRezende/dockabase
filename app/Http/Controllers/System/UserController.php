@@ -26,7 +26,12 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        abort_unless($request->user()->is_admin, 403);
+        abort_unless(
+            $request->user()->is_admin
+            || $request->user()->checkPermission('credentials.create')
+            || $request->user()->checkPermission('credentials.update'),
+            403
+        );
 
         $search = $request->input('search');
 

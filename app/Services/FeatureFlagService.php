@@ -288,18 +288,24 @@ class FeatureFlagService
      */
     public function isFeatureActiveByDefault(string $featureName): bool
     {
+        $feature = config("features.definitions.{$featureName}");
+
+        // Not implemented features are always inactive
+        if (! ($feature['implemented_at'] ?? null)) {
+            return false;
+        }
+
         $env = config('app.env');
 
-        // Dev/Local/Testing: todas as features implementadas ativas
+        // Dev/Local/Testing: implemented features are active
         if (in_array($env, ['local', 'development', 'dev', 'testing'])) {
             return true;
         }
 
-        // Production: features até FIRST_DEPLOY_DATE ativas
-        $feature = config("features.definitions.{$featureName}");
+        // Production: features up to FIRST_DEPLOY_DATE are active
         $deployDate = config('features.first_deploy_date');
 
-        if (! ($feature['implemented_at'] ?? null) || ! $deployDate) {
+        if (! $deployDate) {
             return false;
         }
 
@@ -323,6 +329,7 @@ class FeatureFlagService
             'display_name' => $definition['name'],
             'description' => $definition['description'],
             'is_active' => $isActive,
+            'implemented' => ($definition['implemented_at'] ?? null) !== null,
             'strategy' => $strategy->value,
             'strategy_label' => $strategy->label(),
             'percentage' => $percentage,
