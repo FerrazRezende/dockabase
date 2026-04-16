@@ -36,6 +36,9 @@ import {
     Trash2,
     Plus,
     Search,
+    X,
+    UserPlus,
+    Check,
 } from 'lucide-vue-next';
 import UserAvatarWithStatus from '@/components/user/UserAvatarWithStatus.vue';
 import { useEchoChannels } from '@/composables/useEchoChannels';
@@ -241,8 +244,8 @@ const getUserStatus = (userId: number): UserStatus => {
         </template>
 
         <div class="space-y-4">
-            <div class="flex items-center gap-4">
-                <div class="relative flex-1 max-w-sm">
+            <div class="flex justify-between items-center">
+                <div class="relative max-w-sm">
                     <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         v-model="search"
@@ -329,7 +332,7 @@ const getUserStatus = (userId: number): UserStatus => {
                         <TableCell>
                             <Badge
                                 :variant="user.active ? 'default' : 'outline'"
-                                :class="user.active ? 'bg-green-500' : 'text-muted-foreground'"
+                                :class="user.active ? 'badge-success' : 'text-muted-foreground'"
                             >
                                 {{ user.active ? __('Active') : __('Inactive') }}
                             </Badge>
@@ -407,9 +410,13 @@ const getUserStatus = (userId: number): UserStatus => {
 
                 <DialogFooter>
                     <Button variant="outline" @click="showCreateDialog = false">
+                        <X class="w-4 h-4 mr-2" />
                         {{ __('Cancel') }}
                     </Button>
-                    <Button @click="createUser">{{ __('Create User') }}</Button>
+                    <Button @click="createUser">
+                        <UserPlus class="w-4 h-4 mr-2" />
+                        {{ __('Create User') }}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -426,9 +433,13 @@ const getUserStatus = (userId: number): UserStatus => {
 
                 <DialogFooter>
                     <Button variant="outline" @click="showImpersonateDialog = false">
+                        <X class="w-4 h-4 mr-2" />
                         {{ __('Cancel') }}
                     </Button>
-                    <Button @click="confirmImpersonate">{{ __('Confirm') }}</Button>
+                    <Button @click="confirmImpersonate">
+                        <Check class="w-4 h-4 mr-2" />
+                        {{ __('Confirm') }}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -445,9 +456,13 @@ const getUserStatus = (userId: number): UserStatus => {
 
                 <DialogFooter>
                     <Button variant="outline" @click="showDeactivateDialog = false">
+                        <X class="w-4 h-4 mr-2" />
                         {{ __('Cancel') }}
                     </Button>
-                    <Button variant="destructive" @click="confirmDeactivate">{{ __('Deactivate') }}</Button>
+                    <Button variant="destructive" @click="confirmDeactivate">
+                        <Trash2 class="w-4 h-4 mr-2" />
+                        {{ __('Deactivate') }}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -67,7 +67,7 @@ const getPermissionBadgeVariant = (permission: string): 'default' | 'secondary' 
 };
 
 const getPermissionBadgeClass = (permission: string): string => {
-    if (permission === 'read-write') return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
+    if (permission === 'read-write') return 'badge-success';
     if (permission === 'write') return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
     return '';
 };

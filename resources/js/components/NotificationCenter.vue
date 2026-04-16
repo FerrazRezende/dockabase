@@ -73,9 +73,9 @@ const formatTime = (dateString: string): string => {
     const days = Math.floor(diff / 86400000);
 
     if (minutes < 1) return __('Just now');
-    if (minutes < 60) return __(':minutesm ago', { minutes });
-    if (hours < 24) return __(':hoursh ago', { hours });
-    if (days < 7) return __(':daysd ago', { days });
+    if (minutes < 60) return __(':minutes m ago', { minutes });
+    if (hours < 24) return __(':hours h ago', { hours });
+    if (days < 7) return __(':days d ago', { days });
 
     return date.toLocaleDateString();
 };
@@ -137,14 +137,14 @@ onUnmounted(() => {
                     <DropdownMenuItem
                         v-for="notification in notifications"
                         :key="notification.id"
-                        class="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                        class="flex flex-col items-start gap-1 p-3 cursor-pointer text-foreground"
                         :class="{ 'bg-muted/50': !notification.read }"
                     >
                         <div class="flex items-center gap-2 w-full">
-                            <span class="font-medium text-sm flex-1">{{ notification.title }}</span>
+                            <span class="font-medium text-sm flex-1 text-foreground">{{ notification.title }}</span>
                             <span class="text-xs text-muted-foreground">{{ formatTime(notification.created_at) }}</span>
                         </div>
-                        <p class="text-xs text-muted-foreground line-clamp-2">
+                        <p class="text-xs text-foreground/70 line-clamp-2">
                             {{ notification.message }}
                         </p>
                     </DropdownMenuItem>

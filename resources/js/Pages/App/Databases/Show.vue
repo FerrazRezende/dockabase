@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { __ } from '@/composables/useLang';
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, reactive } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -47,7 +47,10 @@ import type { Database, DatabaseStatus, CreationStep } from '@/types/database';
 import type { Credential } from '@/types/credential';
 import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, Link2, AlertCircle, CheckCircle2, Loader2, Plus, Trash2, Key, Mail, Pencil, X } from 'lucide-vue-next';
 import { useEcho } from '@/composables/useEcho';
+import { useEchoChannels } from '@/composables/useEchoChannels';
+import type { UserStatusChangedEvent, UserStatus } from '@/types/user-status';
 import { useToast } from 'vue-toastification';
+import axios from 'axios';
 import { usePage } from '@inertiajs/vue3';
 import { usePermissions } from '@/composables/usePermissions';
 
@@ -81,8 +84,12 @@ const detaching = ref<string | null>(null);
 const credentialToDelete = ref<{ id: string; name: string } | null>(null);
 const detachDialogOpen = ref(false);
 
+// Real-time user status
+const userStatuses = reactive<Record<string, UserStatus>>({});
+const { connect: connectPresence, listenToPresenceChannel, disconnect: disconnectPresence } = useEchoChannels();
+
 // Flash message on mount
-onMounted(() => {
+onMounted(async () => {
     const message = page.props.flash?.message as string | undefined;
     const messageType = page.props.flash?.messageType as string | undefined;
 
@@ -117,10 +124,29 @@ onMounted(() => {
             toast.error(__('Error creating database'));
         },
     });
+
+    // Fetch initial user statuses from all credentials
+    const userIds = credentials.value.flatMap(c => c.users?.map(u => u.id) || []);
+    if (userIds.length > 0) {
+        try {
+            const { data } = await axios.post(route('api.user.statuses.batch'), { user_ids: [...new Set(userIds)] });
+            Object.assign(userStatuses, data.statuses);
+        } catch { /* ignore */ }
+    }
+
+    // Subscribe to presence channel for real-time user status
+    try {
+        await connectPresence();
+        listenToPresenceChannel((event: UserStatusChangedEvent) => {
+            userStatuses[event.user_id] = event.status as UserStatus;
+        });
+    } catch {
+        // Non-blocking: continue without real-time status updates
+    }
 });
 
 onUnmounted(() => {
-    // Channel cleanup is handled by useEcho
+    try { disconnectPresence(); } catch { /* ignore */ }
 });
 
 const getStatusBadge = () => {
@@ -130,7 +156,7 @@ const getStatusBadge = () => {
         case 'processing':
             return { variant: 'outline', class: 'bg-blue-500/10 text-blue-500', label: __('Processing') };
         case 'ready':
-            return { variant: 'default', class: 'bg-green-500/10 text-green-500', label: __('Ready') };
+            return { variant: 'default', class: 'badge-success', label: __('Ready') };
         case 'failed':
             return { variant: 'destructive', class: '', label: __('Failed') };
         default:
@@ -196,7 +222,7 @@ const confirmDetachCredential = () => {
 };
 
 const getPermissionBadgeClass = (permission: string): string => {
-    if (permission === 'read-write') return 'bg-green-500/10 text-green-500';
+    if (permission === 'read-write') return 'badge-success';
     if (permission === 'write') return 'bg-blue-500/10 text-blue-500';
     return 'bg-gray-500/10 text-gray-500';
 };
@@ -305,16 +331,16 @@ const saveDatabase = () => {
             </Alert>
 
             <!-- Success Alert -->
-            <Alert v-if="status === 'ready' && showReadyAlert" class="border-green-500/50 bg-green-500/10 relative">
-                <CheckCircle2 class="h-4 w-4 text-green-500" />
-                <AlertTitle class="text-green-500">{{ __('Database ready') }}</AlertTitle>
+            <Alert v-if="status === 'ready' && showReadyAlert" class="border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950 relative">
+                <CheckCircle2 class="h-4 w-4 text-success" />
+                <AlertTitle class="text-success">{{ __('Database ready') }}</AlertTitle>
                 <AlertDescription>
                     {{ __('The database is created and available for use.') }}
                 </AlertDescription>
                 <Button
                     variant="ghost"
                     size="icon"
-                    class="absolute top-2 right-2 h-6 w-6 text-green-600 hover:text-green-800"
+                    class="absolute top-2 right-2 h-6 w-6 text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200"
                     @click="showReadyAlert = false"
                 >
                     <X class="h-3 w-3" />
@@ -436,6 +462,7 @@ const saveDatabase = () => {
                                                         :user-id="user.id"
                                                         :user-name="user.name"
                                                         :avatar-url="user.avatar"
+                                                        :status="userStatuses[user.id] || 'offline'"
                                                         size="sm"
                                                     />
                                                     <span class="font-medium">{{ user.name }}</span>

@@ -99,7 +99,7 @@ const userStatus = ref<UserStatus>(props.user.status || 'offline');
 
 const statusRingColor = computed(() => {
   const colors: Record<UserStatus, string> = {
-    online: 'ring-green-500',
+    online: 'ring-emerald-500',
     away: 'ring-yellow-500',
     busy: 'ring-red-500',
     offline: 'ring-gray-300',
@@ -433,7 +433,7 @@ const userInitials = computed(() => {
                 <PvTabsContent value="info" :active-tab="activeTab">
                     <div class="grid gap-6 md:grid-cols-2">
                         <!-- Informações Básicas -->
-                        <Card>
+                        <Card class="h-full">
                             <CardHeader>
                                 <CardTitle class="flex items-center gap-2">
                                     <User class="w-5 h-5" />
@@ -475,7 +475,7 @@ const userInitials = computed(() => {
                         </Card>
 
                         <!-- Features -->
-                        <Card>
+                        <Card class="h-full">
                             <CardHeader>
                                 <CardTitle>{{ __('Visible Features') }}</CardTitle>
                                 <CardDescription>{{ __('Features active for this user') }}</CardDescription>
@@ -497,7 +497,7 @@ const userInitials = computed(() => {
                         </Card>
 
                         <!-- Credentials -->
-                        <Card>
+                        <Card class="h-full">
                             <CardHeader>
                                 <CardTitle>{{ __('Credentials') }}</CardTitle>
                                 <CardDescription>{{ __('Database access permissions via credentials') }}</CardDescription>
@@ -522,7 +522,7 @@ const userInitials = computed(() => {
                         </Card>
 
                         <!-- Databases -->
-                        <Card class="md:col-span-2">
+                        <Card class="h-full">
                             <CardHeader>
                                 <CardTitle>{{ __('Databases') }}</CardTitle>
                                 <CardDescription>{{ __('Databases accessible via credentials') }}</CardDescription>
@@ -662,7 +662,7 @@ const userInitials = computed(() => {
                                                 <Badge
                                                     v-else-if="directPermissionIds.includes(perm.id)"
                                                     variant="default"
-                                                    class="bg-green-600 text-white text-xs"
+                                                    class="badge-success text-xs"
                                                 >
                                                     {{ __('Extra') }}
                                                 </Badge>

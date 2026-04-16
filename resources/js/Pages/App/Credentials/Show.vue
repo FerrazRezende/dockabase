@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { __ } from '@/composables/useLang';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -46,6 +46,9 @@ import type { User } from '@/types/user';
 import { ArrowLeft, Key, Shield, Users, Database, Calendar, Mail, Plus, Trash2, UserPlus, Pencil, Loader2 } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
 import { usePermissions } from '@/composables/usePermissions';
+import { useEchoChannels } from '@/composables/useEchoChannels';
+import type { UserStatusChangedEvent, UserStatus } from '@/types/user-status';
+import axios from 'axios';
 
 const props = defineProps<{
     credential: Credential;
@@ -60,6 +63,35 @@ const loadingUsers = ref(false);
 const attaching = ref(false);
 const detaching = ref<number | null>(null);
 
+// Real-time user status
+const userStatuses = reactive<Record<string, UserStatus>>({});
+const { connect, listenToPresenceChannel, disconnect } = useEchoChannels();
+
+onMounted(async () => {
+    // Fetch initial user statuses
+    const userIds = props.credential.users?.map(u => u.id) || [];
+    if (userIds.length > 0) {
+        try {
+            const { data } = await axios.post(route('api.user.statuses.batch'), { user_ids: userIds });
+            Object.assign(userStatuses, data.statuses);
+        } catch { /* ignore */ }
+    }
+
+    // Subscribe to real-time updates
+    try {
+        await connect();
+        listenToPresenceChannel((event: UserStatusChangedEvent) => {
+            userStatuses[event.user_id] = event.status as UserStatus;
+        });
+    } catch {
+        // Non-blocking: continue without real-time updates
+    }
+});
+
+onUnmounted(() => {
+    try { disconnect(); } catch { /* ignore */ }
+});
+
 const getPermissionBadgeVariant = (permission: CredentialPermission): 'default' | 'secondary' | 'outline' => {
     if (permission === 'read-write') return 'default';
     if (permission === 'read') return 'outline';
@@ -67,7 +99,7 @@ const getPermissionBadgeVariant = (permission: CredentialPermission): 'default' 
 };
 
 const getPermissionBadgeClass = (permission: CredentialPermission): string => {
-    if (permission === 'read-write') return 'bg-green-500/10 text-green-500';
+    if (permission === 'read-write') return 'badge-success';
     if (permission === 'write') return 'bg-blue-500/10 text-blue-500';
     return '';
 };
@@ -341,6 +373,7 @@ const saveCredential = () => {
                                             :user-id="user.id"
                                             :user-name="user.name"
                                             :avatar-url="user.avatar"
+                                            :status="userStatuses[user.id] || 'offline'"
                                             size="sm"
                                         />
                                         <span class="font-medium">{{ user.name }}</span>

@@ -14,7 +14,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from '@/components/ui/accordion';
-import { ArrowLeft, Loader2, Shield, Key } from 'lucide-vue-next';
+import { ArrowLeft, Loader2, Shield, Key, X, Check } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
 
 interface Permission {
@@ -302,10 +302,12 @@ const submit = (): void => {
                             <div class="flex flex-col gap-2 pt-4 border-t">
                                 <Link :href="route('system.permissions.index')" class="w-full">
                                     <Button variant="outline" class="w-full" :disabled="isSaving">
+                                        <X class="w-4 h-4 mr-2" />
                                         {{ __('Cancel') }}
                                     </Button>
                                 </Link>
                                 <Button @click="submit" class="w-full" :disabled="isSaving || !form.name.trim()">
+                                    <Check v-if="!isSaving" class="w-4 h-4 mr-2" />
                                     <Loader2 v-if="isSaving" class="w-4 h-4 mr-2 animate-spin" />
                                     {{ isEditing ? __('Save') : __('Create') }} {{ __('Role') }}
                                 </Button>

@@ -66,7 +66,7 @@ export function useUserStatus() {
    */
   const statusColor = computed(() => {
     const colors: Record<UserStatus, string> = {
-      online: 'text-green-500',
+      online: 'text-success',
       away: 'text-yellow-500',
       busy: 'text-red-500',
       offline: 'text-gray-400',
@@ -79,7 +79,7 @@ export function useUserStatus() {
    */
   const statusBgColor = computed(() => {
     const colors: Record<UserStatus, string> = {
-      online: 'bg-green-500',
+      online: 'badge-success-dot',
       away: 'bg-yellow-500',
       busy: 'bg-red-500',
       offline: 'bg-gray-400',

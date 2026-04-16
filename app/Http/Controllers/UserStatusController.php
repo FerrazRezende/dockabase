@@ -43,6 +43,21 @@ final class UserStatusController extends Controller
     }
 
     /**
+     * Get statuses for multiple users (batch).
+     */
+    public function batch(Request $request): JsonResponse
+    {
+        $request->validate([
+            'user_ids' => ['required', 'array', 'min:1'],
+            'user_ids.*' => ['string'],
+        ]);
+
+        $statuses = $this->statusService->getMultipleStatuses($request->input('user_ids'));
+
+        return response()->json(['statuses' => $statuses]);
+    }
+
+    /**
      * Send a heartbeat ping to keep the user marked as online.
      */
     public function heartbeat(Request $request): JsonResponse

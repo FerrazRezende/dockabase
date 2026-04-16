@@ -53,7 +53,7 @@ const getStepStatus = (step: CreationStep): 'completed' | 'running' | 'pending' 
 const getStepColor = (status: 'completed' | 'running' | 'pending'): string => {
   switch (status) {
     case 'completed':
-      return 'bg-green-500 text-white';
+      return 'bg-emerald-500 text-white';
     case 'running':
       return 'bg-blue-500 text-white animate-pulse';
     default:
@@ -66,7 +66,7 @@ const getLineColor = (index: number): string => {
   if (!nextStep) return 'bg-muted';
 
   const nextStatus = getStepStatus(nextStep.key);
-  return nextStatus === 'completed' ? 'bg-green-500' : 'bg-muted';
+  return nextStatus === 'completed' ? 'bg-emerald-500' : 'bg-muted';
 };
 </script>
 

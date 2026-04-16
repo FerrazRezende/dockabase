@@ -221,7 +221,7 @@ const initials = (name: string): string => {
                     </Link>
 
                     <!-- System Section -->
-                    <div class="pt-4 mt-4 border-t border-border">
+                    <div class="space-y-1">
                     <p v-if="!collapsed" class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         {{ __('System') }}
                     </p>

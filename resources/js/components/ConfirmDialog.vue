@@ -39,7 +39,7 @@ const isOpen = computed({
 const requiresNameInput = computed(() => !!props.confirmName);
 
 const canConfirm = computed(() => {
-    if (!requiresNameInput) return true;
+    if (!requiresNameInput.value) return true;
     return inputValue.value === props.confirmName;
 });
 

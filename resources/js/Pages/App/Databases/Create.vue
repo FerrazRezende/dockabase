@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import type { CredentialCollection } from '@/types/credential';
-import { ArrowLeft, Loader2 } from 'lucide-vue-next';
+import { ArrowLeft, Loader2, X } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
 
 const props = defineProps<{
@@ -132,7 +132,10 @@ const submit = (): void => {
 
                 <div class="flex justify-end gap-4 pt-4">
                     <Link :href="route('app.databases.index')">
-                        <Button variant="outline" type="button">{{ __('Cancel') }}</Button>
+                        <Button variant="outline" type="button">
+                            <X class="w-4 h-4 mr-2" />
+                            {{ __('Cancel') }}
+                        </Button>
                     </Link>
                     <Button type="submit" :disabled="form.processing">
                         <Loader2 v-if="form.processing" class="h-4 w-4 mr-2 animate-spin" />
