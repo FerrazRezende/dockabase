@@ -433,7 +433,7 @@ const userInitials = computed(() => {
                 <PvTabsContent value="info" :active-tab="activeTab">
                     <div class="grid gap-6 md:grid-cols-2">
                         <!-- Informações Básicas -->
-                        <Card>
+                        <Card class="h-full">
                             <CardHeader>
                                 <CardTitle class="flex items-center gap-2">
                                     <User class="w-5 h-5" />
@@ -475,7 +475,7 @@ const userInitials = computed(() => {
                         </Card>
 
                         <!-- Features -->
-                        <Card>
+                        <Card class="h-full">
                             <CardHeader>
                                 <CardTitle>{{ __('Visible Features') }}</CardTitle>
                                 <CardDescription>{{ __('Features active for this user') }}</CardDescription>
@@ -497,7 +497,7 @@ const userInitials = computed(() => {
                         </Card>
 
                         <!-- Credentials -->
-                        <Card>
+                        <Card class="h-full">
                             <CardHeader>
                                 <CardTitle>{{ __('Credentials') }}</CardTitle>
                                 <CardDescription>{{ __('Database access permissions via credentials') }}</CardDescription>
@@ -522,7 +522,7 @@ const userInitials = computed(() => {
                         </Card>
 
                         <!-- Databases -->
-                        <Card class="md:col-span-2">
+                        <Card class="h-full">
                             <CardHeader>
                                 <CardTitle>{{ __('Databases') }}</CardTitle>
                                 <CardDescription>{{ __('Databases accessible via credentials') }}</CardDescription>
