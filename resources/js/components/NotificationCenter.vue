@@ -137,11 +137,11 @@ onUnmounted(() => {
                     <DropdownMenuItem
                         v-for="notification in notifications"
                         :key="notification.id"
-                        class="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                        class="flex flex-col items-start gap-1 p-3 cursor-pointer text-foreground"
                         :class="{ 'bg-muted/50': !notification.read }"
                     >
                         <div class="flex items-center gap-2 w-full">
-                            <span class="font-medium text-sm flex-1">{{ notification.title }}</span>
+                            <span class="font-medium text-sm flex-1 text-foreground">{{ notification.title }}</span>
                             <span class="text-xs text-muted-foreground">{{ formatTime(notification.created_at) }}</span>
                         </div>
                         <p class="text-xs text-muted-foreground line-clamp-2">
