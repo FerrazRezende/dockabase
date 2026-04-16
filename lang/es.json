@@ -607,6 +607,8 @@
     "You have been added to the credential :name.": "Ha sido agregado a la credencial :name.",
     "You have been added to the credential :name": "Ha sido agregado a la credencial :name",
     "You have been removed from the credential :name": "Ha sido removido de la credencial :name",
+    "Removed from credential": "Removido de la credencial",
+    "You have been removed from the credential :name.": "Ha sido removido de la credencial :name.",
     "User added to credential": "Usuario agregado a credencial",
     "User :added_by added :user to the credential :credential.": "El usuario :added_by agregó a :user a la credencial :credential.",
     "Credential linked to database": "Credencial vinculada a base de datos",
