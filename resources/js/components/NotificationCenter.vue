@@ -73,9 +73,9 @@ const formatTime = (dateString: string): string => {
     const days = Math.floor(diff / 86400000);
 
     if (minutes < 1) return __('Just now');
-    if (minutes < 60) return __(':minutesm ago', { minutes });
-    if (hours < 24) return __(':hoursh ago', { hours });
-    if (days < 7) return __(':daysd ago', { days });
+    if (minutes < 60) return __(':minutes m ago', { minutes });
+    if (hours < 24) return __(':hours h ago', { hours });
+    if (days < 7) return __(':days d ago', { days });
 
     return date.toLocaleDateString();
 };
