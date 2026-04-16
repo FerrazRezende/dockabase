@@ -28,28 +28,24 @@ defineProps({
 
         <div class="p-6">
             <div class="grid gap-6 md:grid-cols-2">
-                <div class="space-y-6">
-                    <div class="bg-card shadow-sm rounded-lg border border-border p-6">
-                        <UpdateProfileInformationForm
-                            :must-verify-email="mustVerifyEmail"
-                            :status="status"
-                            class="max-w-xl"
-                        />
-                    </div>
-
-                    <div class="bg-card shadow-sm rounded-lg border border-border p-6">
-                        <UpdatePasswordForm class="max-w-xl" />
-                    </div>
+                <div class="bg-card shadow-sm rounded-lg border border-border p-6 h-full">
+                    <LocaleForm class="max-w-xl" />
                 </div>
 
-                <div class="space-y-6">
-                    <div class="bg-card shadow-sm rounded-lg border border-border p-6">
-                        <ProfilePhotoCard />
-                    </div>
+                <div class="bg-card shadow-sm rounded-lg border border-border p-6 h-full">
+                    <ProfilePhotoCard />
+                </div>
 
-                    <div class="bg-card shadow-sm rounded-lg border border-border p-6">
-                        <LocaleForm class="max-w-xl" />
-                    </div>
+                <div class="bg-card shadow-sm rounded-lg border border-border p-6 h-full">
+                    <UpdateProfileInformationForm
+                        :must-verify-email="mustVerifyEmail"
+                        :status="status"
+                        class="max-w-xl"
+                    />
+                </div>
+
+                <div class="bg-card shadow-sm rounded-lg border border-border p-6 h-full">
+                    <UpdatePasswordForm class="max-w-xl" />
                 </div>
             </div>
         </div>
