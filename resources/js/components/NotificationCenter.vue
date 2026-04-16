@@ -15,7 +15,6 @@ import { Bell, Loader2 } from 'lucide-vue-next';
 import type { Notification } from '@/types/notification';
 import { __ } from '@/composables/useLang';
 import { useToast } from 'vue-toastification';
-import { getEcho } from '@/composables/echo';
 import axios from 'axios';
 
 const page = usePage();
@@ -24,6 +23,7 @@ const toast = useToast();
 const notifications = ref<Notification[]>([]);
 const unreadCount = ref(0);
 const loading = ref(false);
+let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 const fetchNotifications = async () => {
     loading.value = true;
@@ -37,18 +37,20 @@ const fetchNotifications = async () => {
     }
 };
 
-const fetchUnreadCount = async () => {
+const fetchUnreadCount = async (showToast = false) => {
     try {
         const { data } = await axios.get('/api/notifications/unread-count');
-        unreadCount.value = data.count;
+        const newCount = data.count;
+        if (showToast && newCount > unreadCount.value) {
+            const latest = notifications.value[0];
+            if (latest && !latest.read) {
+                toast.info(latest.title);
+            }
+        }
+        unreadCount.value = newCount;
     } catch {
         // Silently fail
     }
-};
-
-const addNotification = (notification: Notification) => {
-    notifications.value.unshift(notification);
-    unreadCount.value++;
 };
 
 const markAllAsRead = async () => {
@@ -84,47 +86,20 @@ const onDropdownOpen = (open: boolean) => {
     }
 };
 
-// Real-time notifications via Echo
-let echoChannel: ReturnType<ReturnType<typeof getEcho>['private']> | null = null;
-
-const setupEchoListener = () => {
-    const user = page.props.auth?.user as { id: number } | undefined;
-    if (!user?.id) return;
-
-    try {
-        const echo = getEcho();
-        echoChannel = echo.private(`users.${user.id}`);
-
-        echoChannel.listen('.user.added-to-credential', (event: { credential_name: string }) => {
-            toast.info(__('You have been added to the credential :name', { name: event.credential_name }));
-            fetchUnreadCount();
-            fetchNotifications();
-        });
-
-        echoChannel.listen('.user.removed-from-credential', (event: { credential_name: string }) => {
-            toast.info(__('You have been removed from the credential :name', { name: event.credential_name }));
-            fetchUnreadCount();
-            fetchNotifications();
-        });
-    } catch {
-        // Echo not available
-    }
-};
-
 onMounted(() => {
     fetchNotifications();
     fetchUnreadCount();
-    setupEchoListener();
+    // Poll every 30s for new notifications
+    pollTimer = setInterval(() => {
+        fetchNotifications();
+        fetchUnreadCount(true);
+    }, 30000);
 });
 
 onUnmounted(() => {
-    if (echoChannel) {
-        try {
-            const echo = getEcho();
-            echo.leaveChannel(`private-users.${(page.props.auth?.user as { id: number })?.id}`);
-        } catch {
-            // Silently fail
-        }
+    if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
     }
 });
 </script>
