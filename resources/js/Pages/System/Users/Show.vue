@@ -202,7 +202,7 @@ const selectedRoleId = ref<number | string>(currentRoleId.value ?? 'none');
 
 // Direct permissions (not from role)
 const directPermissions = props.user.direct_permissions ?? [];
-const directPermissionIds = ref<number[]>(directPermissions.map((p: any) => p.id));
+const directPermissionIds = ref<number[]>(directPermissions.map((p: Permission) => p.id));
 
 // Denied permissions (explicitly revoked from role)
 const deniedPermissionIds = ref<number[]>(props.user.denied_permissions ?? []);
@@ -213,8 +213,8 @@ const checkboxStates = ref<Record<number, boolean>>({});
 // Get role permission IDs for quick lookup
 const rolePermissionIds = computed(() => {
     const ids: number[] = [];
-    userRoles.value.forEach((r: any) => {
-        (r.permissions ?? []).forEach((p: any) => {
+    userRoles.value.forEach((r: Role) => {
+        (r.permissions ?? []).forEach((p: Permission) => {
             if (p?.id) ids.push(p.id);
         });
     });
@@ -224,7 +224,7 @@ const rolePermissionIds = computed(() => {
 // Initialize checkbox states
 const initCheckboxStates = (): void => {
     const states: Record<number, boolean> = {};
-    (props.allPermissions ?? []).forEach((perm: any) => {
+    (props.allPermissions ?? []).forEach((perm: Permission) => {
         const isDenied = deniedPermissionIds.value.includes(perm.id);
         const fromRole = rolePermissionIds.value.includes(perm.id);
         const isDirect = directPermissionIds.value.includes(perm.id);
@@ -241,11 +241,11 @@ nextTick(() => {
 // Get role permission names for quick lookup
 const rolePermissionNames = computed(() => {
     const perms: string[] = [];
-    userRoles.value.forEach((r: any) => {
+    userRoles.value.forEach((r: Role) => {
         const rolePerms = Array.isArray(r.permissions)
             ? r.permissions
             : (r.permissions?.data ?? []);
-        rolePerms.forEach((p: any) => {
+        rolePerms.forEach((p: Permission) => {
             if (p?.name) perms.push(p.name);
         });
     });
