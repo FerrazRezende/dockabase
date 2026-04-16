@@ -106,7 +106,7 @@ watch(isOpen, (value) => {
                     v-if="variant === 'danger'"
                     variant="destructive"
                     @click="handleConfirm"
-                    :disabled="!canConfirm || loading"
+                    :disabled="loading"
                 >
                     <span v-if="loading">{{ __('Deleting...') }}</span>
                     <span v-else>{{ confirmText || __('Delete') }}</span>
@@ -115,7 +115,7 @@ watch(isOpen, (value) => {
                     v-else
                     variant="default"
                     @click="handleConfirm"
-                    :disabled="!canConfirm || loading"
+                    :disabled="loading"
                 >
                     <span v-if="loading">{{ __('Processing') }}</span>
                     <span v-else>{{ confirmText || __('Confirm') }}</span>
