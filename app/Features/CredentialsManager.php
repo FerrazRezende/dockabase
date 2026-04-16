@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace App\Features;
 
-class CredentialsManager
+class CredentialsManager extends Feature
 {
-    public function resolve($user): bool
-    {
-        return true;
-    }
+    public string $name = 'credentials-manager';
 }

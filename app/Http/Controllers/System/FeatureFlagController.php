@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\System;
 
 use App\Enums\RolloutStrategyEnum;
+use App\Features\Feature as BaseFeature;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\System\ActivateFeatureRequest;
 use App\Http\Requests\System\UpdateFeatureRequest;
@@ -82,7 +83,7 @@ class FeatureFlagController extends Controller
         return match (RolloutStrategyEnum::from($feature['strategy'])) {
             RolloutStrategyEnum::ALL => $allUsers->toArray(),
             RolloutStrategyEnum::PERCENTAGE => $allUsers
-                ->filter(fn ($user) => $this->checkPercentage((string) $user->id, $feature['percentage']))
+                ->filter(fn ($user) => BaseFeature::checkPercentage((string) $user->id, $feature['percentage']))
                 ->values()
                 ->toArray(),
             RolloutStrategyEnum::USERS => $allUsers
@@ -91,16 +92,6 @@ class FeatureFlagController extends Controller
                 ->toArray(),
             default => [],
         };
-    }
-
-    /**
-     * Deterministic percentage check matching FeatureFlagService.
-     */
-    private function checkPercentage(string $userId, int $percentage): bool
-    {
-        $hash = crc32($userId);
-
-        return ($hash % 100) < $percentage;
     }
 
     /**

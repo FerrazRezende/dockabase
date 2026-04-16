@@ -39,15 +39,13 @@ class NotificationController extends Controller
         return response()->json(['count' => $count]);
     }
 
-    public function markAsRead(Request $request, int $id): JsonResponse
+    public function markAsRead(Request $request, Notification $notification): JsonResponse
     {
-        $notification = Notification::where('user_id', $request->user()->id)
-            ->where('id', $id)
-            ->first();
-
-        if ($notification) {
-            $notification->markAsRead();
+        if ($notification->user_id !== $request->user()->id) {
+            abort(403);
         }
+
+        $notification->markAsRead();
 
         return response()->json(['success' => true]);
     }

@@ -5,16 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Services\FeatureFlagService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Laravel\Pennant\Feature;
 
 class FeatureController extends Controller
 {
-    public function __construct(
-        private FeatureFlagService $featureService
-    ) {}
-
     /**
      * Get features active for the current user.
      */
@@ -24,7 +20,14 @@ class FeatureController extends Controller
 
         abort_unless($user, 401, 'Unauthenticated');
 
-        $features = $this->featureService->getActiveFeaturesForUser($user);
+        $featureNames = array_keys(config('features.definitions', []));
+        $features = [];
+
+        foreach ($featureNames as $name) {
+            if (Feature::for($user)->active($name)) {
+                $features[] = $name;
+            }
+        }
 
         return response()->json([
             'features' => $features,
@@ -40,11 +43,9 @@ class FeatureController extends Controller
 
         abort_unless($user, 401, 'Unauthenticated');
 
-        $isActive = $this->featureService->isActiveForUser($feature, $user);
-
         return response()->json([
             'feature' => $feature,
-            'is_active' => $isActive,
+            'is_active' => Feature::for($user)->active($feature),
         ]);
     }
 }
