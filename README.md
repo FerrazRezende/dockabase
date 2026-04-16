@@ -28,12 +28,12 @@ Cada instância do DockaBase gerencia **N databases PostgreSQL** na mesma instal
 ┌─────────────────────────────────────────┐
 │           Instância DockaBase            │
 │                                         │
-│  ┌──────────┐ ┌──────────┐ ┌─────────┐  │
-│  │ Database │ │ Database │ │ Database│  │
-│  │   dev    │ │ staging  │ │  prod   │  │
-│  └──────────┘ └──────────┘ └─────────┘  │
-│         │           │           │        │
-│         └─────┬─────┘───────────┘        │
+│  ┌──────────┐         ┌──────────┐      │
+│  │ Database │         │ Database │      │
+│  │   dev    │         │  prod    │      │
+│  └──────────┘         └──────────┘      │
+│         │                   │            │
+│         └─────────┬─────────┘            │
 │               │                          │
 │     ┌─────────▼──────────┐               │
 │     │   Credentials      │               │
@@ -55,7 +55,7 @@ Cada instância do DockaBase gerencia **N databases PostgreSQL** na mesma instal
 | PostgreSQL | 16 | Database principal |
 | Redis | 7 | Cache & sessões |
 | RabbitMQ | 3 | Filas & jobs assíncronos |
-| MinIO | latest | Storage S3-compatible |
+| MinIO | RELEASE.2023-09-04 | Storage S3-compatible (AGPLv3) |
 
 ### Frontend
 
@@ -135,17 +135,19 @@ Request → FormRequest (validação)
 
 ### Roadmap
 
-- [ ] **Schema Builder** — interface visual para criar tabelas e colunas
+- [ ] **Schema Builder** — criação de tabelas em duas etapas: (1) colunas com nome, tipo e FK, (2) validações visuais no-code/low-code que traduzem Laravel FormRequest em UI
 - [ ] **Table Manager** — CRUD de dados com interface tipo planilha
-- [ ] **Dynamic REST API** — API auto-gerada a partir do schema (`/api/v1/{database}/{table}`)
+- [ ] **Dynamic REST API** — API auto-gerada a partir do schema com rate limiting, CORS, auth pela plataforma, max tentativas de login e sessão única por dispositivo
 - [ ] **Realtime** — WebSockets com PostgreSQL LISTEN/NOTIFY
 - [ ] **Storage** — MinIO com buckets e políticas de acesso
 - [ ] **OTP Auth** — login sem senha via código de 6 dígitos
+- [ ] **Database Console** — terminal PSQL no browser (xterm.js) com output em tempo real via Echo
+- [ ] **Acesso Externo** — conexão via DBeaver/pgAdmin com roles PostgreSQL geradas por credential (GRANT/REVOKE)
+- [ ] **Permissões por Tabela** — permissões granulares na Dynamic API (`products.select`, `orders.insert`)
 - [ ] **Database Encryption** — criptografia com pgcrypto
 - [ ] **Automated Backups** — backups automáticos com retenção
-- [ ] **Row Level Security** — políticas RLS do PostgreSQL
-- [ ] **Advanced RBAC** — permissões granulares por tabela
 - [ ] **MCP Server** — integração com AI assistants (Claude, GPT)
+- [ ] **Staging Automático** — integração com GitHub Actions para provisionar banco de dev e staging automaticamente a partir de PRs
 
 ---
 
@@ -426,6 +428,40 @@ Features são gerenciadas via **Laravel Pennant** com classes em `app/Features/`
 - Interface visual no painel admin para ativar/desativar por estratégia
 
 **Estratégias de rollout:** `inactive`, `percentage`, `users`, `all`
+
+---
+
+## Planos Futuros
+
+Além das features do roadmap, o DockaBase tem planos de médio/longo prazo:
+
+### MCP Server + AI Integration
+
+Integração nativa com AI assistants via Model Context Protocol:
+
+```
+┌─────────────────┐     MCP Protocol      ┌─────────────────┐
+│  Claude / AI    │ ◄───────────────────► │  DockaBase MCP  │
+│  Assistant      │                       │     Server      │
+└─────────────────┘                       └────────┬────────┘
+                                                   │
+                                          ┌────────▼────────┐
+                                          │   DockaBase     │
+                                          │   PostgreSQL    │
+                                          └─────────────────┘
+```
+
+Permitir que AI assistants se conectem ao DockaBase para consultar schemas, executar queries seguras, gerenciar dados via linguagem natural e sugerir migrations.
+
+### Staging Automático com GitHub Actions
+
+Pipeline CI/CD que provisiona ambientes de staging automaticamente a partir de pull requests:
+
+- Provisionamento automático de database staging por PR
+- Isolamento completo entre ambientes (dev, staging, prod)
+- Tear-down automático ao fechar o PR
+- Dados de seed configuráveis por ambiente
+- Integração com o DockaBase para gerenciar o ciclo de vida
 
 ---
 

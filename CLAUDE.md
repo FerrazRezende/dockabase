@@ -15,7 +15,7 @@ DockaBase é um clone funcional e simplificado do Supabase, construído com Lara
 
 **Modelo: Single-Tenant Self-Hosted com Múltiplos Databases**
 
-Cada instância do DockaBase pode gerenciar **múltiplos databases PostgreSQL** na mesma instalação (ex: `dev`, `staging`, `prod`).
+Cada instância do DockaBase pode gerenciar **múltiplos databases PostgreSQL** na mesma instalação (ex: `dev`, `prod`).
 
 ### Opções de Deploy
 
@@ -87,7 +87,7 @@ Para **End Users** que acessam databases PostgreSQL (frontend-only apps, DBeaver
 ├─────────────────────────────────────────────────────────────┤
 │  Users:              │  Databases:                          │
 │  • alice@company     │  • dev (read-write)                  │
-│  • bob@company       │  • staging (read-write)              │
+│  • bob@company       │  • prod (read-write)                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -365,8 +365,10 @@ Sistema de criação assíncrona de databases com feedback em tempo real.
 | Echo | `resources/js/composables/echo.ts` | WebSocket client |
 
 ### Fase 3: Schema Builder
-- [ ] Interface visual para criar tabelas
-- [ ] Migrations dinâmicas
+- [ ] **Step 1 — Definição de colunas:** nome, tipo (PostgreSQL), nullable, FK, defaults
+- [ ] **Step 2 — Validações visuais (no-code/low-code):** presets que traduzem Laravel FormRequest rules em UI (required, min/max length, regex, unique, exists, etc.)
+- [ ] **Futuro:** editor visual de Rules customizadas (equivalente a escrever uma `Rule` do Laravel)
+- [ ] Migrations dinâmicas geradas a partir das definições
 - [ ] Suporte a tipos PostgreSQL (UUID, JSONB, Arrays)
 - [ ] Feature flag: `schema-builder`
 
@@ -381,6 +383,7 @@ Sistema de criação assíncrona de databases com feedback em tempo real.
 - [ ] Query Parser (filtros tipo `?age=gte.18`)
 - [ ] Validação dinâmica baseada no schema
 - [ ] Autenticação via Credentials
+- [ ] **Segurança:** rate limiting por credential, CORS configurável, max tentativas de login, uma sessão por dispositivo, throttle por IP/credential
 - [ ] Feature flag: `dynamic-api`
 
 ### Fase 6: Autenticação OTP
@@ -396,8 +399,28 @@ Sistema de criação assíncrona de databases com feedback em tempo real.
 
 ### Fase 8: Storage
 - [ ] MinIO com Buckets
-- [ ] Políticas de acesso via RLS
+- [ ] Políticas de acesso via Credentials
 - [ ] Feature flag: `storage`
+
+### Fase 9: Database Console
+- [ ] Terminal PSQL no browser (xterm.js)
+- [ ] Output em tempo real via Echo
+- [ ] Sessões com timeout e isolamento por usuário
+- [ ] Read-only enforcement para credentials de leitura
+- [ ] Feature flag: `database-console`
+
+### Fase 10: Acesso Externo
+- [ ] Roles PostgreSQL geradas por credential (GRANT/REVOKE)
+- [ ] Conexão via DBeaver, pgAdmin e outros clientes PostgreSQL
+- [ ] Info de conexão (host, port, user, password) na página da credential
+- [ ] Regeneração de senha com verificação
+- [ ] Feature flag: `external-access`
+
+### Fase 11: Permissões por Tabela
+- [ ] Permissões granulares na Dynamic API (`products.select`, `orders.insert`)
+- [ ] Middleware de verificação por tabela e operação
+- [ ] CRUD de roles customizadas via painel admin
+- [ ] Feature flag: `table-permissions`
 
 ## Padrões e Convenções
 
@@ -510,15 +533,18 @@ Features são definidas globalmente, mas cada database pode ter overrides.
 ```
 Features Globais (config/features.php)
 ├── database-creator: available ✓
+├── credentials-manager: available ✓
 ├── schema-builder: available ✓
+├── table-manager: available ✓
 ├── dynamic-api: available ✓
 ├── realtime: available ✓
 ├── storage: available ✓
 ├── otp-auth: available ✓
+├── database-console: available ✓
+├── external-access: available ✓
+├── table-permissions: available ✓
 ├── database-encryption: available ✓
-├── automated-backups: available ✓
-├── rls: available ✓
-└── advanced-rbac: available ✓
+└── automated-backups: available ✓
 
 Database: prod
 ├── dynamic-api: enabled (usa default)
@@ -536,16 +562,17 @@ Database: dev
 | Feature | Descrição | Prioridade |
 |---------|-----------|------------|
 | `database-creator` | Interface para criar databases PostgreSQL | P0 |
-| `schema-builder` | Interface visual para criar tabelas/colunas | P0 |
+| `schema-builder` | Interface visual para criar tabelas/colunas + validações no-code | P0 |
 | `table-manager` | CRUD de dados com interface tipo planilha | P0 |
-| `dynamic-api` | API REST dinâmica auto-gerada | P0 |
+| `dynamic-api` | API REST dinâmica com rate limiting, CORS, auth, sessão única | P0 |
 | `realtime` | Websockets com LISTEN/NOTIFY | P1 |
 | `storage` | Storage MinIO com buckets | P1 |
 | `otp-auth` | Autenticação OTP (login sem senha) | P1 |
+| `database-console` | Terminal PSQL no browser (xterm.js) | P1 |
+| `external-access` | Acesso externo via DBeaver/pgAdmin (roles PostgreSQL por credential) | P1 |
+| `table-permissions` | Permissões granulares por tabela na Dynamic API | P2 |
 | `database-encryption` | Criptografia com pgcrypto | P2 |
 | `automated-backups` | Backups automáticos | P2 |
-| `rls` | Row Level Security | P2 |
-| `advanced-rbac` | RBAC avançado | P2 |
 
 ### Estratégias de Rollout
 
@@ -660,13 +687,20 @@ Este teste verifica se todas as chaves existem em todos os idiomas (PT, EN, ES).
 ### Mensagens de Validação Laravel
 Todas as mensagens de validação padrão do Laravel estão traduzidas. Não é necessário usar `__()` em regras de validação - o Laravel traduz automaticamente.
 
-## RLS - Row Level Security
+## RLS - Acesso Externo via Credentials
 
-### Middleware
-- Define contexto PostgreSQL: `user_id`, `project_id`, `user_roles`
-- Aplica RlsScope baseado nas permissões
+### Como funciona
+As credentials do DockaBase criam roles PostgreSQL nativas com GRANT/REVOKE. Usuários podem conectar via DBeaver, pgAdmin ou qualquer cliente PostgreSQL — só acessam databases e tabelas que sua credential permite.
 
-### Comportamento por Role
+### Role Lifecycle
+| Event | PostgreSQL Action |
+|-------|-------------------|
+| Credential created | `CREATE ROLE "cred_{id}" LOGIN PASSWORD '{generated}'` |
+| Credential attached to database | `GRANT {permission} ON DATABASE "{db}" TO "cred_{id}"` |
+| Credential detached | `REVOKE ALL ON DATABASE "{db}" FROM "cred_{id}"` |
+| Credential deleted | `DROP ROLE IF EXISTS "cred_{id}"` |
+
+### Permissão por Role
 - **Admin:** Vê tudo
 - **Editor:** Vê dados do projeto
 - **User:** Vê apenas próprios dados
@@ -706,7 +740,7 @@ Segue sintaxe Supabase/PostgREST:
 ### Storage
 - **Buckets:** Containers lógicos (pasta no MinIO)
 - **Private Files:** URLs temporárias com expiração
-- **Políticas:** Acesso via RLS
+- **Políticas:** Acesso via Credentials
 
 ### API
 - **REST:** CRUD automático por tabela
@@ -714,13 +748,12 @@ Segue sintaxe Supabase/PostgREST:
 
 ## Próximos Passos
 
-1. Criar estrutura base do projeto Laravel 13
-2. Implementar DynamicController inicial
-3. Configurar Inertia.js com dashboard básico
-4. Implementar cache de schema com Redis
-5. Criar primeira tabela dinâmica funcional
-6. Configurar Spatie Permission para RBAC
-7. Implementar RLS integrado com roles e permissões
+1. Implementar Schema Builder (Fase 3)
+2. Implementar Table Manager (Fase 4)
+3. Implementar Dynamic REST API (Fase 5)
+4. Implementar Database Console (Fase 9)
+5. Implementar Acesso Externo via Credentials (Fase 10)
+6. Implementar Permissões por Tabela na Dynamic API (Fase 11)
 
 ## Roadmap Futuro (P3+)
 
@@ -820,6 +853,16 @@ Response:
 
 ### Prioridade
 **P3** - Implementar após features core (API, Auth, Realtime, Storage) estarem estáveis.
+
+### Staging Automático com GitHub Actions
+
+Pipeline CI/CD que provisiona ambientes automaticamente a partir de pull requests:
+
+- Provisionamento automático de banco de dev e staging por PR
+- Isolamento completo entre ambientes (dev, staging, prod)
+- Tear-down automático ao fechar o PR
+- Dados de seed configuráveis por ambiente
+- Integração com o DockaBase para gerenciar o ciclo de vida
 
 ---
 
