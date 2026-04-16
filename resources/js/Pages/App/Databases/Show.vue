@@ -50,6 +50,7 @@ import { useEcho } from '@/composables/useEcho';
 import { useEchoChannels } from '@/composables/useEchoChannels';
 import type { UserStatusChangedEvent, UserStatus } from '@/types/user-status';
 import { useToast } from 'vue-toastification';
+import axios from 'axios';
 import { usePage } from '@inertiajs/vue3';
 import { usePermissions } from '@/composables/usePermissions';
 
@@ -123,6 +124,15 @@ onMounted(async () => {
             toast.error(__('Error creating database'));
         },
     });
+
+    // Fetch initial user statuses from all credentials
+    const userIds = credentials.value.flatMap(c => c.users?.map(u => u.id) || []);
+    if (userIds.length > 0) {
+        try {
+            const { data } = await axios.post(route('api.user.statuses.batch'), { user_ids: [...new Set(userIds)] });
+            Object.assign(userStatuses, data.statuses);
+        } catch { /* ignore */ }
+    }
 
     // Subscribe to presence channel for real-time user status
     try {

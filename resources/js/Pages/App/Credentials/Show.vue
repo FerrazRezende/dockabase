@@ -48,6 +48,7 @@ import { useToast } from 'vue-toastification';
 import { usePermissions } from '@/composables/usePermissions';
 import { useEchoChannels } from '@/composables/useEchoChannels';
 import type { UserStatusChangedEvent, UserStatus } from '@/types/user-status';
+import axios from 'axios';
 
 const props = defineProps<{
     credential: Credential;
@@ -67,6 +68,16 @@ const userStatuses = reactive<Record<number, UserStatus>>({});
 const { connect, listenToPresenceChannel, disconnect } = useEchoChannels();
 
 onMounted(async () => {
+    // Fetch initial user statuses
+    const userIds = props.credential.users?.map(u => u.id) || [];
+    if (userIds.length > 0) {
+        try {
+            const { data } = await axios.post(route('api.user.statuses.batch'), { user_ids: userIds });
+            Object.assign(userStatuses, data.statuses);
+        } catch { /* ignore */ }
+    }
+
+    // Subscribe to real-time updates
     try {
         await connect();
         listenToPresenceChannel((event: UserStatusChangedEvent) => {
