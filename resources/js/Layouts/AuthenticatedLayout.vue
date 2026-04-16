@@ -147,7 +147,7 @@ const initials = (name: string): string => {
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 space-y-2 p-2">
+            <nav class="flex-1 space-y-1 p-2">
                 <!-- Home for non-admin users -->
                 <Link
                     v-if="!auth.user.is_admin"
@@ -221,7 +221,7 @@ const initials = (name: string): string => {
                     </Link>
 
                     <!-- System Section -->
-                    <div class="space-y-2">
+                    <div class="space-y-1">
                     <p v-if="!collapsed" class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         {{ __('System') }}
                     </p>
