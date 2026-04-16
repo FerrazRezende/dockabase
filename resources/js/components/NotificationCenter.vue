@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,7 +14,12 @@ import {
 import { Bell, Loader2 } from 'lucide-vue-next';
 import type { Notification } from '@/types/notification';
 import { __ } from '@/composables/useLang';
+import { useToast } from 'vue-toastification';
+import { getEcho } from '@/composables/echo';
 import axios from 'axios';
+
+const page = usePage();
+const toast = useToast();
 
 const notifications = ref<Notification[]>([]);
 const unreadCount = ref(0);
@@ -40,6 +46,11 @@ const fetchUnreadCount = async () => {
     }
 };
 
+const addNotification = (notification: Notification) => {
+    notifications.value.unshift(notification);
+    unreadCount.value++;
+};
+
 const markAllAsRead = async () => {
     try {
         await axios.post('/api/notifications/read-all');
@@ -60,9 +71,9 @@ const formatTime = (dateString: string): string => {
     const days = Math.floor(diff / 86400000);
 
     if (minutes < 1) return __('Just now');
-    if (minutes < 60) return __(':count minutes ago', { count: minutes });
-    if (hours < 24) return __(':count hours ago', { count: hours });
-    if (days < 7) return __(':count days ago', { count: days });
+    if (minutes < 60) return __(':minutesm ago', { minutes });
+    if (hours < 24) return __(':hoursh ago', { hours });
+    if (days < 7) return __(':daysd ago', { days });
 
     return date.toLocaleDateString();
 };
@@ -73,9 +84,48 @@ const onDropdownOpen = (open: boolean) => {
     }
 };
 
+// Real-time notifications via Echo
+let echoChannel: ReturnType<ReturnType<typeof getEcho>['private']> | null = null;
+
+const setupEchoListener = () => {
+    const user = page.props.auth?.user as { id: number } | undefined;
+    if (!user?.id) return;
+
+    try {
+        const echo = getEcho();
+        echoChannel = echo.private(`users.${user.id}`);
+
+        echoChannel.listen('.user.added-to-credential', (event: { credential_name: string }) => {
+            toast.info(__('You have been added to the credential :name', { name: event.credential_name }));
+            fetchUnreadCount();
+            fetchNotifications();
+        });
+
+        echoChannel.listen('.user.removed-from-credential', (event: { credential_name: string }) => {
+            toast.info(__('You have been removed from the credential :name', { name: event.credential_name }));
+            fetchUnreadCount();
+            fetchNotifications();
+        });
+    } catch {
+        // Echo not available
+    }
+};
+
 onMounted(() => {
     fetchNotifications();
     fetchUnreadCount();
+    setupEchoListener();
+});
+
+onUnmounted(() => {
+    if (echoChannel) {
+        try {
+            const echo = getEcho();
+            echo.leaveChannel(`private-users.${(page.props.auth?.user as { id: number })?.id}`);
+        } catch {
+            // Silently fail
+        }
+    }
 });
 </script>
 
