@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Events\UserStatusUpdatedEvent;
+use App\Events\UserStatusUpdated;
 use App\Listeners\CacheUserStatusListener;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -18,9 +18,12 @@ final class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
 
-        UserStatusUpdatedEvent::class => [
+        UserStatusUpdated::class => [
             CacheUserStatusListener::class,
         ],
+
+        \App\Events\UserAddedToCredential::class => [],
+        \App\Events\UserRemovedFromCredential::class => [],
     ];
 
     public function boot(): void
