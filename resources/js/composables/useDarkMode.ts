@@ -1,10 +1,10 @@
-import { ref, watch } from 'vue';
+import { ref, watch, type Ref } from 'vue';
 
-const isDark = ref(false);
+const isDark: Ref<boolean> = ref(false);
 
 // Initialize immediately
 if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('theme');
+    const stored: string | null = localStorage.getItem('theme');
     if (stored === 'dark') {
         isDark.value = true;
     } else if (stored === 'light') {
@@ -22,7 +22,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Watch for changes
-watch(isDark, (value) => {
+watch(isDark, (value: boolean) => {
     if (value) {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
@@ -32,8 +32,8 @@ watch(isDark, (value) => {
     }
 });
 
-export function useDarkMode() {
-    const toggleDark = () => {
+export function useDarkMode(): { isDark: Ref<boolean>; toggleDark: () => void } {
+    const toggleDark = (): void => {
         isDark.value = !isDark.value;
     };
 

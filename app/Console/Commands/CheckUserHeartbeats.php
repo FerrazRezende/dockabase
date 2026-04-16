@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\UserStatusEnum;
-use App\Events\UserStatusUpdatedEvent;
+use App\Events\UserStatusUpdated;
 use App\Models\User;
 use App\Models\UserActivity;
 use App\Services\UserStatusService;
@@ -72,7 +72,7 @@ final class CheckUserHeartbeats extends Command
                 $user = User::find($userId);
 
                 if ($user !== null) {
-                    broadcast(new UserStatusUpdatedEvent(
+                    broadcast(new UserStatusUpdated(
                         $user,
                         UserStatusEnum::OFFLINE,
                         '',

@@ -114,12 +114,17 @@ class UserControllerTest extends TestCase
         $this->assertEquals('jane.smith@example.com', $users[0]['email']);
     }
 
-    public function test_non_admin_cannot_list_users(): void
+    public function test_non_admin_can_list_users_without_godlike_admin(): void
     {
+        // Regular users can list users but godlike admin is filtered out
         $response = $this->actingAs($this->regularUser)
             ->getJson(route('system.users.index'));
 
-        $response->assertForbidden();
+        $response->assertOk();
+
+        // Admin should not appear in the list
+        $adminIds = collect($response->json('data'))->pluck('is_admin');
+        $this->assertFalse(in_array(true, $adminIds->toArray()));
     }
 
     public function test_unauthenticated_cannot_list_users(): void

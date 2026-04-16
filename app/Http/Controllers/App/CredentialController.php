@@ -142,6 +142,8 @@ class CredentialController extends Controller
 
         $this->credentialService->detachUser($credential, (string) $user->id);
 
+        app(NotificationService::class)->notifyUserRemovedFromCredential($credential, $user);
+
         return redirect()->back()->with('toast', ['message' => __('User removed successfully')]);
     }
 }

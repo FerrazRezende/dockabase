@@ -26,16 +26,10 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        abort_unless(
-            $request->user()->is_admin
-            || $request->user()->checkPermission('credentials.create')
-            || $request->user()->checkPermission('credentials.update'),
-            403
-        );
-
         $search = $request->input('search');
 
         $users = User::with('roles', 'permissions')
+            ->when(!$request->user()->is_admin, fn ($q) => $q->where('is_admin', false))
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
