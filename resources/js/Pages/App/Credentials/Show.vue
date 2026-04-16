@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { __ } from '@/composables/useLang';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -46,6 +46,8 @@ import type { User } from '@/types/user';
 import { ArrowLeft, Key, Shield, Users, Database, Calendar, Mail, Plus, Trash2, UserPlus, Pencil, Loader2 } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
 import { usePermissions } from '@/composables/usePermissions';
+import { useEchoChannels } from '@/composables/useEchoChannels';
+import type { UserStatusChangedEvent, UserStatus } from '@/types/user-status';
 
 const props = defineProps<{
     credential: Credential;
@@ -59,6 +61,26 @@ const availableUsers = ref<User[]>([]);
 const loadingUsers = ref(false);
 const attaching = ref(false);
 const detaching = ref<number | null>(null);
+
+// Real-time user status
+const userStatuses = reactive<Record<number, UserStatus>>({});
+const { connect, listenToPresenceChannel, disconnect } = useEchoChannels();
+
+onMounted(async () => {
+    try {
+        await connect();
+        listenToPresenceChannel((event: UserStatusChangedEvent) => {
+            const userId = Number(event.user_id);
+            userStatuses[userId] = event.status as UserStatus;
+        });
+    } catch {
+        // Non-blocking: continue without real-time updates
+    }
+});
+
+onUnmounted(() => {
+    try { disconnect(); } catch { /* ignore */ }
+});
 
 const getPermissionBadgeVariant = (permission: CredentialPermission): 'default' | 'secondary' | 'outline' => {
     if (permission === 'read-write') return 'default';
@@ -341,6 +363,7 @@ const saveCredential = () => {
                                             :user-id="user.id"
                                             :user-name="user.name"
                                             :avatar-url="user.avatar"
+                                            :status="userStatuses[user.id] || 'offline'"
                                             size="sm"
                                         />
                                         <span class="font-medium">{{ user.name }}</span>

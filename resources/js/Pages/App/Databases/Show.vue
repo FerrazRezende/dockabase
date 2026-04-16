@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { __ } from '@/composables/useLang';
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, reactive } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -47,6 +47,8 @@ import type { Database, DatabaseStatus, CreationStep } from '@/types/database';
 import type { Credential } from '@/types/credential';
 import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, Link2, AlertCircle, CheckCircle2, Loader2, Plus, Trash2, Key, Mail, Pencil, X } from 'lucide-vue-next';
 import { useEcho } from '@/composables/useEcho';
+import { useEchoChannels } from '@/composables/useEchoChannels';
+import type { UserStatusChangedEvent, UserStatus } from '@/types/user-status';
 import { useToast } from 'vue-toastification';
 import { usePage } from '@inertiajs/vue3';
 import { usePermissions } from '@/composables/usePermissions';
@@ -81,8 +83,12 @@ const detaching = ref<string | null>(null);
 const credentialToDelete = ref<{ id: string; name: string } | null>(null);
 const detachDialogOpen = ref(false);
 
+// Real-time user status
+const userStatuses = reactive<Record<number, UserStatus>>({});
+const { connect: connectPresence, listenToPresenceChannel, disconnect: disconnectPresence } = useEchoChannels();
+
 // Flash message on mount
-onMounted(() => {
+onMounted(async () => {
     const message = page.props.flash?.message as string | undefined;
     const messageType = page.props.flash?.messageType as string | undefined;
 
@@ -117,10 +123,21 @@ onMounted(() => {
             toast.error(__('Error creating database'));
         },
     });
+
+    // Subscribe to presence channel for real-time user status
+    try {
+        await connectPresence();
+        listenToPresenceChannel((event: UserStatusChangedEvent) => {
+            const userId = Number(event.user_id);
+            userStatuses[userId] = event.status as UserStatus;
+        });
+    } catch {
+        // Non-blocking: continue without real-time status updates
+    }
 });
 
 onUnmounted(() => {
-    // Channel cleanup is handled by useEcho
+    try { disconnectPresence(); } catch { /* ignore */ }
 });
 
 const getStatusBadge = () => {
@@ -436,6 +453,7 @@ const saveDatabase = () => {
                                                         :user-id="user.id"
                                                         :user-name="user.name"
                                                         :avatar-url="user.avatar"
+                                                        :status="userStatuses[user.id] || 'offline'"
                                                         size="sm"
                                                     />
                                                     <span class="font-medium">{{ user.name }}</span>

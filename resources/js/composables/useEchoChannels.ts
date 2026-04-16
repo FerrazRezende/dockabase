@@ -186,7 +186,7 @@ export function useEchoChannels() {
    * Listen to the global presence channel for status updates from any user.
    */
   function listenToPresenceChannel(callback: StatusUpdateCallback): (() => void) | null {
-    const channelName = 'private-presence';
+    const channelName = 'presence';
 
     if (activeChannels.has(channelName)) {
       return null;
