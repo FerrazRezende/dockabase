@@ -64,7 +64,16 @@ class HandleInertiaRequests extends Middleware
             $activeFeatures = $featureService->getActiveFeaturesForUser($user);
 
             // Get all permissions for the user (excluding denied)
-            $userPermissions = $user->getActualPermissions()->pluck('name')->toArray();
+            // Admins get all permissions since they bypass backend checks
+            if ($user->is_admin) {
+                $userPermissions = $user->getActualPermissions()->pluck('name')->toArray();
+                // If admin has no Spatie role, still grant all permissions for frontend checks
+                if (empty($userPermissions)) {
+                    $userPermissions = \Spatie\Permission\Models\Permission::pluck('name')->toArray();
+                }
+            } else {
+                $userPermissions = $user->getActualPermissions()->pluck('name')->toArray();
+            }
 
             // Get user's current status
             $statusService = app(UserStatusService::class);
