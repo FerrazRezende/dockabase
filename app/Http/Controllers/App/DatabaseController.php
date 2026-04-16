@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\System\CreateDatabaseRequest;
-use App\Http\Requests\System\UpdateDatabaseRequest;
-use App\Http\Resources\DatabaseCollection;
-use App\Http\Resources\DatabaseResource;
+use App\Http\Requests\Database\CreateDatabaseRequest;
+use App\Http\Requests\Database\UpdateDatabaseRequest;
+use App\Http\Resources\App\DatabaseCollection;
+use App\Http\Resources\App\DatabaseResource;
 use App\Jobs\CreateDatabaseJob;
 use App\Models\Credential;
 use App\Models\Database;
 use App\Services\DatabaseService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,8 @@ class DatabaseController extends Controller
     {
         $this->authorize('viewAny', Database::class);
 
-        $databases = Database::withCount('credentials')
+        $databases = Database::visibleTo($request->user())
+            ->withCount('credentials')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -55,7 +57,10 @@ class DatabaseController extends Controller
 
         $database = $this->databaseService->create(array_merge(
             $request->validated(),
-            ['status' => 'pending']
+            [
+                'status' => 'pending',
+                'created_by' => $request->user()->id,
+            ],
         ));
 
         if ($request->has('credential_ids')) {
@@ -69,6 +74,9 @@ class DatabaseController extends Controller
 
         // Dispatch async job
         CreateDatabaseJob::dispatch($database);
+
+        // Notify admins
+        app(NotificationService::class)->notifyDatabaseCreationStarted($database, $request->user());
 
         if ($request->wantsJson()) {
             return new DatabaseResource($database);
@@ -100,13 +108,17 @@ class DatabaseController extends Controller
         ]);
     }
 
-    public function update(UpdateDatabaseRequest $request, Database $database): DatabaseResource
+    public function update(UpdateDatabaseRequest $request, Database $database): DatabaseResource|RedirectResponse
     {
         $this->authorize('update', $database);
 
         $database = $this->databaseService->update($database, $request->validated());
 
-        return new DatabaseResource($database);
+        if ($request->wantsJson()) {
+            return new DatabaseResource($database);
+        }
+
+        return redirect()->back()->with('toast', ['message' => __('Database updated successfully')]);
     }
 
     public function destroy(Request $request, Database $database): JsonResponse|RedirectResponse
@@ -122,7 +134,7 @@ class DatabaseController extends Controller
         return to_route('app.databases.index');
     }
 
-    public function attachCredential(Request $request, Database $database): DatabaseResource
+    public function attachCredential(Request $request, Database $database): RedirectResponse
     {
         $this->authorize('update', $database);
 
@@ -133,15 +145,19 @@ class DatabaseController extends Controller
         $credential = Credential::findOrFail($request->input('credential_id'));
         $this->databaseService->attachCredential($database, $credential);
 
-        return new DatabaseResource($database->fresh());
+        app(NotificationService::class)->notifyCredentialAttachedToDatabase(
+            $credential, $database, $request->user()
+        );
+
+        return redirect()->back()->with('toast', ['message' => __('Credential added successfully')]);
     }
 
-    public function detachCredential(Database $database, Credential $credential): JsonResponse
+    public function detachCredential(Database $database, Credential $credential): RedirectResponse
     {
         $this->authorize('update', $database);
 
         $this->databaseService->detachCredential($database, $credential);
 
-        return response()->json(null, 204);
+        return redirect()->back()->with('toast', ['message' => __('Credential removed successfully')]);
     }
 }

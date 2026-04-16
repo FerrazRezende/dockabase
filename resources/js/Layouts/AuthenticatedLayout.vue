@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import NotificationCenter from '@/components/NotificationCenter.vue';
 import StatusPickerDropdown from '@/components/user/StatusPickerDropdown.vue';
@@ -15,9 +15,10 @@ import {
     Key,
     Users,
     Shield,
+    AlertTriangle,
 } from 'lucide-vue-next';
-import ImpersonateBanner from '@/components/ImpersonateBanner.vue';
 import { useDarkMode } from '@/composables/useDarkMode';
+import { useLang, __ } from '@/composables/useLang';
 import { usePermissions } from '@/composables/usePermissions';
 import { useUserStatus } from '@/composables/useUserStatus';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
@@ -162,7 +163,7 @@ const initials = (name: string): string => {
                     ]"
                 >
                     <Home class="h-5 w-5 shrink-0" />
-                    <span v-if="!collapsed">Home</span>
+                    <span v-if="!collapsed">{{ __('Home') }}</span>
                 </Link>
 
                 <!-- Databases - requires database-creator feature AND databases.view permission -->
@@ -180,7 +181,7 @@ const initials = (name: string): string => {
                     ]"
                 >
                     <Database class="h-5 w-5 shrink-0" />
-                    <span v-if="!collapsed">Databases</span>
+                    <span v-if="!collapsed">{{ __('Databases') }}</span>
                 </Link>
 
                 <!-- Credentials - requires credentials-manager feature AND credentials.view permission -->
@@ -198,7 +199,7 @@ const initials = (name: string): string => {
                     ]"
                 >
                     <Key class="h-5 w-5 shrink-0" />
-                    <span v-if="!collapsed">Credentials</span>
+                    <span v-if="!collapsed">{{ __('Credentials') }}</span>
                 </Link>
 
                 <!-- Admin Section -->
@@ -216,13 +217,13 @@ const initials = (name: string): string => {
                         ]"
                     >
                         <Home class="h-5 w-5 shrink-0" />
-                        <span v-if="!collapsed">Home</span>
+                        <span v-if="!collapsed">{{ __('Home') }}</span>
                     </Link>
 
                     <!-- System Section -->
                     <div class="pt-4 mt-4 border-t border-border">
                     <p v-if="!collapsed" class="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Sistema
+                        {{ __('System') }}
                     </p>
                     <Link
                         :href="route('system.features.index')"
@@ -237,7 +238,7 @@ const initials = (name: string): string => {
                         ]"
                     >
                         <Flag class="h-5 w-5 shrink-0" />
-                        <span v-if="!collapsed">Features</span>
+                        <span v-if="!collapsed">{{ __('Features') }}</span>
                     </Link>
                     <Link
                         :href="route('system.permissions.index')"
@@ -252,7 +253,7 @@ const initials = (name: string): string => {
                         ]"
                     >
                         <Shield class="h-5 w-5 shrink-0" />
-                        <span v-if="!collapsed">Permissões</span>
+                        <span v-if="!collapsed">{{ __('Permissions') }}</span>
                     </Link>
                     <Link
                         :href="route('system.users.index')"
@@ -267,7 +268,7 @@ const initials = (name: string): string => {
                         ]"
                     >
                         <Users class="h-5 w-5 shrink-0" />
-                        <span v-if="!collapsed">Usuários</span>
+                        <span v-if="!collapsed">{{ __('Users') }}</span>
                     </Link>
                 </div>
                 </template>
@@ -286,13 +287,42 @@ const initials = (name: string): string => {
 
         <!-- Main Content -->
         <main :class="['flex-1 transition-all duration-300 flex flex-col', collapsed ? 'ml-16' : 'ml-64']">
-            <!-- Impersonate Banner -->
-            <ImpersonateBanner
-                v-if="impersonating?.is_impersonating"
-                :user-name="auth.user.name"
-            />
             <!-- Header -->
-            <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-6">
+            <header
+                v-if="impersonating?.is_impersonating"
+                class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-amber-500/30 bg-amber-500/10 backdrop-blur-sm px-6"
+            >
+                <div class="flex items-center gap-3 min-w-0">
+                    <slot name="header" />
+                </div>
+                <div class="absolute inset-x-0 flex items-center justify-center pointer-events-none">
+                    <div class="flex items-center gap-2 pointer-events-auto">
+                        <AlertTriangle class="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span class="text-sm font-medium text-amber-900 dark:text-amber-100">
+                            {{ __('You are accessing as :name.', { name: auth.user.name }) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <NotificationCenter />
+                    <Button variant="ghost" size="icon" @click="toggleDark">
+                        <Sun v-if="isDark" class="h-5 w-5" />
+                        <Moon v-else class="h-5 w-5" />
+                    </Button>
+                    <Button
+                        size="sm"
+                        class="gap-2 bg-amber-600 text-white hover:bg-amber-700 border-amber-600 hover:border-amber-700"
+                        @click="router.post(route('system.impersonate.stop'))"
+                    >
+                        <LogOut class="h-4 w-4" />
+                        {{ __('Exit impersonation') }}
+                    </Button>
+                </div>
+            </header>
+            <header
+                v-else
+                class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-6"
+            >
                 <div>
                     <slot name="header" />
                 </div>

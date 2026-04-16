@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\User;
 use App\Traits\HasKsuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -27,6 +29,7 @@ class Database extends Model
         'current_step',
         'progress',
         'error_message',
+        'created_by',
     ];
 
     protected function casts(): array
@@ -63,6 +66,19 @@ class Database extends Model
     public function scopeOfStatus($query, string $status)
     {
         return $query->where('status', $status);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function scopeVisibleTo($query, User $user)
+    {
+        $query->where(function ($q) use ($user) {
+            $q->whereHas('credentials.users', fn ($q) => $q->where('users.id', $user->id))
+                ->orWhere('created_by', $user->id);
+        });
     }
 
     public function isPending(): bool

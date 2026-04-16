@@ -19,6 +19,7 @@ Route::middleware(['web', 'auth'])->prefix('api')->group(function (): void {
     // User status endpoints
     Route::get('/user/status', [UserStatusController::class, 'index'])->name('api.user.status');
     Route::post('/user/status', [UserStatusController::class, 'store'])->name('api.user.status.set');
+    Route::post('/user/heartbeat', [UserStatusController::class, 'heartbeat'])->name('api.user.heartbeat');
 
     // Notification endpoints
     Route::get('/notifications', [NotificationController::class, 'index'])->name('api.notifications.index');

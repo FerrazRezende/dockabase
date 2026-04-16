@@ -9,8 +9,8 @@ use App\Http\Requests\System\StoreUserRequest;
 use App\Http\Requests\System\SyncDirectPermissionsRequest;
 use App\Http\Requests\System\UpdateUserRequest;
 use App\Http\Requests\System\UpdateUserRoleRequest;
-use App\Http\Resources\UserProfileResource;
-use App\Http\Resources\SystemUserResource;
+use App\Http\Resources\Profile\UserProfileResource;
+use App\Http\Resources\System\SystemUserResource;
 use App\Models\User;
 use App\Services\UserActivityService;
 use Illuminate\Http\Request;
@@ -26,7 +26,12 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        abort_unless($request->user()->is_admin, 403);
+        abort_unless(
+            $request->user()->is_admin
+            || $request->user()->checkPermission('credentials.create')
+            || $request->user()->checkPermission('credentials.update'),
+            403
+        );
 
         $search = $request->input('search');
 

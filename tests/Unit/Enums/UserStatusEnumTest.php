@@ -33,11 +33,11 @@ class UserStatusEnumTest extends TestCase
         $this->assertEquals('offline', $status->value);
     }
 
-    public function test_label_returns_portuguese_translation(): void
+    public function test_label_returns_translation_key(): void
     {
         $this->assertEquals('Online', UserStatusEnum::ONLINE->label());
-        $this->assertEquals('Ausente', UserStatusEnum::AWAY->label());
-        $this->assertEquals('Ocupado', UserStatusEnum::BUSY->label());
+        $this->assertEquals('Away', UserStatusEnum::AWAY->label());
+        $this->assertEquals('Busy', UserStatusEnum::BUSY->label());
         $this->assertEquals('Offline', UserStatusEnum::OFFLINE->label());
     }
 

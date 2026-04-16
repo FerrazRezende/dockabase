@@ -29,13 +29,13 @@ class DatabaseCreationStepEnumTest extends TestCase
 
     public function test_label_returns_human_readable_string(): void
     {
-        $this->assertEquals('Validando', DatabaseCreationStepEnum::VALIDATING->label());
-        $this->assertEquals('Criando', DatabaseCreationStepEnum::CREATING->label());
-        $this->assertEquals('Configurando', DatabaseCreationStepEnum::CONFIGURING->label());
-        $this->assertEquals('Migrações', DatabaseCreationStepEnum::MIGRATING->label());
-        $this->assertEquals('Permissões', DatabaseCreationStepEnum::PERMISSIONS->label());
-        $this->assertEquals('Testando', DatabaseCreationStepEnum::TESTING->label());
-        $this->assertEquals('Pronto', DatabaseCreationStepEnum::READY->label());
+        $this->assertEquals('Validating', DatabaseCreationStepEnum::VALIDATING->label());
+        $this->assertEquals('Creating', DatabaseCreationStepEnum::CREATING->label());
+        $this->assertEquals('Configuring', DatabaseCreationStepEnum::CONFIGURING->label());
+        $this->assertEquals('Migrating', DatabaseCreationStepEnum::MIGRATING->label());
+        $this->assertEquals('Permissions', DatabaseCreationStepEnum::PERMISSIONS->label());
+        $this->assertEquals('Testing', DatabaseCreationStepEnum::TESTING->label());
+        $this->assertEquals('Ready', DatabaseCreationStepEnum::READY->label());
     }
 
     public function test_progress_percentage(): void

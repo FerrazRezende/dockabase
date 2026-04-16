@@ -16,7 +16,7 @@ class CredentialFactory extends Factory
     {
         return [
             'name' => $this->faker->words(2, true).' Team',
-            'permission' => CredentialPermissionEnum::ReadWrite,
+            'permission' => CredentialPermissionEnum::READ_WRITE,
             'description' => $this->faker->sentence(),
         ];
     }

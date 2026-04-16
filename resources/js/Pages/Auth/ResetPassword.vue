@@ -1,22 +1,15 @@
-<script setup>
+<script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { __ } from '@/composables/useLang';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Head, useForm } from '@inertiajs/vue3';
 
-const props = defineProps({
-    email: {
-        type: String,
-        required: true,
-    },
-    token: {
-        type: String,
-        required: true,
-    },
-});
+const props = defineProps<{
+    email: string;
+    token: string;
+}>();
 
 const form = useForm({
     token: props.token,
@@ -36,66 +29,57 @@ const submit = () => {
     <GuestLayout>
         <Head :title="__('Reset Password')" />
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" :value="__('Email')" />
-
-                <TextInput
+        <form @submit.prevent="submit" class="space-y-4">
+            <div class="space-y-2">
+                <Label for="email">{{ __('Email') }}</Label>
+                <Input
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
                     v-model="form.email"
                     required
                     autofocus
                     autocomplete="username"
                 />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+                <p v-if="form.errors.email" class="text-sm text-destructive">
+                    {{ form.errors.email }}
+                </p>
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" :value="__('Password')" />
-
-                <TextInput
+            <div class="space-y-2">
+                <Label for="password">{{ __('Password') }}</Label>
+                <Input
                     id="password"
                     type="password"
-                    class="mt-1 block w-full"
                     v-model="form.password"
                     required
                     autocomplete="new-password"
                 />
-
-                <InputError class="mt-2" :message="form.errors.password" />
+                <p v-if="form.errors.password" class="text-sm text-destructive">
+                    {{ form.errors.password }}
+                </p>
             </div>
 
-            <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    :value="__('Confirm Password')"
-                />
-
-                <TextInput
+            <div class="space-y-2">
+                <Label for="password_confirmation">{{ __('Confirm Password') }}</Label>
+                <Input
                     id="password_confirmation"
                     type="password"
-                    class="mt-1 block w-full"
                     v-model="form.password_confirmation"
                     required
                     autocomplete="new-password"
                 />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
+                <p v-if="form.errors.password_confirmation" class="text-sm text-destructive">
+                    {{ form.errors.password_confirmation }}
+                </p>
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
+            <div class="flex items-center justify-end">
+                <Button
+                    type="submit"
                     :disabled="form.processing"
                 >
                     {{ __('Reset Password') }}
-                </PrimaryButton>
+                </Button>
             </div>
         </form>
     </GuestLayout>

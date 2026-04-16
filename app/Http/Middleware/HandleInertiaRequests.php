@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use App\Models\User;
@@ -77,7 +79,7 @@ class HandleInertiaRequests extends Middleware
         ];
 
         // If impersonating, fetch both original and target user details
-        if ($impersonating['is_impersonating']) {
+        if ($impersonating['is_impersonating'] && $user) {
             $originalUserId = Session::get('original_user_id');
             $originalUser = User::find($originalUserId);
 

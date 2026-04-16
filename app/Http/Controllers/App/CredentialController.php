@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\System\CreateCredentialRequest;
-use App\Http\Requests\System\UpdateCredentialRequest;
-use App\Http\Resources\CredentialCollection;
-use App\Http\Resources\CredentialResource;
+use App\Http\Requests\Credential\CreateCredentialRequest;
+use App\Http\Requests\Credential\UpdateCredentialRequest;
+use App\Http\Resources\App\CredentialCollection;
+use App\Http\Resources\App\CredentialResource;
 use App\Models\Credential;
 use App\Models\User;
 use App\Services\CredentialService;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,8 @@ class CredentialController extends Controller
     {
         $this->authorize('viewAny', Credential::class);
 
-        $credentials = Credential::withCount(['users', 'databases'])
+        $credentials = Credential::visibleTo($request->user())
+            ->withCount(['users', 'databases'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -52,16 +54,22 @@ class CredentialController extends Controller
     {
         $this->authorize('create', Credential::class);
 
-        $credential = $this->credentialService->create($request->validated());
+        $credential = $this->credentialService->create(array_merge(
+            $request->validated(),
+            ['created_by' => $request->user()->id],
+        ));
 
         if ($request->has('user_ids')) {
             foreach ($request->validated('user_ids') as $userId) {
                 $user = User::find($userId);
                 if ($user) {
                     $this->credentialService->attachUser($credential, (string) $user->id);
+                    app(NotificationService::class)->notifyUserAddedToCredential($credential, $user);
                 }
             }
         }
+
+        app(NotificationService::class)->notifyCredentialCreated($credential, $request->user());
 
         if ($request->wantsJson()) {
             return new CredentialResource($credential);
@@ -85,13 +93,17 @@ class CredentialController extends Controller
         ]);
     }
 
-    public function update(UpdateCredentialRequest $request, Credential $credential): CredentialResource
+    public function update(UpdateCredentialRequest $request, Credential $credential): CredentialResource|RedirectResponse
     {
         $this->authorize('update', $credential);
 
         $credential = $this->credentialService->update($credential, $request->validated());
 
-        return new CredentialResource($credential);
+        if ($request->wantsJson()) {
+            return new CredentialResource($credential);
+        }
+
+        return redirect()->back()->with('toast', ['message' => __('Credential updated successfully')]);
     }
 
     public function destroy(Request $request, Credential $credential): JsonResponse|RedirectResponse
@@ -107,26 +119,29 @@ class CredentialController extends Controller
         return to_route('app.credentials.index');
     }
 
-    public function attachUser(Request $request, Credential $credential): CredentialResource
+    public function attachUser(Request $request, Credential $credential): RedirectResponse
     {
         $this->authorize('update', $credential);
 
         $request->validate([
-            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'user_id' => ['required', 'string', 'exists:users,id'],
         ]);
 
         $user = User::findOrFail($request->input('user_id'));
         $this->credentialService->attachUser($credential, (string) $user->id);
 
-        return new CredentialResource($credential->fresh()->load(['users']));
+        app(NotificationService::class)->notifyUserAddedToCredential($credential, $user);
+        app(NotificationService::class)->notifyUserAttachedToCredential($credential, $user, $request->user());
+
+        return redirect()->back()->with('toast', ['message' => __('User added successfully')]);
     }
 
-    public function detachUser(Credential $credential, User $user): JsonResponse
+    public function detachUser(Credential $credential, User $user): RedirectResponse
     {
         $this->authorize('update', $credential);
 
         $this->credentialService->detachUser($credential, (string) $user->id);
 
-        return response()->json(null, 204);
+        return redirect()->back()->with('toast', ['message' => __('User removed successfully')]);
     }
 }

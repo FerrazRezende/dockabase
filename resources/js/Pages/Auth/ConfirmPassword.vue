@@ -1,10 +1,9 @@
-<script setup>
+<script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { __ } from '@/composables/useLang';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Head, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
@@ -22,33 +21,33 @@ const submit = () => {
     <GuestLayout>
         <Head :title="__('Confirm Password')" />
 
-        <div class="mb-4 text-sm text-gray-600">
+        <div class="mb-4 text-sm text-muted-foreground">
             {{ __('This is a secure area of the application. Please confirm your password before continuing.') }}
         </div>
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="password" :value="__('Password')" />
-                <TextInput
+        <form @submit.prevent="submit" class="space-y-4">
+            <div class="space-y-2">
+                <Label for="password">{{ __('Password') }}</Label>
+                <Input
                     id="password"
                     type="password"
-                    class="mt-1 block w-full"
                     v-model="form.password"
                     required
                     autocomplete="current-password"
                     autofocus
                 />
-                <InputError class="mt-2" :message="form.errors.password" />
+                <p v-if="form.errors.password" class="text-sm text-destructive">
+                    {{ form.errors.password }}
+                </p>
             </div>
 
-            <div class="mt-4 flex justify-end">
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
+            <div class="flex justify-end">
+                <Button
+                    type="submit"
                     :disabled="form.processing"
                 >
                     {{ __('Confirm') }}
-                </PrimaryButton>
+                </Button>
             </div>
         </form>
     </GuestLayout>

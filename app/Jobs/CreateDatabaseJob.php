@@ -10,6 +10,7 @@ use App\Events\DatabaseFailed;
 use App\Events\DatabaseStepUpdated;
 use App\Models\Database;
 use App\Services\DatabaseProvisioningService;
+use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -54,13 +55,17 @@ class CreateDatabaseJob implements ShouldQueue
                 'status' => 'ready',
                 'current_step' => DatabaseCreationStepEnum::READY->value,
                 'progress' => 100,
+                'is_active' => true,
             ]);
 
             DatabaseCreated::dispatch($this->database);
 
+            app(NotificationService::class)->notifyDatabaseCreated($this->database);
+
         } catch (Throwable $e) {
             $this->database->update([
                 'status' => 'failed',
+                'is_active' => false,
                 'error_message' => $e->getMessage(),
             ]);
 

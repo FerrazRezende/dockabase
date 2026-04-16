@@ -233,6 +233,76 @@ Todas as models que precisam de exclusão lógica devem usar SoftDeletes.
 
 ## Fases de Desenvolvimento
 
+## Convenções de Código - OBRIGATÓRIO
+
+### Nova Feature Checklist
+
+Ao criar uma nova feature, seguir ESTA ORDEM:
+
+1. **Feature Flag** (`config/features.php` + `app/Features/`)
+   - Adicionar definição em `config/features.php`
+   - Criar classe Pennant em `app/Features/NomeFeature.php`
+   - Registrar no `FeatureServiceProvider`
+
+2. **Backend** (TDD - testes primeiro):
+   - Migration + Model (com `declare(strict_types=1)`)
+   - Enum (se necessário) - UPPER_CASE + label() com __()
+   - FormRequest em `Requests/{Domain}/`
+   - Service (regras puras, sem busca/eventos/transações)
+   - Controller (orquestração) em `Controllers/{Domain}/`
+   - Resource em `Resources/{Domain}/`
+   - Policy em `Policies/`
+   - Tests (Unit para Services/Enums, Feature para Controllers)
+
+3. **Frontend**:
+   - Types em `types/`
+   - Composables em `composables/`
+   - Components em `components/{domain}/`
+   - Pages em `Pages/{Domain}/`
+   - Imports SEMPRE de `@/components/` (kebab-case)
+
+4. **Traduções** (sempre em TODOS os 3 arquivos):
+   - `lang/pt.json`
+   - `lang/en.json`
+   - `lang/es.json`
+   - Rodar: `php artisan test tests/Feature/Lang/TranslationKeysTest.php`
+
+### Padrão de Controller Responses
+
+- **Web (Inertia):** `return redirect()->back()->with('toast', ['message' => __('Success message')]);`
+- **API (JSON):** `return new EntityResource($entity);`
+- **NUNCA** usar `to_route()` — preferir `redirect()->back()` ou `redirect()->route()`
+
+### Features (Pennant)
+
+Cada feature DEVE ter:
+1. Definição em `config/features.php` (name, description, implemented_at)
+2. Classe em `app/Features/NomeFeature.php` com método `resolve($user): bool`
+3. Registro no `FeatureServiceProvider`
+4. Validação de exibição: Feature Flag (sidebar) + RBAC (botões)
+
+### Traduções - REGRA CRÍTICA
+
+- **Backend:** SEMPRE usar `__('chave')` em todas as mensagens
+- **Frontend:** SEMPRE usar `__('chave')` ou `{{ __('chave') }}` em templates
+- **Enums:** Labels com `__()` - ex: `self::ONLINE => __('Online')`
+- **3 arquivos:** TODAS as chaves devem existir em pt.json, en.json e es.json
+- **Teste de validação:** `php artisan test tests/Feature/Lang/TranslationKeysTest.php`
+
+### Echo/WebSocket
+
+- **1 instância only:** `composables/echo.ts` é o singleton (getEcho/destroyEcho)
+- `useEcho.ts` para Database channels
+- `useEchoChannels.ts` para User Status channels
+- NUNCA criar instância Echo diretamente
+
+### Components Frontend
+
+- **shadcn-vue ONLY:** NÃO criar wrappers como PrimaryButton, TextInput etc.
+- **Import path:** SEMPRE `@/components/` (kebab-case)
+- **TypeScript:** SEMPRE `<script setup lang="ts">`
+- **App components:** em `components/app/` (ApplicationLogo, NavLink, etc.)
+
 ### Fase 1: Core & Infraestrutura ✅
 - [x] Setup Laravel 13 + PHP 8.4
 - [x] Configurar Octane, PostgreSQL, Redis, RabbitMQ

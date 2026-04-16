@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\DTOs\FeatureConfigDTO;
 use App\Enums\RolloutStrategyEnum;
 use App\Models\FeatureHistory;
 use App\Models\FeatureSetting;
@@ -18,7 +17,7 @@ class FeatureFlagService
     /**
      * Get all available features with their current status.
      *
-     * @return Collection<int, FeatureConfigDTO>
+     * @return Collection<int, array>
      */
     public function getAllFeatures(): Collection
     {
@@ -37,9 +36,9 @@ class FeatureFlagService
 
                 // Se está ativo por padrão (sem setting), estratégia é "all"
                 $strategy = $setting?->strategy ??
-                    ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
+                    ($isActive ? RolloutStrategyEnum::ALL : RolloutStrategyEnum::INACTIVE);
 
-                return FeatureConfigDTO::fromDefinition(
+                return $this->buildFeatureArray(
                     name: $name,
                     definition: $definition,
                     strategy: $strategy,
@@ -54,7 +53,7 @@ class FeatureFlagService
     /**
      * Get a single feature's configuration.
      */
-    public function getFeature(string $featureName): ?FeatureConfigDTO
+    public function getFeature(string $featureName): ?array
     {
         $definition = config("features.definitions.{$featureName}");
 
@@ -70,9 +69,9 @@ class FeatureFlagService
             : $this->isFeatureActiveByDefault($featureName);
 
         $strategy = $setting?->strategy ??
-            ($isActive ? RolloutStrategyEnum::All : RolloutStrategyEnum::Inactive);
+            ($isActive ? RolloutStrategyEnum::ALL : RolloutStrategyEnum::INACTIVE);
 
-        return FeatureConfigDTO::fromDefinition(
+        return $this->buildFeatureArray(
             name: $featureName,
             definition: $definition,
             strategy: $strategy,
@@ -85,7 +84,7 @@ class FeatureFlagService
     /**
      * Activate a feature with the given strategy.
      */
-    public function activate(string $featureName, array $options, User $actor): FeatureConfigDTO
+    public function activate(string $featureName, array $options, User $actor): array
     {
         $definition = config("features.definitions.{$featureName}");
         abort_unless($definition, 404, "Feature {$featureName} not found");
@@ -96,7 +95,7 @@ class FeatureFlagService
 
         $setting = FeatureSetting::firstOrCreate(
             ['feature_name' => $featureName],
-            ['strategy' => RolloutStrategyEnum::Inactive, 'is_active' => false]
+            ['strategy' => RolloutStrategyEnum::INACTIVE, 'is_active' => false]
         );
 
         $previousState = $setting->toArray();
@@ -119,20 +118,20 @@ class FeatureFlagService
     /**
      * Deactivate a feature.
      */
-    public function deactivate(string $featureName, User $actor): FeatureConfigDTO
+    public function deactivate(string $featureName, User $actor): array
     {
         $definition = config("features.definitions.{$featureName}");
         abort_unless($definition, 404, "Feature {$featureName} not found");
 
         $setting = FeatureSetting::firstOrCreate(
             ['feature_name' => $featureName],
-            ['strategy' => RolloutStrategyEnum::Inactive, 'is_active' => false]
+            ['strategy' => RolloutStrategyEnum::INACTIVE, 'is_active' => false]
         );
 
         $previousState = $setting->toArray();
 
         $setting->update([
-            'strategy' => RolloutStrategyEnum::Inactive,
+            'strategy' => RolloutStrategyEnum::INACTIVE,
             'percentage' => 0,
             'is_active' => false,
         ]);
@@ -148,7 +147,7 @@ class FeatureFlagService
     /**
      * Update feature rollout settings.
      */
-    public function update(string $featureName, array $options, User $actor): FeatureConfigDTO
+    public function update(string $featureName, array $options, User $actor): array
     {
         $definition = config("features.definitions.{$featureName}");
         abort_unless($definition, 404, "Feature {$featureName} not found");
@@ -175,7 +174,7 @@ class FeatureFlagService
     /**
      * Add a user to the feature's allowlist.
      */
-    public function addUser(string $featureName, string $userId, User $actor): FeatureConfigDTO
+    public function addUser(string $featureName, string $userId, User $actor): array
     {
         $setting = FeatureSetting::where('feature_name', $featureName)->firstOrFail();
         $previousState = $setting->toArray();
@@ -196,7 +195,7 @@ class FeatureFlagService
     /**
      * Remove a user from the feature's allowlist.
      */
-    public function removeUser(string $featureName, string $userId, User $actor): FeatureConfigDTO
+    public function removeUser(string $featureName, string $userId, User $actor): array
     {
         $setting = FeatureSetting::where('feature_name', $featureName)->firstOrFail();
         $previousState = $setting->toArray();
@@ -237,10 +236,10 @@ class FeatureFlagService
 
         // Se há setting ativo, segue a estratégia definida
         return match ($setting->strategy) {
-            RolloutStrategyEnum::All => true,
-            RolloutStrategyEnum::Percentage => $this->checkPercentage($user->id, $setting->percentage),
-            RolloutStrategyEnum::Users => in_array((string) $user->id, $setting->user_ids ?? []),
-            RolloutStrategyEnum::Inactive => false,
+            RolloutStrategyEnum::ALL => true,
+            RolloutStrategyEnum::PERCENTAGE => $this->checkPercentage($user->id, $setting->percentage),
+            RolloutStrategyEnum::USERS => in_array((string) $user->id, $setting->user_ids ?? []),
+            RolloutStrategyEnum::INACTIVE => false,
         };
     }
 
@@ -252,8 +251,8 @@ class FeatureFlagService
         $allFeatures = $this->getAllFeatures();
 
         return $allFeatures
-            ->filter(fn (FeatureConfigDTO $feature) => $this->isActiveForUser($feature->name, $user))
-            ->map(fn (FeatureConfigDTO $feature) => $feature->name)
+            ->filter(fn (array $feature) => $this->isActiveForUser($feature['name'], $user))
+            ->map(fn (array $feature) => $feature['name'])
             ->values()
             ->toArray();
     }
@@ -289,23 +288,53 @@ class FeatureFlagService
      */
     public function isFeatureActiveByDefault(string $featureName): bool
     {
+        $feature = config("features.definitions.{$featureName}");
+
+        // Not implemented features are always inactive
+        if (! ($feature['implemented_at'] ?? null)) {
+            return false;
+        }
+
         $env = config('app.env');
 
-        // Dev/Local/Testing: todas as features implementadas ativas
+        // Dev/Local/Testing: implemented features are active
         if (in_array($env, ['local', 'development', 'dev', 'testing'])) {
             return true;
         }
 
-        // Production: features até FIRST_DEPLOY_DATE ativas
-        $feature = config("features.definitions.{$featureName}");
+        // Production: features up to FIRST_DEPLOY_DATE are active
         $deployDate = config('features.first_deploy_date');
 
-        if (! ($feature['implemented_at'] ?? null) || ! $deployDate) {
+        if (! $deployDate) {
             return false;
         }
 
         return Carbon::parse($feature['implemented_at'])
             ->lte(Carbon::parse($deployDate));
+    }
+
+    /**
+     * Build a feature array from definition and settings.
+     */
+    private function buildFeatureArray(
+        string $name,
+        array $definition,
+        RolloutStrategyEnum $strategy,
+        bool $isActive,
+        int $percentage = 0,
+        ?array $userIds = null
+    ): array {
+        return [
+            'name' => $name,
+            'display_name' => $definition['name'],
+            'description' => $definition['description'],
+            'is_active' => $isActive,
+            'implemented' => ($definition['implemented_at'] ?? null) !== null,
+            'strategy' => $strategy->value,
+            'strategy_label' => $strategy->label(),
+            'percentage' => $percentage,
+            'user_ids' => $userIds,
+        ];
     }
 
     /**

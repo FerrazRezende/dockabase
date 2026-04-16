@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import LocaleForm from './Partials/LocaleForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';

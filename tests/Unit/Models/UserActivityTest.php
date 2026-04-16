@@ -41,7 +41,7 @@ class UserActivityTest extends TestCase
             'to_status' => 'away',
         ]);
 
-        $this->assertEquals(UserActivityTypeEnum::StatusChanged, $activity->activity_type);
+        $this->assertEquals(UserActivityTypeEnum::STATUS_CHANGED, $activity->activity_type);
         $this->assertEquals('online', $activity->from_status);
         $this->assertEquals('away', $activity->to_status);
     }
@@ -53,7 +53,7 @@ class UserActivityTest extends TestCase
             'metadata' => ['database_name' => 'production'],
         ]);
 
-        $this->assertEquals(UserActivityTypeEnum::DatabaseCreated, $activity->activity_type);
+        $this->assertEquals(UserActivityTypeEnum::DATABASE_CREATED, $activity->activity_type);
         $this->assertEquals(['database_name' => 'production'], $activity->metadata);
     }
 
@@ -64,7 +64,7 @@ class UserActivityTest extends TestCase
             'metadata' => ['credential_name' => 'Dev Team'],
         ]);
 
-        $this->assertEquals(UserActivityTypeEnum::CredentialCreated, $activity->activity_type);
+        $this->assertEquals(UserActivityTypeEnum::CREDENTIAL_CREATED, $activity->activity_type);
         $this->assertEquals(['credential_name' => 'Dev Team'], $activity->metadata);
     }
 }

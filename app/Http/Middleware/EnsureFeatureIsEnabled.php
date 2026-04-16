@@ -24,11 +24,11 @@ class EnsureFeatureIsEnabled
             if ($request->wantsJson()) {
                 return new JsonResponse([
                     'error' => 'feature_disabled',
-                    'message' => 'This feature is not available for your account',
+                    'message' => __('This feature is not available for your account'),
                 ], Response::HTTP_FORBIDDEN);
             }
 
-            abort(Response::HTTP_FORBIDDEN, 'This feature is not available for your account');
+            abort(Response::HTTP_FORBIDDEN, __('This feature is not available for your account'));
         }
 
         return $next($request);

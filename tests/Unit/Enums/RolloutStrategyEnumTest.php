@@ -3,7 +3,7 @@
 namespace Tests\Unit\Enums;
 
 use App\Enums\RolloutStrategyEnum;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class RolloutStrategyEnumTest extends TestCase
 {
@@ -12,25 +12,25 @@ class RolloutStrategyEnumTest extends TestCase
         $cases = RolloutStrategyEnum::cases();
 
         $this->assertCount(4, $cases);
-        $this->assertContains(RolloutStrategyEnum::Inactive, $cases);
-        $this->assertContains(RolloutStrategyEnum::Percentage, $cases);
-        $this->assertContains(RolloutStrategyEnum::Users, $cases);
-        $this->assertContains(RolloutStrategyEnum::All, $cases);
+        $this->assertContains(RolloutStrategyEnum::INACTIVE, $cases);
+        $this->assertContains(RolloutStrategyEnum::PERCENTAGE, $cases);
+        $this->assertContains(RolloutStrategyEnum::USERS, $cases);
+        $this->assertContains(RolloutStrategyEnum::ALL, $cases);
     }
 
     public function test_labels_are_correct(): void
     {
-        $this->assertEquals('Inativo', RolloutStrategyEnum::Inactive->label());
-        $this->assertEquals('Percentual', RolloutStrategyEnum::Percentage->label());
-        $this->assertEquals('Usuários Específicos', RolloutStrategyEnum::Users->label());
-        $this->assertEquals('Todos', RolloutStrategyEnum::All->label());
+        $this->assertEquals('Inactive', RolloutStrategyEnum::INACTIVE->label());
+        $this->assertEquals('Percentage', RolloutStrategyEnum::PERCENTAGE->label());
+        $this->assertEquals('Specific Users', RolloutStrategyEnum::USERS->label());
+        $this->assertEquals('All', RolloutStrategyEnum::ALL->label());
     }
 
     public function test_is_active_returns_correct_boolean(): void
     {
-        $this->assertFalse(RolloutStrategyEnum::Inactive->isActive());
-        $this->assertTrue(RolloutStrategyEnum::Percentage->isActive());
-        $this->assertTrue(RolloutStrategyEnum::Users->isActive());
-        $this->assertTrue(RolloutStrategyEnum::All->isActive());
+        $this->assertFalse(RolloutStrategyEnum::INACTIVE->isActive());
+        $this->assertTrue(RolloutStrategyEnum::PERCENTAGE->isActive());
+        $this->assertTrue(RolloutStrategyEnum::USERS->isActive());
+        $this->assertTrue(RolloutStrategyEnum::ALL->isActive());
     }
 }

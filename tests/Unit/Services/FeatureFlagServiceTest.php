@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
-use App\DTOs\FeatureConfigDTO;
 use App\Enums\RolloutStrategyEnum;
 use App\Models\User;
 use App\Services\FeatureFlagService;
@@ -27,19 +26,19 @@ class FeatureFlagServiceTest extends TestCase
     {
         $features = $this->service->getAllFeatures();
 
-        $this->assertCount(2, $features); // Apenas database-creator e credentials-manager
-        $this->assertContainsOnlyInstancesOf(FeatureConfigDTO::class, $features);
+        $this->assertCount(12, $features); // All defined features from config/features.php
+        $this->assertIsArray($features->first());
     }
 
     public function test_get_all_features_defaults_to_active_in_local_environment(): void
     {
         // Em ambiente de teste (que usa 'testing'), features são ativas por padrão
         $features = $this->service->getAllFeatures();
-        $databaseCreator = $features->first(fn ($f) => $f->name === 'database-creator');
+        $databaseCreator = $features->first(fn ($f) => $f['name'] === 'database-creator');
 
         // Sem setting no banco, usa default do ambiente (testing = true)
-        $this->assertTrue($databaseCreator->isActive);
-        $this->assertEquals(RolloutStrategyEnum::All, $databaseCreator->strategy);
+        $this->assertTrue($databaseCreator['is_active']);
+        $this->assertEquals(RolloutStrategyEnum::ALL->value, $databaseCreator['strategy']);
     }
 
     public function test_get_feature_returns_null_for_unknown(): void
@@ -49,13 +48,13 @@ class FeatureFlagServiceTest extends TestCase
         $this->assertNull($feature);
     }
 
-    public function test_get_feature_returns_dto_for_known(): void
+    public function test_get_feature_returns_array_for_known(): void
     {
         $feature = $this->service->getFeature('database-creator');
 
-        $this->assertInstanceOf(FeatureConfigDTO::class, $feature);
-        $this->assertEquals('database-creator', $feature->name);
-        $this->assertEquals('Database Creator', $feature->displayName);
+        $this->assertIsArray($feature);
+        $this->assertEquals('database-creator', $feature['name']);
+        $this->assertEquals('Database Creator', $feature['display_name']);
     }
 
     public function test_is_feature_active_by_default_returns_true_in_dev_environment(): void

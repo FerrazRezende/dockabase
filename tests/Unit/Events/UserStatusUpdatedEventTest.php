@@ -28,7 +28,7 @@ final class UserStatusUpdatedEventTest extends TestCase
         $channels = $event->broadcastOn();
 
         $this->assertCount(1, $channels);
-        $this->assertSame('private-users', $channels[0]->name);
+        $this->assertSame('private-presence', $channels[0]->name);
     }
 
     public function test_broadcast_as_returns_correct_event_name(): void

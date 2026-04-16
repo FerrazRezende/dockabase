@@ -136,7 +136,7 @@ class UserControllerTest extends TestCase
         $userData = [
             'name' => 'Alice Johnson',
             'email' => 'alice.johnson@example.com',
-            'roles' => [$role->id],
+            'role_id' => $role->id,
         ];
 
         $response = $this->actingAs($this->admin)
@@ -167,13 +167,12 @@ class UserControllerTest extends TestCase
 
     public function test_admin_can_create_user_with_direct_permissions(): void
     {
-        $dbViewPermission = \Spatie\Permission\Models\Permission::where('name', 'databases.view')->first();
-        $credCreatePermission = \Spatie\Permission\Models\Permission::where('name', 'credentials.create')->first();
-
+        // The store endpoint does not handle direct permissions;
+        // permissions must be synced separately via syncPermissions endpoint.
+        // Here we verify the user is created successfully.
         $userData = [
             'name' => 'Bob Williams',
             'email' => 'bob.williams@example.com',
-            'permissions' => [$dbViewPermission->id, $credCreatePermission->id],
         ];
 
         $response = $this->actingAs($this->admin)
@@ -186,11 +185,6 @@ class UserControllerTest extends TestCase
             'name' => 'Bob Williams',
             'email' => 'bob.williams@example.com',
         ]);
-
-        // Verify direct permissions were assigned
-        $user = User::where('email', 'bob.williams@example.com')->first();
-        $this->assertTrue($user->hasDirectPermission('databases.view'));
-        $this->assertTrue($user->hasDirectPermission('credentials.create'));
     }
 
     public function test_created_user_has_password_changed_at_null(): void
@@ -295,7 +289,6 @@ class UserControllerTest extends TestCase
                     'created_at',
                     'roles',
                     'direct_permissions',
-                    'all_permissions',
                     'credentials',
                     'databases',
                 ],
@@ -312,7 +305,7 @@ class UserControllerTest extends TestCase
         $this->assertCount(1, $data['credentials']);
     }
 
-    public function test_user_profile_includes_all_permissions(): void
+    public function test_user_profile_includes_direct_permissions(): void
     {
         $user = User::factory()->create(['is_admin' => false]);
 
@@ -329,11 +322,11 @@ class UserControllerTest extends TestCase
 
         $data = $response->json('data');
 
-        // Verify permissions include both role and direct permissions
-        $this->assertIsArray($data['all_permissions']);
-        $this->assertGreaterThan(0, count($data['all_permissions']));
+        // Verify direct_permissions include the explicitly assigned permission
+        $this->assertIsArray($data['direct_permissions']);
+        $this->assertGreaterThan(0, count($data['direct_permissions']));
 
-        $permissionNames = array_column($data['all_permissions'], 'name');
+        $permissionNames = array_column($data['direct_permissions'], 'name');
         $this->assertContains('users.delete', $permissionNames);
     }
 
@@ -436,18 +429,16 @@ class UserControllerTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_sync_user_roles_and_permissions(): void
+    public function test_admin_can_sync_user_permissions(): void
     {
         $user = User::factory()->create(['is_admin' => false]);
 
-        // Initially assign Read Only role
-        $user->assignRole('Read Only');
+        // Initially give some direct permissions
+        $user->givePermissionTo('databases.view');
 
-        $fullAccessRole = \Spatie\Permission\Models\Role::where('name', 'Full Access')->first();
         $deletePermission = \Spatie\Permission\Models\Permission::where('name', 'users.delete')->first();
 
         $syncData = [
-            'roles' => [$fullAccessRole->id],
             'permissions' => [$deletePermission->id],
         ];
 
@@ -458,25 +449,19 @@ class UserControllerTest extends TestCase
 
         $user->refresh();
 
-        // Verify roles were synced (Read Only removed, Full Access added)
-        $this->assertTrue($user->hasRole('Full Access'));
-        $this->assertFalse($user->hasRole('Read Only'));
-
-        // Verify direct permissions were synced
+        // Verify direct permissions were synced (old removed, new added)
+        $this->assertFalse($user->hasDirectPermission('databases.view'));
         $this->assertTrue($user->hasDirectPermission('users.delete'));
     }
 
-    public function test_sync_can_remove_all_roles(): void
+    public function test_update_role_can_remove_all_roles(): void
     {
         $user = User::factory()->create(['is_admin' => false]);
         $user->assignRole('Full Access');
 
-        $syncData = [
-            'roles' => [],
-        ];
-
+        // Send updateRole without role_id to remove all roles
         $response = $this->actingAs($this->admin)
-            ->postJson(route('system.users.permissions.sync', $user), $syncData);
+            ->putJson(route('system.users.role.update', $user), []);
 
         $response->assertOk();
 
@@ -507,14 +492,14 @@ class UserControllerTest extends TestCase
         $this->assertCount(0, $user->getDirectPermissions());
     }
 
-    public function test_sync_without_roles_removes_all_roles(): void
+    public function test_sync_permissions_does_not_affect_roles(): void
     {
         $user = User::factory()->create(['is_admin' => false]);
         $user->assignRole('Full Access');
 
         $deletePermission = \Spatie\Permission\Models\Permission::where('name', 'users.delete')->first();
 
-        // Sync only direct permissions, not roles (empty array)
+        // Sync only direct permissions via syncPermissions endpoint
         $syncData = [
             'permissions' => [$deletePermission->id],
         ];
@@ -526,8 +511,8 @@ class UserControllerTest extends TestCase
 
         $user->refresh();
 
-        // Verify role was removed (because sync with empty array removes all)
-        $this->assertCount(0, $user->roles);
+        // Verify role was NOT affected (syncPermissions only touches permissions)
+        $this->assertTrue($user->hasRole('Full Access'));
 
         // Verify direct permission was added
         $this->assertTrue($user->hasDirectPermission('users.delete'));

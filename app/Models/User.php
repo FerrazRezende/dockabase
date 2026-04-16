@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Models\UserActivity;
@@ -9,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Permission as SpatiePermission;
 use Spatie\Permission\Traits\HasRoles;
 use App\Traits\HasKsuid;
 
@@ -115,10 +119,25 @@ class User extends Authenticatable
      */
     public function checkPermission(string $permission): bool
     {
+        // Admins bypass all permission checks (unless explicitly denied)
+        if ($this->is_admin) {
+            // But denied permissions still override
+            $deniedPermissionIds = $this->denied_permissions ?? [];
+            if (!empty($deniedPermissionIds)) {
+                $deniedNames = SpatiePermission::whereIn('id', $deniedPermissionIds)
+                    ->pluck('name')
+                    ->toArray();
+                if (in_array($permission, $deniedNames, true)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         // Check denied permissions first (they override everything)
         $deniedPermissionIds = $this->denied_permissions ?? [];
         if (!empty($deniedPermissionIds)) {
-            $deniedNames = \Spatie\Permission\Models\Permission::whereIn('id', $deniedPermissionIds)
+            $deniedNames = SpatiePermission::whereIn('id', $deniedPermissionIds)
                 ->pluck('name')
                 ->toArray();
             if (in_array($permission, $deniedNames, true)) {
@@ -132,14 +151,14 @@ class User extends Authenticatable
     /**
      * Get all permissions the user actually has (excluding denied).
      */
-    public function getActualPermissions(): \Illuminate\Support\Collection
+    public function getActualPermissions(): Collection
     {
         $deniedPermissionIds = $this->denied_permissions ?? [];
         if (empty($deniedPermissionIds)) {
             return $this->getAllPermissions();
         }
 
-        $deniedNames = \Spatie\Permission\Models\Permission::whereIn('id', $deniedPermissionIds)
+        $deniedNames = SpatiePermission::whereIn('id', $deniedPermissionIds)
             ->pluck('name')
             ->toArray();
 

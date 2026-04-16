@@ -103,19 +103,31 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
                             {{ feature.description }}
                         </TableCell>
                         <TableCell>
+                            <template v-if="!feature.implemented">
+                                <Badge variant="outline" class="bg-yellow-500/10 text-yellow-500">
+                                    {{ __('Not Implemented') }}
+                                </Badge>
+                            </template>
                             <Switch
+                                v-else
                                 :model-value="feature.is_active"
                                 :disabled="toggling === feature.name"
                                 @update:model-value="toggleFeature(feature.name, feature.is_active)"
                             />
                         </TableCell>
                         <TableCell>
-                            <Badge :variant="getStrategyBadgeVariant(feature.strategy)">
+                            <Badge v-if="!feature.implemented" variant="outline" class="text-muted-foreground">
+                                {{ __('Planned') }}
+                            </Badge>
+                            <Badge v-else :variant="getStrategyBadgeVariant(feature.strategy)">
                                 {{ feature.strategy_label }}
                             </Badge>
                         </TableCell>
                         <TableCell>
-                            <span v-if="feature.strategy === 'percentage'" class="text-sm">
+                            <span v-if="!feature.implemented" class="text-sm text-muted-foreground">
+                                -
+                            </span>
+                            <span v-else-if="feature.strategy === 'percentage'" class="text-sm">
                                 {{ feature.percentage }}%
                             </span>
                             <span v-else-if="feature.strategy === 'all'" class="text-sm text-green-500">

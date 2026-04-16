@@ -9,5 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Schedule commands
-Schedule::command('presence:set-auto-away')->everyMinute()->runInBackground();
+Schedule::command('presence:check-heartbeats')->everyMinute()->runInBackground();
 Schedule::command('presence:cleanup-activities 30')->dailyAt('00:00')->runInBackground();

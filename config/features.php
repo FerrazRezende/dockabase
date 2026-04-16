@@ -16,13 +16,63 @@ return [
     'definitions' => [
         'database-creator' => [
             'name' => 'Database Creator',
-            'description' => 'Interface para criar e gerenciar databases PostgreSQL',
+            'description' => 'Interface for creating and managing PostgreSQL databases',
             'implemented_at' => '2026-03-15',
         ],
         'credentials-manager' => [
             'name' => 'Credentials Manager',
-            'description' => 'Gerenciamento de credenciais de acesso ao sistema',
+            'description' => 'Management of system access credentials',
             'implemented_at' => '2026-03-20',
+        ],
+        'schema-builder' => [
+            'name' => 'Schema Builder',
+            'description' => 'Visual interface for creating tables and columns',
+            'implemented_at' => null,
+        ],
+        'table-manager' => [
+            'name' => 'Table Manager',
+            'description' => 'Spreadsheet-like CRUD data interface',
+            'implemented_at' => null,
+        ],
+        'dynamic-api' => [
+            'name' => 'Dynamic REST API',
+            'description' => 'Auto-generated REST API from database schema',
+            'implemented_at' => null,
+        ],
+        'realtime' => [
+            'name' => 'Realtime',
+            'description' => 'WebSockets with PostgreSQL LISTEN/NOTIFY',
+            'implemented_at' => null,
+        ],
+        'storage' => [
+            'name' => 'Storage',
+            'description' => 'MinIO S3-compatible storage with access policies',
+            'implemented_at' => null,
+        ],
+        'otp-auth' => [
+            'name' => 'OTP Authentication',
+            'description' => 'Passwordless authentication via OTP codes',
+            'implemented_at' => null,
+        ],
+        'database-encryption' => [
+            'name' => 'Database Encryption',
+            'description' => 'Column-level encryption with pgcrypto',
+            'implemented_at' => null,
+        ],
+        'automated-backups' => [
+            'name' => 'Automated Backups',
+            'description' => 'Automatic daily backups with configurable retention',
+            'implemented_at' => null,
+        ],
+        'rls' => [
+            'name' => 'Row Level Security',
+            'description' => 'PostgreSQL Row Level Security policies',
+            'implemented_at' => null,
+        ],
+        'advanced-rbac' => [
+            'name' => 'Advanced RBAC',
+            'description' => 'Advanced role-based access control',
+            'implemented_at' => null,
         ],
     ],
 ];

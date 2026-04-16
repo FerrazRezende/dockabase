@@ -17,7 +17,7 @@ class UserActivityFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'activity_type' => UserActivityTypeEnum::StatusChanged,
+            'activity_type' => UserActivityTypeEnum::STATUS_CHANGED,
             'from_status' => null,
             'to_status' => null,
             'metadata' => null,
@@ -27,7 +27,7 @@ class UserActivityFactory extends Factory
     public function statusChanged(): self
     {
         return $this->state(fn (array $attributes) => [
-            'activity_type' => UserActivityTypeEnum::StatusChanged,
+            'activity_type' => UserActivityTypeEnum::STATUS_CHANGED,
             'from_status' => 'online',
             'to_status' => 'away',
         ]);
@@ -36,7 +36,7 @@ class UserActivityFactory extends Factory
     public function databaseCreated(): self
     {
         return $this->state(fn (array $attributes) => [
-            'activity_type' => UserActivityTypeEnum::DatabaseCreated,
+            'activity_type' => UserActivityTypeEnum::DATABASE_CREATED,
             'metadata' => ['database_name' => $this->faker->word()],
         ]);
     }
@@ -44,7 +44,7 @@ class UserActivityFactory extends Factory
     public function credentialCreated(): self
     {
         return $this->state(fn (array $attributes) => [
-            'activity_type' => UserActivityTypeEnum::CredentialCreated,
+            'activity_type' => UserActivityTypeEnum::CREDENTIAL_CREATED,
             'metadata' => ['credential_name' => $this->faker->words(2, true)],
         ]);
     }

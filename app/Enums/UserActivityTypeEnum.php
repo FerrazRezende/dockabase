@@ -6,8 +6,18 @@ namespace App\Enums;
 
 enum UserActivityTypeEnum: string
 {
-    case StatusChanged = 'status_changed';
-    case DatabaseCreated = 'database_created';
-    case CredentialCreated = 'credential_created';
-    case PageView = 'page_view';
+    case STATUS_CHANGED = 'status_changed';
+    case DATABASE_CREATED = 'database_created';
+    case CREDENTIAL_CREATED = 'credential_created';
+    case PAGE_VIEW = 'page_view';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::STATUS_CHANGED => __('Status Changed'),
+            self::DATABASE_CREATED => __('Database Created'),
+            self::CREDENTIAL_CREATED => __('Credential Created'),
+            self::PAGE_VIEW => __('Page View'),
+        };
+    }
 }

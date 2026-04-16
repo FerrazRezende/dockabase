@@ -8,8 +8,8 @@ use App\Http\Middleware\SetLocaleMiddleware;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Session\Store;
 use Illuminate\Support\Facades\App;
-use Mockery;
 use Tests\TestCase;
 
 class SetLocaleMiddlewareTest extends TestCase
@@ -20,6 +20,13 @@ class SetLocaleMiddlewareTest extends TestCase
     {
         parent::setUp();
         App::setLocale('pt');
+    }
+
+    private function createSessionStore(): Store
+    {
+        $handler = app('session')->driver()->getHandler();
+
+        return new Store('test', $handler);
     }
 
     public function test_it_sets_locale_from_authenticated_user(): void
@@ -40,6 +47,7 @@ class SetLocaleMiddlewareTest extends TestCase
     {
         $request = Request::create('/', 'GET');
         $request->cookies->set('locale', 'en');
+        $request->setLaravelSession($this->createSessionStore());
 
         $middleware = new SetLocaleMiddleware();
         $response = $middleware->handle($request, fn ($req) => response('OK'));
@@ -66,6 +74,7 @@ class SetLocaleMiddlewareTest extends TestCase
     {
         $request = Request::create('/', 'GET');
         $request->cookies->set('locale', 'fr');
+        $request->setLaravelSession($this->createSessionStore());
 
         $middleware = new SetLocaleMiddleware();
         $middleware->handle($request, fn ($req) => response('OK'));
@@ -77,6 +86,7 @@ class SetLocaleMiddlewareTest extends TestCase
     {
         $request = Request::create('/', 'GET');
         $request->cookies->set('locale', 'de');
+        $request->setLaravelSession($this->createSessionStore());
 
         $middleware = new SetLocaleMiddleware();
         $middleware->handle($request, fn ($req) => response('OK'));
