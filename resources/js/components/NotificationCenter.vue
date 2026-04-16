@@ -144,7 +144,7 @@ onUnmounted(() => {
                             <span class="font-medium text-sm flex-1 text-foreground">{{ notification.title }}</span>
                             <span class="text-xs text-muted-foreground">{{ formatTime(notification.created_at) }}</span>
                         </div>
-                        <p class="text-xs text-muted-foreground line-clamp-2">
+                        <p class="text-xs text-foreground/70 line-clamp-2">
                             {{ notification.message }}
                         </p>
                     </DropdownMenuItem>
