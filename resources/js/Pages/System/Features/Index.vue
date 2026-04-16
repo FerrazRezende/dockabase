@@ -130,7 +130,7 @@ const getStrategyBadgeVariant = (strategy: string): 'default' | 'secondary' | 'o
                             <span v-else-if="feature.strategy === 'percentage'" class="text-sm">
                                 {{ feature.percentage }}%
                             </span>
-                            <span v-else-if="feature.strategy === 'all'" class="text-sm text-green-500">
+                            <span v-else-if="feature.strategy === 'all'" class="text-sm text-success">
                                 100%
                             </span>
                             <span v-else class="text-sm text-muted-foreground">

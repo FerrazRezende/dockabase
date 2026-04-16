@@ -67,7 +67,7 @@ const getPermissionBadgeVariant = (permission: CredentialPermission): 'default' 
 };
 
 const getPermissionBadgeClass = (permission: CredentialPermission): string => {
-    if (permission === 'read-write') return 'bg-green-500/10 text-green-500';
+    if (permission === 'read-write') return 'badge-success';
     if (permission === 'write') return 'bg-blue-500/10 text-blue-500';
     return '';
 };

@@ -329,7 +329,7 @@ const getUserStatus = (userId: number): UserStatus => {
                         <TableCell>
                             <Badge
                                 :variant="user.active ? 'default' : 'outline'"
-                                :class="user.active ? 'bg-green-500' : 'text-muted-foreground'"
+                                :class="user.active ? 'badge-success' : 'text-muted-foreground'"
                             >
                                 {{ user.active ? __('Active') : __('Inactive') }}
                             </Badge>

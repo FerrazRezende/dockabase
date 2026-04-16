@@ -124,7 +124,7 @@ const confirmDelete = () => {
                         <TableCell>
                             <Badge
                                 :variant="database.is_active ? 'default' : 'outline'"
-                                :class="database.is_active ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : ''"
+                                :class="database.is_active ? 'badge-success' : ''"
                             >
                                 {{ database.is_active ? __('Active') : __('Inactive') }}
                             </Badge>

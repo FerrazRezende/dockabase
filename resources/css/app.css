@@ -180,6 +180,17 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Success color utilities (emerald-based for better contrast) */
+.badge-success {
+  @apply bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300;
+}
+.badge-success-dot {
+  @apply bg-emerald-500;
+}
+.text-success {
+  @apply text-emerald-700 dark:text-emerald-300;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

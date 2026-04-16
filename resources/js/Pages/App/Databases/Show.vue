@@ -130,7 +130,7 @@ const getStatusBadge = () => {
         case 'processing':
             return { variant: 'outline', class: 'bg-blue-500/10 text-blue-500', label: __('Processing') };
         case 'ready':
-            return { variant: 'default', class: 'bg-green-500/10 text-green-500', label: __('Ready') };
+            return { variant: 'default', class: 'badge-success', label: __('Ready') };
         case 'failed':
             return { variant: 'destructive', class: '', label: __('Failed') };
         default:
@@ -196,7 +196,7 @@ const confirmDetachCredential = () => {
 };
 
 const getPermissionBadgeClass = (permission: string): string => {
-    if (permission === 'read-write') return 'bg-green-500/10 text-green-500';
+    if (permission === 'read-write') return 'badge-success';
     if (permission === 'write') return 'bg-blue-500/10 text-blue-500';
     return 'bg-gray-500/10 text-gray-500';
 };
@@ -305,16 +305,16 @@ const saveDatabase = () => {
             </Alert>
 
             <!-- Success Alert -->
-            <Alert v-if="status === 'ready' && showReadyAlert" class="border-green-500/50 bg-green-500/10 relative">
-                <CheckCircle2 class="h-4 w-4 text-green-500" />
-                <AlertTitle class="text-green-500">{{ __('Database ready') }}</AlertTitle>
+            <Alert v-if="status === 'ready' && showReadyAlert" class="border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950 relative">
+                <CheckCircle2 class="h-4 w-4 text-success" />
+                <AlertTitle class="text-success">{{ __('Database ready') }}</AlertTitle>
                 <AlertDescription>
                     {{ __('The database is created and available for use.') }}
                 </AlertDescription>
                 <Button
                     variant="ghost"
                     size="icon"
-                    class="absolute top-2 right-2 h-6 w-6 text-green-600 hover:text-green-800"
+                    class="absolute top-2 right-2 h-6 w-6 text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200"
                     @click="showReadyAlert = false"
                 >
                     <X class="h-3 w-3" />

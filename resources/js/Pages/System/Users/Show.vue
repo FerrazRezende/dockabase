@@ -99,7 +99,7 @@ const userStatus = ref<UserStatus>(props.user.status || 'offline');
 
 const statusRingColor = computed(() => {
   const colors: Record<UserStatus, string> = {
-    online: 'ring-green-500',
+    online: 'ring-emerald-500',
     away: 'ring-yellow-500',
     busy: 'ring-red-500',
     offline: 'ring-gray-300',
@@ -662,7 +662,7 @@ const userInitials = computed(() => {
                                                 <Badge
                                                     v-else-if="directPermissionIds.includes(perm.id)"
                                                     variant="default"
-                                                    class="bg-green-600 text-white text-xs"
+                                                    class="badge-success text-xs"
                                                 >
                                                     {{ __('Extra') }}
                                                 </Badge>

@@ -174,7 +174,7 @@ const formatDate = (dateString: string) => {
 const getActionBadge = (action: string) => {
     switch (action) {
         case 'activated':
-            return { variant: 'default', label: __('Activated'), class: 'bg-green-500/10 text-green-500' };
+            return { variant: 'default', label: __('Activated'), class: 'badge-success' };
         case 'deactivated':
             return { variant: 'outline', label: __('Deactivated'), class: '' };
         case 'updated':
@@ -246,7 +246,7 @@ const accessDisplay = computed(() => {
                         <div class="flex items-center gap-4">
                             <Badge
                                 :variant="feature.is_active ? 'default' : 'outline'"
-                                :class="feature.is_active ? 'bg-green-500/10 text-green-500' : ''"
+                                :class="feature.is_active ? 'badge-success' : ''"
                                 class="text-base px-4 py-1"
                             >
                                 {{ feature.is_active ? __('Active') : __('Inactive') }}
@@ -422,7 +422,7 @@ const accessDisplay = computed(() => {
                 <CardContent>
                     <!-- All users message -->
                     <div v-if="accessDisplay.type === 'all'" class="text-center py-8">
-                        <div class="text-green-500 font-semibold text-lg mb-2">
+                        <div class="text-success font-semibold text-lg mb-2">
                             {{ __('All users are seeing this feature') }}
                         </div>
                         <p class="text-muted-foreground text-sm">

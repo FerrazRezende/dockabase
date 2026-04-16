@@ -68,7 +68,7 @@ const statusOptions: Array<{
   colorClass: string;
   bgClass: string;
 }> = [
-  { value: 'online', label: 'user_status.online', colorClass: 'text-green-500', bgClass: 'bg-green-500' },
+  { value: 'online', label: 'user_status.online', colorClass: 'text-success', bgClass: 'badge-success-dot' },
   { value: 'away', label: 'user_status.away', colorClass: 'text-yellow-500', bgClass: 'bg-yellow-500' },
   { value: 'busy', label: 'user_status.busy', colorClass: 'text-red-500', bgClass: 'bg-red-500' },
   { value: 'offline', label: 'user_status.offline', colorClass: 'text-gray-400', bgClass: 'bg-gray-400' },
