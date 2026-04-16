@@ -64,7 +64,7 @@ const attaching = ref(false);
 const detaching = ref<number | null>(null);
 
 // Real-time user status
-const userStatuses = reactive<Record<number, UserStatus>>({});
+const userStatuses = reactive<Record<string, UserStatus>>({});
 const { connect, listenToPresenceChannel, disconnect } = useEchoChannels();
 
 onMounted(async () => {
@@ -81,8 +81,7 @@ onMounted(async () => {
     try {
         await connect();
         listenToPresenceChannel((event: UserStatusChangedEvent) => {
-            const userId = Number(event.user_id);
-            userStatuses[userId] = event.status as UserStatus;
+            userStatuses[event.user_id] = event.status as UserStatus;
         });
     } catch {
         // Non-blocking: continue without real-time updates

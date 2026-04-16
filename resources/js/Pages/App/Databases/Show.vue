@@ -85,7 +85,7 @@ const credentialToDelete = ref<{ id: string; name: string } | null>(null);
 const detachDialogOpen = ref(false);
 
 // Real-time user status
-const userStatuses = reactive<Record<number, UserStatus>>({});
+const userStatuses = reactive<Record<string, UserStatus>>({});
 const { connect: connectPresence, listenToPresenceChannel, disconnect: disconnectPresence } = useEchoChannels();
 
 // Flash message on mount
@@ -138,8 +138,7 @@ onMounted(async () => {
     try {
         await connectPresence();
         listenToPresenceChannel((event: UserStatusChangedEvent) => {
-            const userId = Number(event.user_id);
-            userStatuses[userId] = event.status as UserStatus;
+            userStatuses[event.user_id] = event.status as UserStatus;
         });
     } catch {
         // Non-blocking: continue without real-time status updates

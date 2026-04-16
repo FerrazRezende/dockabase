@@ -49,7 +49,7 @@ final class UserStatusController extends Controller
     {
         $request->validate([
             'user_ids' => ['required', 'array', 'min:1'],
-            'user_ids.*' => ['integer'],
+            'user_ids.*' => ['string'],
         ]);
 
         $statuses = $this->statusService->getMultipleStatuses($request->input('user_ids'));
