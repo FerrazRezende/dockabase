@@ -24,6 +24,6 @@ Route::middleware(['web', 'auth'])->prefix('api')->group(function (): void {
     // Notification endpoints
     Route::get('/notifications', [NotificationController::class, 'index'])->name('api.notifications.index');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 });

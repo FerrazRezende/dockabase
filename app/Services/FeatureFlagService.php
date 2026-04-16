@@ -214,33 +214,12 @@ class FeatureFlagService
 
     /**
      * Check if a feature is active for a specific user.
+     *
+     * Delegates to Pennant which uses the feature class's before()/resolve() methods.
      */
     public function isActiveForUser(string $featureName, User $user): bool
     {
-        // God Admin always sees all features
-        if ($user->is_admin === true) {
-            return true;
-        }
-
-        $setting = FeatureSetting::where('feature_name', $featureName)->first();
-
-        // Se não há setting no banco, usa o default por ambiente
-        if (! $setting) {
-            return $this->isFeatureActiveByDefault($featureName);
-        }
-
-        // Se há setting mas está inativo, feature desativada
-        if (! $setting->is_active) {
-            return false;
-        }
-
-        // Se há setting ativo, segue a estratégia definida
-        return match ($setting->strategy) {
-            RolloutStrategyEnum::ALL => true,
-            RolloutStrategyEnum::PERCENTAGE => $this->checkPercentage($user->id, $setting->percentage),
-            RolloutStrategyEnum::USERS => in_array((string) $user->id, $setting->user_ids ?? []),
-            RolloutStrategyEnum::INACTIVE => false,
-        };
+        return Feature::for($user)->active($featureName);
     }
 
     /**
@@ -335,16 +314,6 @@ class FeatureFlagService
             'percentage' => $percentage,
             'user_ids' => $userIds,
         ];
-    }
-
-    /**
-     * Deterministic percentage check based on user ID hash.
-     */
-    private function checkPercentage(string|int $userId, int $percentage): bool
-    {
-        $hash = crc32((string) $userId);
-
-        return ($hash % 100) < $percentage;
     }
 
     /**
