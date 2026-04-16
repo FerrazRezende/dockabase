@@ -10,6 +10,7 @@ use App\Models\Database;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class DatabaseControllerTest extends TestCase
@@ -25,11 +26,16 @@ class DatabaseControllerTest extends TestCase
         parent::setUp();
         $this->admin = User::factory()->create(['is_admin' => true]);
         $this->user = User::factory()->create(['is_admin' => false]);
+
+        // Seed permissions so checkPermission() doesn't throw
+        foreach (['databases.view', 'databases.create', 'databases.update', 'databases.delete'] as $name) {
+            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
     }
 
     public function test_index_returns_databases_for_admin(): void
     {
-        Database::factory()->count(3)->create();
+        Database::factory()->count(3)->create(['created_by' => $this->admin->id]);
 
         $response = $this->actingAs($this->admin)
             ->getJson(route('app.databases.index'));
@@ -40,7 +46,13 @@ class DatabaseControllerTest extends TestCase
 
     public function test_index_allowed_for_non_admin_via_feature_flag(): void
     {
-        // DatabasePolicy.viewAny returns true for all users,
+        // Create a database visible to the non-admin user
+        Database::factory()->create(['created_by' => $this->user->id]);
+
+        // Grant permission so policy check passes
+        $this->user->givePermissionTo('databases.view');
+
+        // DatabasePolicy.viewAny returns true for users with permission,
         // and feature flags are active for all users in testing env.
         $response = $this->actingAs($this->user)
             ->getJson(route('app.databases.index'));
@@ -111,7 +123,7 @@ class DatabaseControllerTest extends TestCase
                 'credential_id' => $credential->id,
             ]);
 
-        $response->assertOk();
+        $response->assertRedirect();
 
         $this->assertTrue($database->fresh()->credentials->contains($credential));
     }
@@ -125,7 +137,7 @@ class DatabaseControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->deleteJson(route('app.databases.credentials.detach', [$database, $credential]));
 
-        $response->assertNoContent();
+        $response->assertRedirect();
 
         $this->assertFalse($database->fresh()->credentials->contains($credential));
     }

@@ -8,6 +8,7 @@ use App\Models\Database;
 use App\Models\User;
 use App\Policies\DatabasePolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class DatabasePolicyTest extends TestCase
@@ -20,6 +21,12 @@ class DatabasePolicyTest extends TestCase
     {
         parent::setUp();
         $this->policy = new DatabasePolicy;
+
+        // Seed permissions required by checkPermission()
+        $permissions = ['databases.view', 'databases.create', 'databases.update', 'databases.delete'];
+        foreach ($permissions as $name) {
+            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
     }
 
     public function test_admin_can_view_any(): void
@@ -32,6 +39,7 @@ class DatabasePolicyTest extends TestCase
     public function test_non_admin_can_view_any(): void
     {
         $user = User::factory()->create(['is_admin' => false]);
+        $user->givePermissionTo('databases.view');
 
         $this->assertTrue($this->policy->viewAny($user));
     }
