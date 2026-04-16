@@ -389,7 +389,7 @@ const saveDatabase = () => {
                                 </CardTitle>
                                 <CardDescription>{{ __('Credentials with access to this database') }}</CardDescription>
                             </div>
-                            <Button v-if="canEdit('databases')" size="sm" @click="openAddCredentialDialog" :disabled="availableCredentials.length === 0">
+                            <Button size="sm" @click="openAddCredentialDialog" :disabled="availableCredentials.length === 0">
                                 <Plus class="h-4 w-4 mr-2" />
                                 {{ __('Add') }}
                             </Button>
@@ -411,7 +411,6 @@ const saveDatabase = () => {
                                         </Badge>
                                     </div>
                                     <Button
-                                        v-if="canEdit('databases')"
                                         variant="ghost"
                                         size="icon"
                                         class="text-destructive hover:text-destructive h-8 w-8"
@@ -487,7 +486,7 @@ const saveDatabase = () => {
         </div>
 
         <!-- Add Credential Dialog -->
-        <Dialog v-if="canEdit('databases')" v-model:open="addCredentialDialogOpen">
+        <Dialog v-model:open="addCredentialDialogOpen">
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{{ __('Add Credential') }}</DialogTitle>

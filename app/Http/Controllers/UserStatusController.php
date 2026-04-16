@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\UserStatusEnum;
-use App\Events\UserStatusUpdated;
+use App\Events\UserStatusUpdatedEvent;
 use App\Models\User;
 use App\Models\UserActivity;
 use App\Services\UserStatusService;
@@ -88,7 +88,7 @@ final class UserStatusController extends Controller
         ]);
 
         // Broadcast the status change
-        broadcast(new UserStatusUpdated(
+        broadcast(new UserStatusUpdatedEvent(
             $user,
             $statusEnum,
             $request->input('message', ''),

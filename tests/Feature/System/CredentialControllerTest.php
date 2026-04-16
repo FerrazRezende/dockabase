@@ -7,7 +7,6 @@ namespace Tests\Feature\System;
 use App\Models\Credential;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class CredentialControllerTest extends TestCase
@@ -23,16 +22,11 @@ class CredentialControllerTest extends TestCase
         parent::setUp();
         $this->admin = User::factory()->create(['is_admin' => true]);
         $this->user = User::factory()->create(['is_admin' => false]);
-
-        // Seed permissions so checkPermission() doesn't throw
-        foreach (['credentials.view', 'credentials.create', 'credentials.update', 'credentials.delete'] as $name) {
-            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
-        }
     }
 
     public function test_index_returns_credentials_for_admin(): void
     {
-        Credential::factory()->count(3)->create(['created_by' => $this->admin->id]);
+        Credential::factory()->count(3)->create();
 
         $response = $this->actingAs($this->admin)
             ->getJson(route('app.credentials.index'));
@@ -43,13 +37,7 @@ class CredentialControllerTest extends TestCase
 
     public function test_index_allowed_for_non_admin_via_feature_flag(): void
     {
-        // Create a credential visible to the non-admin user
-        Credential::factory()->create(['created_by' => $this->user->id]);
-
-        // Grant permission so policy check passes
-        $this->user->givePermissionTo('credentials.view');
-
-        // CredentialPolicy.viewAny returns true for users with permission,
+        // CredentialPolicy.viewAny returns true for all users,
         // and feature flags are active for all users in testing env.
         $response = $this->actingAs($this->user)
             ->getJson(route('app.credentials.index'));
@@ -120,7 +108,7 @@ class CredentialControllerTest extends TestCase
                 'user_id' => $user->id,
             ]);
 
-        $response->assertRedirect();
+        $response->assertOk();
 
         $this->assertTrue($credential->fresh()->users->contains($user));
     }
@@ -134,7 +122,7 @@ class CredentialControllerTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->deleteJson(route('app.credentials.users.detach', [$credential, $user]));
 
-        $response->assertRedirect();
+        $response->assertNoContent();
 
         $this->assertFalse($credential->fresh()->users->contains($user));
     }

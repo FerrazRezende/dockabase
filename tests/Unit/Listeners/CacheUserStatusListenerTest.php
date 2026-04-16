@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Listeners;
 
-use App\Events\UserStatusUpdated;
+use App\Events\UserStatusUpdatedEvent;
 use App\Enums\UserStatusEnum;
 use App\Listeners\CacheUserStatusListener;
 use App\Models\User;
@@ -28,7 +28,7 @@ final class CacheUserStatusListenerTest extends TestCase
             // Integration test: use real service and Redis connection
             $user = User::factory()->create();
 
-            $event = new UserStatusUpdated(
+            $event = new UserStatusUpdatedEvent(
                 user: $user,
                 status: UserStatusEnum::BUSY,
                 message: 'Focus time',

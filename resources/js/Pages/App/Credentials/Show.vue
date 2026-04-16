@@ -275,7 +275,7 @@ const saveCredential = () => {
                             <CardTitle>{{ __('Users') }}</CardTitle>
                             <CardDescription>{{ __('Users with this credential') }}</CardDescription>
                         </div>
-                        <Dialog v-if="canEdit('credentials')" v-model:open="isAddUserDialogOpen">
+                        <Dialog v-model:open="isAddUserDialogOpen">
                             <DialogTrigger as-child>
                                 <Button size="sm" @click="openAddUserDialog">
                                     <UserPlus class="h-4 w-4 mr-2" />
@@ -354,7 +354,6 @@ const saveCredential = () => {
                                 </TableCell>
                                 <TableCell>
                                     <Button
-                                        v-if="canEdit('credentials')"
                                         variant="ghost"
                                         size="icon"
                                         @click="detachUser(user.id)"

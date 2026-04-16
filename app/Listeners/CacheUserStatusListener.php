@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Listeners;
 
-use App\Events\UserStatusUpdated;
+use App\Events\UserStatusUpdatedEvent;
 use App\Services\UserStatusService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
@@ -15,7 +15,7 @@ final class CacheUserStatusListener implements ShouldQueue
     ) {
     }
 
-    public function handle(UserStatusUpdated $event): void
+    public function handle(UserStatusUpdatedEvent $event): void
     {
         $this->statusService->setStatus(
             user: $event->user,

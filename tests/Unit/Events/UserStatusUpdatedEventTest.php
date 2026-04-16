@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Events;
 
-use App\Events\UserStatusUpdated;
+use App\Events\UserStatusUpdatedEvent;
 use App\Enums\UserStatusEnum;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-final class UserStatusUpdatedTest extends TestCase
+final class UserStatusUpdatedEventTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -19,7 +19,7 @@ final class UserStatusUpdatedTest extends TestCase
         $user = User::factory()->create();
         $status = UserStatusEnum::ONLINE;
 
-        $event = new UserStatusUpdated(
+        $event = new UserStatusUpdatedEvent(
             user: $user,
             status: $status,
             message: 'Available for work',
@@ -36,7 +36,7 @@ final class UserStatusUpdatedTest extends TestCase
         $user = User::factory()->create();
         $status = UserStatusEnum::BUSY;
 
-        $event = new UserStatusUpdated(
+        $event = new UserStatusUpdatedEvent(
             user: $user,
             status: $status,
             message: 'In client call',
@@ -53,7 +53,7 @@ final class UserStatusUpdatedTest extends TestCase
         ]);
         $status = UserStatusEnum::AWAY;
 
-        $event = new UserStatusUpdated(
+        $event = new UserStatusUpdatedEvent(
             user: $user,
             status: $status,
             message: 'Deep work session',
@@ -77,7 +77,7 @@ final class UserStatusUpdatedTest extends TestCase
         $user = User::factory()->create();
         $status = UserStatusEnum::OFFLINE;
 
-        $event = new UserStatusUpdated(
+        $event = new UserStatusUpdatedEvent(
             user: $user,
             status: $status,
             message: 'Signing off',

@@ -11,9 +11,9 @@ Broadcast::channel('database.{id}', function ($user, $id) {
     return true; // Any authenticated user can subscribe
 });
 
-// User private channel for status, notifications, etc.
-Broadcast::channel('users.{id}', function ($user, string $id) {
-    return $user->id === $id;
+// User status channel for real-time presence
+Broadcast::channel('private-users.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
 });
 
 // Global presence channel for status updates - any authenticated user

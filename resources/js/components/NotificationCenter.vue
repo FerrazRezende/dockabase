@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { ref, onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,52 +12,93 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Bell, Loader2 } from 'lucide-vue-next';
 import type { Notification } from '@/types/notification';
-import { __ } from '@/composables/useLang';
-import { useToast } from 'vue-toastification';
-import axios from 'axios';
-
-const page = usePage();
-const toast = useToast();
 
 const notifications = ref<Notification[]>([]);
 const unreadCount = ref(0);
 const loading = ref(false);
-let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 const fetchNotifications = async () => {
     loading.value = true;
     try {
-        const { data } = await axios.get('/api/notifications');
-        notifications.value = data.data;
-    } catch {
+        const response = await fetch('/api/notifications', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'include',
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            notifications.value = data.data;
+        }
+    } catch (e) {
         // Silently fail
     } finally {
         loading.value = false;
     }
 };
 
-const fetchUnreadCount = async (showToast = false) => {
+const fetchUnreadCount = async () => {
     try {
-        const { data } = await axios.get('/api/notifications/unread-count');
-        const newCount = data.count;
-        if (showToast && newCount > unreadCount.value) {
-            const latest = notifications.value[0];
-            if (latest && !latest.read) {
-                toast.info(latest.title);
-            }
+        const response = await fetch('/api/notifications/unread-count', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'include',
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            unreadCount.value = data.count;
         }
-        unreadCount.value = newCount;
-    } catch {
+    } catch (e) {
+        // Silently fail
+    }
+};
+
+const markAsRead = async (notificationId: number) => {
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        await fetch(`/api/notifications/${notificationId}/read`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            credentials: 'include',
+        });
+
+        const notification = notifications.value.find(n => n.id === notificationId);
+        if (notification) {
+            notification.read = true;
+        }
+        unreadCount.value = Math.max(0, unreadCount.value - 1);
+    } catch (e) {
         // Silently fail
     }
 };
 
 const markAllAsRead = async () => {
     try {
-        await axios.post('/api/notifications/read-all');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        await fetch('/api/notifications/read-all', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            credentials: 'include',
+        });
+
         notifications.value.forEach(n => n.read = true);
         unreadCount.value = 0;
-    } catch {
+    } catch (e) {
         // Silently fail
     }
 };
@@ -72,12 +112,12 @@ const formatTime = (dateString: string): string => {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return __('Just now');
-    if (minutes < 60) return __(':minutesm ago', { minutes });
-    if (hours < 24) return __(':hoursh ago', { hours });
-    if (days < 7) return __(':daysd ago', { days });
+    if (minutes < 1) return 'Agora';
+    if (minutes < 60) return `${minutes}m atras`;
+    if (hours < 24) return `${hours}h atras`;
+    if (days < 7) return `${days}d atras`;
 
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('pt-BR');
 };
 
 const onDropdownOpen = (open: boolean) => {
@@ -89,18 +129,6 @@ const onDropdownOpen = (open: boolean) => {
 onMounted(() => {
     fetchNotifications();
     fetchUnreadCount();
-    // Poll every 30s for new notifications
-    pollTimer = setInterval(() => {
-        fetchNotifications();
-        fetchUnreadCount(true);
-    }, 30000);
-});
-
-onUnmounted(() => {
-    if (pollTimer) {
-        clearInterval(pollTimer);
-        pollTimer = null;
-    }
 });
 </script>
 

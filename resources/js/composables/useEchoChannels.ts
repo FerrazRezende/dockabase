@@ -55,7 +55,7 @@ export function useEchoChannels() {
         connectionState.value = 'connecting';
       });
 
-      echo.connector.pusher.connection.bind('error', (error: unknown) => {
+      echo.connector.pusher.connection.bind('error', (error: any) => {
         connectionState.value = 'error';
         connectionError.value = error instanceof Error ? error : new Error('Connection error');
         isConnected.value = false;
@@ -72,7 +72,7 @@ export function useEchoChannels() {
           resolve();
         });
 
-        echo.connector.pusher.connection.bind('error', (error: unknown) => {
+        echo.connector.pusher.connection.bind('error', (error: any) => {
           clearTimeout(timeout);
           reject(error);
         });

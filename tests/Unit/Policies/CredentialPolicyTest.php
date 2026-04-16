@@ -8,7 +8,6 @@ use App\Models\Credential;
 use App\Models\User;
 use App\Policies\CredentialPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class CredentialPolicyTest extends TestCase
@@ -21,12 +20,6 @@ class CredentialPolicyTest extends TestCase
     {
         parent::setUp();
         $this->policy = new CredentialPolicy;
-
-        // Seed permissions required by checkPermission()
-        $permissions = ['credentials.view', 'credentials.create', 'credentials.update', 'credentials.delete'];
-        foreach ($permissions as $name) {
-            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
-        }
     }
 
     public function test_admin_can_view_any(): void
@@ -39,7 +32,6 @@ class CredentialPolicyTest extends TestCase
     public function test_non_admin_can_view_any(): void
     {
         $user = User::factory()->create(['is_admin' => false]);
-        $user->givePermissionTo('credentials.view');
 
         $this->assertTrue($this->policy->viewAny($user));
     }

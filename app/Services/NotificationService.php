@@ -138,23 +138,6 @@ class NotificationService
     }
 
     /**
-     * User removed from a credential — notify the removed user.
-     */
-    public function notifyUserRemovedFromCredential(Credential $credential, User $removedUser): void
-    {
-        Notification::create([
-            'user_id' => $removedUser->id,
-            'type' => 'user_removed_from_credential',
-            'title' => __('Removed from credential'),
-            'message' => __('You have been removed from the credential :name.', ['name' => $credential->name]),
-            'data' => [
-                'credential_id' => $credential->id,
-                'credential_name' => $credential->name,
-            ],
-        ]);
-    }
-
-    /**
      * Send a notification to all admin users.
      */
     private function notifyAdmins(string $type, string $title, string $message, array $data): void
