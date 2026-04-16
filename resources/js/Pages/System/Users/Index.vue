@@ -36,6 +36,9 @@ import {
     Trash2,
     Plus,
     Search,
+    X,
+    UserPlus,
+    Check,
 } from 'lucide-vue-next';
 import UserAvatarWithStatus from '@/components/user/UserAvatarWithStatus.vue';
 import { useEchoChannels } from '@/composables/useEchoChannels';
@@ -407,9 +410,13 @@ const getUserStatus = (userId: number): UserStatus => {
 
                 <DialogFooter>
                     <Button variant="outline" @click="showCreateDialog = false">
+                        <X class="w-4 h-4 mr-2" />
                         {{ __('Cancel') }}
                     </Button>
-                    <Button @click="createUser">{{ __('Create User') }}</Button>
+                    <Button @click="createUser">
+                        <UserPlus class="w-4 h-4 mr-2" />
+                        {{ __('Create User') }}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -426,9 +433,13 @@ const getUserStatus = (userId: number): UserStatus => {
 
                 <DialogFooter>
                     <Button variant="outline" @click="showImpersonateDialog = false">
+                        <X class="w-4 h-4 mr-2" />
                         {{ __('Cancel') }}
                     </Button>
-                    <Button @click="confirmImpersonate">{{ __('Confirm') }}</Button>
+                    <Button @click="confirmImpersonate">
+                        <Check class="w-4 h-4 mr-2" />
+                        {{ __('Confirm') }}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -445,9 +456,13 @@ const getUserStatus = (userId: number): UserStatus => {
 
                 <DialogFooter>
                     <Button variant="outline" @click="showDeactivateDialog = false">
+                        <X class="w-4 h-4 mr-2" />
                         {{ __('Cancel') }}
                     </Button>
-                    <Button variant="destructive" @click="confirmDeactivate">{{ __('Deactivate') }}</Button>
+                    <Button variant="destructive" @click="confirmDeactivate">
+                        <Trash2 class="w-4 h-4 mr-2" />
+                        {{ __('Deactivate') }}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

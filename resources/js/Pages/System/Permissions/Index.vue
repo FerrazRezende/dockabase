@@ -22,7 +22,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Search, Info } from 'lucide-vue-next';
+import { Plus, Pencil, Trash2, Search, Info, X } from 'lucide-vue-next';
 import { useToast } from 'vue-toastification';
 
 interface Permission {
@@ -276,8 +276,14 @@ const pageTitle = computed(() => __('Permissions'));
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button variant="outline" @click="showDeleteRoleDialog = false">{{ __('Cancel') }}</Button>
-                    <Button variant="destructive" @click="deleteRole">{{ __('Delete') }}</Button>
+                    <Button variant="outline" @click="showDeleteRoleDialog = false">
+                        <X class="w-4 h-4 mr-2" />
+                        {{ __('Cancel') }}
+                    </Button>
+                    <Button variant="destructive" @click="deleteRole">
+                        <Trash2 class="w-4 h-4 mr-2" />
+                        {{ __('Delete') }}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
