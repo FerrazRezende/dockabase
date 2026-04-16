@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Bell, Loader2 } from 'lucide-vue-next';
 import type { Notification } from '@/types/notification';
+import { __ } from '@/composables/useLang';
+import axios from 'axios';
 
 const notifications = ref<Notification[]>([]);
 const unreadCount = ref(0);
@@ -20,19 +22,9 @@ const loading = ref(false);
 const fetchNotifications = async () => {
     loading.value = true;
     try {
-        const response = await fetch('/api/notifications', {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'include',
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            notifications.value = data.data;
-        }
-    } catch (e) {
+        const { data } = await axios.get('/api/notifications');
+        notifications.value = data.data;
+    } catch {
         // Silently fail
     } finally {
         loading.value = false;
@@ -41,64 +33,19 @@ const fetchNotifications = async () => {
 
 const fetchUnreadCount = async () => {
     try {
-        const response = await fetch('/api/notifications/unread-count', {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'include',
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            unreadCount.value = data.count;
-        }
-    } catch (e) {
-        // Silently fail
-    }
-};
-
-const markAsRead = async (notificationId: number) => {
-    try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-        await fetch(`/api/notifications/${notificationId}/read`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            credentials: 'include',
-        });
-
-        const notification = notifications.value.find(n => n.id === notificationId);
-        if (notification) {
-            notification.read = true;
-        }
-        unreadCount.value = Math.max(0, unreadCount.value - 1);
-    } catch (e) {
+        const { data } = await axios.get('/api/notifications/unread-count');
+        unreadCount.value = data.count;
+    } catch {
         // Silently fail
     }
 };
 
 const markAllAsRead = async () => {
     try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-        await fetch('/api/notifications/read-all', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            credentials: 'include',
-        });
-
+        await axios.post('/api/notifications/read-all');
         notifications.value.forEach(n => n.read = true);
         unreadCount.value = 0;
-    } catch (e) {
+    } catch {
         // Silently fail
     }
 };
@@ -112,12 +59,12 @@ const formatTime = (dateString: string): string => {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return 'Agora';
-    if (minutes < 60) return `${minutes}m atras`;
-    if (hours < 24) return `${hours}h atras`;
-    if (days < 7) return `${days}d atras`;
+    if (minutes < 1) return __('Just now');
+    if (minutes < 60) return __(':count minutes ago', { count: minutes });
+    if (hours < 24) return __(':count hours ago', { count: hours });
+    if (days < 7) return __(':count days ago', { count: days });
 
-    return date.toLocaleDateString('pt-BR');
+    return date.toLocaleDateString();
 };
 
 const onDropdownOpen = (open: boolean) => {

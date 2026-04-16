@@ -46,7 +46,7 @@ class NotificationController extends Controller
             ->first();
 
         if ($notification) {
-            $notification->update(['read' => true]);
+            $notification->markAsRead();
         }
 
         return response()->json(['success' => true]);
@@ -56,7 +56,7 @@ class NotificationController extends Controller
     {
         Notification::where('user_id', $request->user()->id)
             ->where('read', false)
-            ->update(['read' => true]);
+            ->each(fn ($n) => $n->markAsRead());
 
         return response()->json(['success' => true]);
     }
