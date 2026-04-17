@@ -156,7 +156,7 @@ Methods: `isDestructive(): bool`, `label(): string`
 
 #### `SchemaIntrospectionService`
 
-Reads `information_schema` via the system DB connection. Returns raw arrays.
+Reads `information_schema` from tenant databases. Creates temporary connections using connection info from the `Database` model, queries system catalogs, and disconnects. Returns raw arrays.
 
 Methods:
 - `getSchemas(Database $database): array` — lists user schemas (excludes `pg_catalog`, `information_schema`, `pg_toast`)
@@ -165,7 +165,7 @@ Methods:
 - `getTableData(Database $database, string $schema, string $table, int $page, int $perPage, ?string $search, ?string $sortBy, ?string $sortDir): array` — paginated rows
 - `getTableRowCount(Database $database, string $schema, string $table): int`
 
-All methods create a temporary connection to the tenant database, query `information_schema`, and disconnect.
+Uses a shared helper `getConnection(Database $database): \Illuminate\Database\ConnectionInterface` that creates a temporary connection from the `Database` model's stored host/port/name credentials. All methods use this helper and share the same connection/disconnect pattern.
 
 #### `SchemaBuilderService`
 
