@@ -4,6 +4,8 @@ import { __ } from '@/composables/useLang';
 import { ref, onMounted, onUnmounted, computed, reactive } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import SchemaBrowser from '@/components/schema/SchemaBrowser.vue';
 import {
     Card,
     CardContent,
@@ -69,6 +71,7 @@ const currentStep = ref<CreationStep | null>(props.database.current_step);
 const progress = ref(props.database.progress);
 const status = ref<DatabaseStatus>(props.database.status);
 const errorMessage = ref(props.database.error_message);
+const activeTab = ref('info');
 
 const { subscribeToDatabase } = useEcho();
 
@@ -301,8 +304,16 @@ const saveDatabase = () => {
         </template>
 
         <div class="space-y-6">
-            <!-- Timeline Card (only for pending/processing databases) -->
-            <Card v-if="status === 'pending' || status === 'processing'">
+            <!-- Tabs -->
+            <Tabs default-value="info" class="w-full">
+                <TabsList>
+                    <TabsTrigger value="info">{{ __('Information') }}</TabsTrigger>
+                    <TabsTrigger value="schema" v-if="activeFeatures?.includes('schema-builder')">{{ __('Schema') }}</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="info" class="space-y-6 mt-4">
+                    <!-- Timeline Card (only for pending/processing databases) -->
+                    <Card v-if="status === 'pending' || status === 'processing'">
                 <CardHeader>
                     <CardTitle class="flex items-center gap-2">
                         <Loader2 v-if="status === 'processing'" class="h-5 w-5 animate-spin text-primary" />
@@ -513,6 +524,13 @@ const saveDatabase = () => {
             </div>
         </div>
 
+                </TabsContent>
+
+                <TabsContent value="schema" class="mt-4" v-if="activeFeatures?.includes('schema-builder')">
+                    <SchemaBrowser :database-id="database.id" />
+                </TabsContent>
+            </Tabs>
+
         <!-- Add Credential Dialog -->
         <Dialog v-if="canEdit('databases')" v-model:open="addCredentialDialogOpen">
             <DialogContent>
@@ -607,5 +625,7 @@ const saveDatabase = () => {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+                </TabsContent>
+            </Tabs>
     </AuthenticatedLayout>
 </template>
