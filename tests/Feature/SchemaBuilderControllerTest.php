@@ -20,8 +20,29 @@ class SchemaBuilderControllerTest extends TestCase
     {
         parent::setUp();
 
+        // Configure PostgreSQL for this test
+        $this->configurePostgreSQL();
+
         $this->user = User::factory()->create(['is_admin' => true]);
         $this->database = Database::factory()->create(['created_by' => $this->user->id]);
+    }
+
+    protected function configurePostgreSQL(): void
+    {
+        // Setup PostgreSQL connection for tests
+        config(['database.connections.pgsql' => [
+            'driver' => 'pgsql',
+            'host' => env('PG_HOST', '127.0.0.1'),
+            'port' => env('PG_PORT', '5432'),
+            'database' => env('PG_DATABASE', 'dockabase'),
+            'username' => env('PG_USERNAME', 'dockabase'),
+            'password' => env('PG_PASSWORD', 'secret'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
+        ]]);
     }
 
     public function test_index_requires_authentication(): void
