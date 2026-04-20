@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 import type { TableDataResponse } from '@/types/schema'
 import { Search, ArrowUpDown, Download } from 'lucide-vue-next'
 import { Input } from '@/components/ui/input'

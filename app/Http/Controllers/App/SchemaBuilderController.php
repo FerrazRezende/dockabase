@@ -80,6 +80,19 @@ class SchemaBuilderController
         return ColumnResource::collection($columns);
     }
 
+    public function storeSchema(Database $database, \Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        Gate::authorize('update', $database);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:63', 'regex:/^[a-z][a-z0-9_]*$/'],
+        ]);
+
+        $this->introspectionService->createSchema($database, $validated['name']);
+
+        return response()->json(['message' => __('Schema created successfully')]);
+    }
+
     public function store(Database $database, CreateTableRequest $request): RedirectResponse
     {
         Gate::authorize('create', $database);

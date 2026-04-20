@@ -39,6 +39,7 @@ Route::middleware(['web', 'auth'])
             // Schema Builder - requires schema-builder feature flag
             Route::middleware(['feature:schema-builder'])->group(function (): void {
                 Route::get('/databases/{database}/schema', [SchemaBuilderController::class, 'index'])->name('databases.schema');
+                Route::post('/databases/{database}/schemas', [SchemaBuilderController::class, 'storeSchema'])->name('databases.schemas.store');
                 Route::get('/databases/{database}/tables/{schema}/{table}', [SchemaBuilderController::class, 'tableData'])->name('databases.tables.data');
                 Route::get('/databases/{database}/tables/{schema}/{table}/columns', [SchemaBuilderController::class, 'columns'])->name('databases.tables.columns');
                 Route::post('/databases/{database}/tables', [SchemaBuilderController::class, 'store'])->name('databases.tables.store');

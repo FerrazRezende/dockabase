@@ -10,7 +10,7 @@ class TableDataRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('viewSchema', $this->route('database'));
     }
 
     public function rules(): array

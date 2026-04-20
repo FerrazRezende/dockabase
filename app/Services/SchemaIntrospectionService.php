@@ -12,14 +12,37 @@ class SchemaIntrospectionService
 {
     private const EXCLUDED_SCHEMAS = ['pg_catalog', 'information_schema', 'pg_toast'];
 
+    /**
+     * Quote a PostgreSQL identifier (schema, table, column name) safely.
+     * Doubles any embedded double-quote to prevent injection.
+     */
+    private function quoteIdentifier(string $identifier): string
+    {
+        return '"' . str_replace('"', '""', $identifier) . '"';
+    }
+
+    /**
+     * Validate that an identifier contains only safe characters.
+     * PostgreSQL identifiers: letters, digits, underscores. Must start with a letter or underscore.
+     */
+    private function validateIdentifier(string $identifier): void
+    {
+        if (! preg_match('/^[a-zA-Z_][a-zA-Z0-9_]{0,62}$/', $identifier)) {
+            throw new \InvalidArgumentException("Invalid identifier: {$identifier}");
+        }
+    }
+
     public function getSchemas(Database $database): array
     {
         $connection = $this->getConnection($database);
 
+        $excluded = implode(',', array_map(fn ($s) => '?' , self::EXCLUDED_SCHEMAS));
+
         $rows = $connection->select(
             "SELECT schema_name FROM information_schema.schemata
-             WHERE schema_name NOT IN ('" . implode("','", self::EXCLUDED_SCHEMAS) . "')
-             ORDER BY schema_name"
+             WHERE schema_name NOT IN ({$excluded})
+             ORDER BY schema_name",
+            self::EXCLUDED_SCHEMAS
         );
 
         return array_map(fn ($row) => $row->schema_name, $rows);
@@ -27,6 +50,7 @@ class SchemaIntrospectionService
 
     public function getTables(Database $database, string $schema): array
     {
+        $this->validateIdentifier($schema);
         $connection = $this->getConnection($database);
 
         $rows = $connection->select(
@@ -42,6 +66,8 @@ class SchemaIntrospectionService
 
     public function getColumns(Database $database, string $schema, string $table): array
     {
+        $this->validateIdentifier($schema);
+        $this->validateIdentifier($table);
         $connection = $this->getConnection($database);
 
         $sql = "SELECT
@@ -102,37 +128,44 @@ class SchemaIntrospectionService
         ?string $sortBy = null,
         ?string $sortDir = 'ASC'
     ): array {
+        $this->validateIdentifier($schema);
+        $this->validateIdentifier($table);
         $connection = $this->getConnection($database);
-        $offset = ($page - 1) * $perPage;
 
-        $totalQuery = 'SELECT COUNT(*) as total FROM "' . $schema . '"."' . $table . '"';
+        $qualifiedTable = $this->quoteIdentifier($schema) . '.' . $this->quoteIdentifier($table);
+        $offset = ($page - 1) * $perPage;
+        $perPage = max(1, min(500, $perPage));
+
+        // Count total rows
+        $bindings = [];
+        $countSql = "SELECT COUNT(*) as total FROM {$qualifiedTable}";
+
         if ($search) {
-            $totalQuery .= " WHERE CAST(* AS TEXT) ILIKE ?";
+            $countSql .= " WHERE CAST(* AS TEXT) ILIKE ?";
+            $bindings[] = '%' . $search . '%';
         }
 
-        $totalResult = $search
-            ? $connection->select($totalQuery, ['%' . $search . '%'])
-            : $connection->select($totalQuery);
-        $totalRows = (int) $totalResult[0]->total;
+        $totalRows = (int) $connection->selectOne($countSql, $bindings)->total;
 
-        $sql = 'SELECT * FROM "' . $schema . '"."' . $table . '"';
+        // Fetch rows
+        $dataBindings = $search ? ['%' . $search . '%'] : [];
+        $sql = "SELECT * FROM {$qualifiedTable}";
 
         if ($search) {
             $sql .= " WHERE CAST(* AS TEXT) ILIKE ?";
         }
 
         if ($sortBy) {
-            $sql .= ' ORDER BY "' . $sortBy . '" ' . ($sortDir === 'DESC' ? 'DESC' : 'ASC');
-        } else {
-            $sql .= ' ORDER BY 1';
+            $this->validateIdentifier($sortBy);
+            $direction = strtoupper($sortDir) === 'DESC' ? 'DESC' : 'ASC';
+            $sql .= ' ORDER BY ' . $this->quoteIdentifier($sortBy) . ' ' . $direction;
         }
 
-        $sql .= ' LIMIT ' . $perPage . ' OFFSET ' . $offset;
+        $sql .= ' LIMIT ? OFFSET ?';
+        $dataBindings[] = $perPage;
+        $dataBindings[] = $offset;
 
-        $rows = $search
-            ? $connection->select($sql, ['%' . $search . '%'])
-            : $connection->select($sql);
-
+        $rows = $connection->select($sql, $dataBindings);
         $columns = ! empty($rows) ? array_keys((array) $rows[0]) : [];
 
         return [
@@ -144,22 +177,38 @@ class SchemaIntrospectionService
 
     public function getTableRowCount(Database $database, string $schema, string $table): int
     {
+        $this->validateIdentifier($schema);
+        $this->validateIdentifier($table);
         $connection = $this->getConnection($database);
 
-        $result = $connection->select('SELECT COUNT(*) as count FROM "' . $schema . '"."' . $table . '"');
+        $qualifiedTable = $this->quoteIdentifier($schema) . '.' . $this->quoteIdentifier($table);
+        $result = $connection->selectOne("SELECT COUNT(*) as count FROM {$qualifiedTable}");
 
-        return (int) $result[0]->count;
+        return (int) $result->count;
+    }
+
+    public function createSchema(Database $database, string $schema): void
+    {
+        $this->validateIdentifier($schema);
+        $connection = $this->getConnection($database);
+
+        $connection->statement('CREATE SCHEMA IF NOT EXISTS ' . $this->quoteIdentifier($schema));
     }
 
     private function getConnection(Database $database): ConnectionInterface
     {
-        return DB::connect([
+        $connectionName = "tenant_{$database->id}";
+        $default = config('database.connections.pgsql');
+
+        config(["database.connections.{$connectionName}" => [
             'driver' => 'pgsql',
-            'host' => $database->host,
-            'port' => $database->port,
+            'host' => $default['host'],
+            'port' => $default['port'],
             'database' => $database->database_name,
-            'username' => config('database.connections.pgsql.username'),
-            'password' => config('database.connections.pgsql.password'),
-        ]);
+            'username' => $default['username'],
+            'password' => $default['password'],
+        ]]);
+
+        return DB::connection($connectionName);
     }
 }
