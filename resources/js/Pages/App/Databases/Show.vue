@@ -307,7 +307,7 @@ const saveDatabase = () => {
             </div>
         </template>
 
-        <div>
+        <div class="max-w-full overflow-hidden">
             <PvTabs v-model="activeTab" :tabs="tabs">
                 <!-- Info Tab -->
                 <PvTabsContent value="info" :active-tab="activeTab">
@@ -499,7 +499,9 @@ const saveDatabase = () => {
 
                 <!-- Schema Tab -->
                 <PvTabsContent value="schema" :active-tab="activeTab" v-if="activeFeatures?.includes('schema-builder')">
-                    <SchemaBrowser :database-id="database.id" />
+                    <div class="overflow-hidden">
+                        <SchemaBrowser :database-id="database.id" />
+                    </div>
                 </PvTabsContent>
             </PvTabs>
         </div>

@@ -27,7 +27,7 @@ return [
         'schema-builder' => [
             'name' => 'Schema Builder',
             'description' => 'Visual interface for creating tables and columns',
-            'implemented_at' => null,
+            'implemented_at' => '2026-04-18',
         ],
         'table-manager' => [
             'name' => 'Table Manager',

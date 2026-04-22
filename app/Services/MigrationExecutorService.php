@@ -36,13 +36,18 @@ class MigrationExecutorService
 
     private function getConnection(Database $database): ConnectionInterface
     {
-        return DB::connect([
+        $connectionName = "tenant_{$database->id}";
+        $default = config('database.connections.pgsql');
+
+        config(["database.connections.{$connectionName}" => [
             'driver' => 'pgsql',
-            'host' => $database->host,
-            'port' => $database->port,
+            'host' => $default['host'],
+            'port' => $default['port'],
             'database' => $database->database_name,
-            'username' => config('database.connections.pgsql.username'),
-            'password' => config('database.connections.pgsql.password'),
-        ]);
+            'username' => $default['username'],
+            'password' => $default['password'],
+        ]]);
+
+        return DB::connection($connectionName);
     }
 }

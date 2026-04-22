@@ -48,216 +48,35 @@ const {
   selectedSchema,
   selectedTable,
   loading,
+  dataView,
+  dataLoading,
   loadSchemas,
+  selectTable,
   search,
   sortBy,
   sortDir,
+  loadTableData,
   page,
   perPage,
 } = useSchemaBrowser(props.databaseId)
 
-// Local state for mock data - bypass composable API
-const dataLoading = ref(false)
-const dataView = ref<TableDataResponse | null>(null)
-
 const toast = useToast()
 const { canEdit } = usePermissions()
 
-// View: 'folders' = schema grid, 'browser' = table browser
 const view = ref<'folders' | 'browser'>('folders')
 const searchInput = ref('')
-
-// Create schema dialog
 const createDialogOpen = ref(false)
 const newSchemaName = ref('')
 const creating = ref(false)
 
-// Use local dataView directly (set by handleSelectTable with mock data)
-const mockTableData = computed(() => {
-  if (dataView.value) {
-    return dataView.value
-  }
-  // Default fallback
-  return {
-    columns: ['id', 'name', 'created_at'],
-    rows: [
-      { id: 'mock_001', name: 'Select a table', created_at: '2026-04-15' },
-    ],
-    totalRows: 0,
-  }
-})
-
 const currentSchemaTables = computed(() => {
-  const schema = displaySchemas.value.find(s => s.name === selectedSchema.value)
+  const schema = schemas.value.find(s => s.name === selectedSchema.value)
   return schema?.tables || []
-})
-
-const totalRows = computed(() => {
-  return displaySchemas.value.reduce((sum, s) => sum + s.tables.length, 0)
 })
 
 const openSchema = (schemaName: string) => {
   selectedSchema.value = schemaName
   view.value = 'browser'
-}
-
-// Mock data generator - hardcoded in component
-const getMockTableData = (tableName: string): TableDataResponse => {
-  const mockData: Record<string, TableDataResponse> = {
-    users: {
-      columns: ['id', 'name', 'email', 'role', 'created_at'],
-      rows: [
-        { id: 'usr_01JF2K3M', name: 'Ana Silva', email: 'ana@dockabase.io', role: 'admin', created_at: '2026-04-10 14:30' },
-        { id: 'usr_01JF2K3N', name: 'Carlos Souza', email: 'carlos@dockabase.io', role: 'editor', created_at: '2026-04-11 09:15' },
-        { id: 'usr_01JF2K3P', name: 'Maria Oliveira', email: 'maria@dockabase.io', role: 'viewer', created_at: '2026-04-12 16:45' },
-        { id: 'usr_01JF2K3Q', name: 'Pedro Santos', email: 'pedro@dockabase.io', role: 'editor', created_at: '2026-04-13 11:00' },
-        { id: 'usr_01JF2K3R', name: 'Juliana Lima', email: 'juliana@dockabase.io', role: 'admin', created_at: '2026-04-14 08:20' },
-      ],
-      totalRows: 1240,
-    },
-    profiles: {
-      columns: ['id', 'user_id', 'bio', 'avatar_url', 'updated_at'],
-      rows: [
-        { id: 'prf_001', user_id: 'usr_01JF2K3M', bio: 'Full stack developer', avatar_url: '/avatars/ana.jpg', updated_at: '2026-04-15 10:00' },
-        { id: 'prf_002', user_id: 'usr_01JF2K3N', bio: 'Designer', avatar_url: '/avatars/carlos.jpg', updated_at: '2026-04-14 15:30' },
-        { id: 'prf_003', user_id: 'usr_01JF2K3P', bio: 'Product manager', avatar_url: '/avatars/maria.jpg', updated_at: '2026-04-13 09:00' },
-      ],
-      totalRows: 856,
-    },
-    posts: {
-      columns: ['id', 'title', 'status', 'views', 'published_at'],
-      rows: [
-        { id: 'pst_001', title: 'Getting Started with DockaBase', status: 'published', views: 1240, published_at: '2026-04-01' },
-        { id: 'pst_002', title: 'Schema Builder Tutorial', status: 'published', views: 856, published_at: '2026-04-05' },
-        { id: 'pst_003', title: 'API Authentication Guide', status: 'draft', views: 0, published_at: null },
-        { id: 'pst_004', title: 'Realtime Features', status: 'published', views: 432, published_at: '2026-04-10' },
-      ],
-      totalRows: 489,
-    },
-    products: {
-      columns: ['id', 'name', 'price', 'stock', 'active'],
-      rows: [
-        { id: 'prd_001', name: 'DockaBase Pro Plan', price: 29.99, stock: 999, active: true },
-        { id: 'prd_002', name: 'DockaBase Enterprise', price: 99.99, stock: 50, active: true },
-        { id: 'prd_003', name: 'DockaBase Starter', price: 0, stock: 9999, active: true },
-        { id: 'prd_004', name: 'Support Pack', price: 9.99, stock: 0, active: false },
-      ],
-      totalRows: 567,
-    },
-    orders: {
-      columns: ['id', 'customer', 'total', 'status', 'created_at'],
-      rows: [
-        { id: 'ord_001', customer: 'João Silva', total: 129.99, status: 'completed', created_at: '2026-04-15 14:30' },
-        { id: 'ord_002', customer: 'Maria Santos', total: 59.99, status: 'pending', created_at: '2026-04-15 12:00' },
-        { id: 'ord_003', customer: 'Pedro Lima', total: 199.99, status: 'processing', created_at: '2026-04-15 10:15' },
-        { id: 'ord_004', customer: 'Ana Costa', total: 39.99, status: 'completed', created_at: '2026-04-14 18:45' },
-      ],
-      totalRows: 3421,
-    },
-    customers: {
-      columns: ['id', 'name', 'email', 'country', 'signup_date'],
-      rows: [
-        { id: 'cust_001', name: 'João Silva', email: 'joao@email.com', country: 'Brazil', signup_date: '2026-01-15' },
-        { id: 'cust_002', name: 'Maria Santos', email: 'maria@email.com', country: 'Portugal', signup_date: '2026-02-20' },
-        { id: 'cust_003', name: 'Pedro Lima', email: 'pedro@email.com', country: 'Spain', signup_date: '2026-03-10' },
-      ],
-      totalRows: 1823,
-    },
-    sessions: {
-      columns: ['id', 'user_id', 'ip_address', 'user_agent', 'last_activity'],
-      rows: [
-        { id: 'ses_001', user_id: 'usr_01JF2K3M', ip_address: '192.168.1.100', user_agent: 'Chrome/120', last_activity: '2026-04-15 16:00' },
-        { id: 'ses_002', user_id: 'usr_01JF2K3N', ip_address: '192.168.1.101', user_agent: 'Firefox/121', last_activity: '2026-04-15 15:45' },
-        { id: 'ses_003', user_id: 'usr_01JF2K3P', ip_address: '192.168.1.102', user_agent: 'Safari/17', last_activity: '2026-04-15 14:30' },
-      ],
-      totalRows: 3420,
-    },
-    permissions: {
-      columns: ['id', 'name', 'description', 'guard_name'],
-      rows: [
-        { id: 1, name: 'view-databases', description: 'View databases list', guard_name: 'web' },
-        { id: 2, name: 'create-database', description: 'Create new database', guard_name: 'web' },
-        { id: 3, name: 'delete-database', description: 'Delete a database', guard_name: 'web' },
-      ],
-      totalRows: 45,
-    },
-    roles: {
-      columns: ['id', 'name', 'description', 'created_at'],
-      rows: [
-        { id: 1, name: 'super-admin', description: 'Full access', created_at: '2026-01-01' },
-        { id: 2, name: 'admin', description: 'Admin access', created_at: '2026-01-01' },
-        { id: 3, name: 'manager', description: 'Manager access', created_at: '2026-01-01' },
-      ],
-      totalRows: 12,
-    },
-    oauth_providers: {
-      columns: ['id', 'provider', 'user_id', 'provider_user_id', 'created_at'],
-      rows: [
-        { id: 1, provider: 'google', user_id: 'usr_01JF2K3M', provider_user_id: 'google_123', created_at: '2026-03-01' },
-        { id: 2, provider: 'github', user_id: 'usr_01JF2K3N', provider_user_id: 'github_456', created_at: '2026-03-05' },
-      ],
-      totalRows: 128,
-    },
-    password_resets: {
-      columns: ['id', 'email', 'token', 'created_at'],
-      rows: [
-        { id: 1, email: 'user@example.com', token: 'abc123...', created_at: '2026-04-15 10:00' },
-        { id: 2, email: 'another@example.com', token: 'def456...', created_at: '2026-04-14 15:30' },
-      ],
-      totalRows: 67,
-    },
-    mfa_codes: {
-      columns: ['id', 'user_id', 'code', 'type', 'expires_at'],
-      rows: [
-        { id: 1, user_id: 'usr_01JF2K3M', code: '******', type: 'totp', expires_at: '2026-04-15 18:00' },
-        { id: 2, user_id: 'usr_01JF2K3N', code: '******', type: 'totp', expires_at: '2026-04-15 17:30' },
-      ],
-      totalRows: 234,
-    },
-    comments: {
-      columns: ['id', 'post_id', 'author_name', 'content', 'created_at'],
-      rows: [
-        { id: 1, post_id: 'pst_001', author_name: 'João Silva', content: 'Great article!', created_at: '2026-04-15' },
-        { id: 2, post_id: 'pst_002', author_name: 'Maria Santos', content: 'Very helpful', created_at: '2026-04-14' },
-      ],
-      totalRows: 2156,
-    },
-    categories: {
-      columns: ['id', 'name', 'slug', 'posts_count'],
-      rows: [
-        { id: 1, name: 'Tutorials', slug: 'tutorials', posts_count: 45 },
-        { id: 2, name: 'News', slug: 'news', posts_count: 23 },
-        { id: 3, name: 'Reviews', slug: 'reviews', posts_count: 12 },
-      ],
-      totalRows: 34,
-    },
-    tags: {
-      columns: ['id', 'name', 'slug', 'color'],
-      rows: [
-        { id: 1, name: 'Laravel', slug: 'laravel', color: '#FF2D20' },
-        { id: 2, name: 'Vue', slug: 'vue', color: '#4FC08D' },
-        { id: 3, name: 'TypeScript', slug: 'typescript', color: '#3178C6' },
-      ],
-      totalRows: 89,
-    },
-    order_items: {
-      columns: ['id', 'order_id', 'product_id', 'quantity', 'price'],
-      rows: [
-        { id: 1, order_id: 'ord_001', product_id: 'prd_001', quantity: 2, price: 29.99 },
-        { id: 2, order_id: 'ord_002', product_id: 'prd_002', quantity: 1, price: 99.99 },
-      ],
-      totalRows: 8456,
-    },
-  }
-
-  return mockData[tableName] || {
-    columns: ['id', 'name', 'created_at'],
-    rows: [
-      { id: 'mock_001', name: `Sample row for ${tableName}`, created_at: '2026-04-15' },
-      { id: 'mock_002', name: `Sample row for ${tableName}`, created_at: '2026-04-15' },
-    ],
-    totalRows: 100,
-  }
 }
 
 const goBack = () => {
@@ -267,12 +86,7 @@ const goBack = () => {
 }
 
 const handleSelectTable = async (schema: string, table: string) => {
-  selectedTable.value = table
-  dataLoading.value = true
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300))
-  dataView.value = getMockTableData(table)
-  dataLoading.value = false
+  await selectTable(schema, table)
 }
 
 const handleSort = (column: string) => {
@@ -282,64 +96,10 @@ const handleSort = (column: string) => {
     sortBy.value = column
     sortDir.value = 'asc'
   }
-  // Re-sort mock data locally
-  if (dataView.value && dataView.value.rows) {
-    const rows = [...dataView.value.rows]
-    rows.sort((a: any, b: any) => {
-      const aVal = a[column]
-      const bVal = b[column]
-      const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
-      return sortDir.value === 'asc' ? cmp : -cmp
-    })
-    dataView.value = { ...dataView.value, rows }
+  if (selectedSchema.value && selectedTable.value) {
+    loadTableData()
   }
 }
-
-// Mock schemas for UI testing when backend returns empty
-const displaySchemas = computed(() => {
-  // Use mock when no real schemas loaded (empty or undefined)
-  if (!schemas.value || schemas.value.length === 0) {
-    return [
-      {
-        name: 'public',
-        tables: [
-          { name: 'users', schema: 'public', rowCount: 1240, columns: [] },
-          { name: 'profiles', schema: 'public', rowCount: 856, columns: [] },
-          { name: 'sessions', schema: 'public', rowCount: 3420, columns: [] },
-          { name: 'permissions', schema: 'public', rowCount: 45, columns: [] },
-          { name: 'roles', schema: 'public', rowCount: 12, columns: [] },
-        ],
-      },
-      {
-        name: 'auth',
-        tables: [
-          { name: 'oauth_providers', schema: 'auth', rowCount: 128, columns: [] },
-          { name: 'password_resets', schema: 'auth', rowCount: 67, columns: [] },
-          { name: 'mfa_codes', schema: 'auth', rowCount: 234, columns: [] },
-        ],
-      },
-      {
-        name: 'blog',
-        tables: [
-          { name: 'posts', schema: 'blog', rowCount: 489, columns: [] },
-          { name: 'comments', schema: 'blog', rowCount: 2156, columns: [] },
-          { name: 'categories', schema: 'blog', rowCount: 34, columns: [] },
-          { name: 'tags', schema: 'blog', rowCount: 89, columns: [] },
-        ],
-      },
-      {
-        name: 'ecommerce',
-        tables: [
-          { name: 'products', schema: 'ecommerce', rowCount: 567, columns: [] },
-          { name: 'orders', schema: 'ecommerce', rowCount: 3421, columns: [] },
-          { name: 'customers', schema: 'ecommerce', rowCount: 1823, columns: [] },
-          { name: 'order_items', schema: 'ecommerce', rowCount: 8456, columns: [] },
-        ],
-      },
-    ]
-  }
-  return schemas.value
-})
 
 const createSchema = async () => {
   if (!newSchemaName.value.trim()) return
@@ -367,11 +127,10 @@ onMounted(() => {
 <template>
   <!-- FOLDERS VIEW: Schema cards -->
   <div v-if="view === 'folders'">
-    <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
         <h3 class="text-lg font-semibold">{{ __('Schemas') }}</h3>
-        <p class="text-sm text-muted-foreground">{{ displaySchemas.length }} {{ displaySchemas.length === 1 ? __('schema') : __('schemas') }} {{ __('in this database') }}</p>
+        <p class="text-sm text-muted-foreground">{{ schemas.length }} {{ schemas.length === 1 ? __('schema') : __('schemas') }} {{ __('in this database') }}</p>
       </div>
       <Button v-if="canEdit('databases')" @click="createDialogOpen = true">
         <Plus class="h-4 w-4 mr-2" />
@@ -383,20 +142,19 @@ onMounted(() => {
       <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
     </div>
 
-    <div v-else-if="displaySchemas.length === 0" class="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+    <div v-else-if="schemas.length === 0" class="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
       <Folder class="h-12 w-12 opacity-20" />
       <p class="text-sm">{{ __('No schemas found in this database') }}</p>
     </div>
 
     <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <button
-        v-for="schema in displaySchemas"
+        v-for="schema in schemas"
         :key="schema.name"
         class="group relative overflow-hidden rounded-xl border bg-card p-0 text-left transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 cursor-pointer"
         @click="openSchema(schema.name)"
       >
         <div class="p-5">
-          <!-- Header with icon -->
           <div class="flex items-start gap-4 mb-4">
             <div class="relative">
               <div class="absolute inset-0 bg-primary/20 blur-xl rounded-full group-hover:blur-2xl transition-all" />
@@ -418,7 +176,6 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Tables preview -->
           <div v-if="schema.tables.length > 0" class="space-y-1.5">
             <div class="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
               <TableIcon class="h-3 w-3" />
@@ -445,21 +202,19 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Empty state -->
           <div v-else class="flex items-center justify-center rounded-lg bg-muted/30 py-3 text-xs text-muted-foreground">
             {{ __('No tables yet') }}
           </div>
         </div>
 
-        <!-- Hover glow effect -->
         <div class="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       </button>
     </div>
   </div>
 
-  <!-- BROWSER VIEW: Table sidebar + data -->
-  <div v-else class="flex h-[calc(100vh-14rem)] min-h-[500px] rounded-lg border bg-card overflow-hidden">
-    <!-- Left Sidebar: Tables -->
+  <!-- BROWSER VIEW: Table sidebar + data - FIXED HEIGHT, NO PAGE SCROLL -->
+  <div v-else class="flex rounded-lg border bg-card" style="height: calc(100vh - 14rem); min-height: 500px;">
+    <!-- Left Sidebar: Tables - FIXED, no scroll on page -->
     <div class="w-60 border-r flex flex-col shrink-0">
       <div class="p-3 border-b">
         <button
@@ -505,7 +260,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Main Content Area -->
+    <!-- Main Content Area - THIS is the scroll container -->
     <div class="flex-1 flex flex-col min-w-0">
       <!-- No table selected -->
       <div v-if="!selectedTable" class="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3">
@@ -515,14 +270,14 @@ onMounted(() => {
 
       <!-- Table data view -->
       <template v-else>
-        <!-- Toolbar -->
+        <!-- Toolbar - fixed at top -->
         <div class="flex items-center gap-3 px-4 py-3 border-b shrink-0">
           <div class="flex items-center gap-2 min-w-0">
             <TableIcon class="h-4 w-4 text-muted-foreground shrink-0" />
             <h3 class="text-sm font-semibold truncate">{{ selectedTable }}</h3>
             <Badge variant="outline" class="text-[10px] h-5 shrink-0">
               <Columns3 class="h-3 w-3 mr-1" />
-              {{ currentSchemaTables.find(t => t.name === selectedTable)?.columns.length || 0 }} {{ __('cols') }}
+              {{ dataView?.columns?.length ?? 0 }} {{ __('cols') }}
             </Badge>
           </div>
           <div class="ml-auto">
@@ -538,63 +293,65 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Data table -->
+        <!-- SCROLL CONTAINER - only this panel scrolls -->
         <div class="flex-1 overflow-auto">
           <div v-if="dataLoading" class="flex items-center justify-center h-40">
             <Loader2 class="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
 
-          <Table v-else>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  v-for="column in mockTableData.columns"
-                  :key="column"
-                  class="cursor-pointer hover:bg-accent/50 text-xs h-9"
-                  @click="handleSort(column)"
-                >
-                  <div class="flex items-center gap-1">
-                    {{ column }}
-                    <ArrowUpDown
-                      v-if="sortBy === column"
-                      class="h-3 w-3"
-                      :class="{ 'rotate-180': sortDir === 'desc' }"
-                    />
-                  </div>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="(row, idx) in mockTableData.rows" :key="idx" class="hover:bg-accent/30">
-                <TableCell
-                  v-for="column in mockTableData.columns"
-                  :key="column"
-                  class="text-sm py-2"
-                >
-                  <span v-if="column === 'id'" class="font-mono text-xs text-muted-foreground">{{ row[column] }}</span>
-                  <Badge v-else-if="column === 'role'" variant="secondary" class="text-[10px] h-5">{{ row[column] }}</Badge>
-                  <span v-else>{{ row[column] }}</span>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <div v-else-if="dataView" style="overflow-x: auto; overflow-y: visible;">
+            <table class="w-max border-collapse">
+              <thead>
+                <tr>
+                  <th
+                    v-for="column in dataView.columns"
+                    :key="column"
+                    class="sticky top-0 z-10 cursor-pointer hover:bg-accent/50 text-xs h-9 px-3 text-left font-medium border-r last:border-r-0 whitespace-nowrap bg-muted/50"
+                    @click="handleSort(column)"
+                  >
+                    <div class="flex items-center gap-1">
+                      {{ column }}
+                      <ArrowUpDown
+                        v-if="sortBy === column"
+                        class="h-3 w-3 shrink-0"
+                        :class="{ 'rotate-180': sortDir === 'desc' }"
+                      />
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, idx) in dataView.rows" :key="idx" class="hover:bg-accent/30">
+                  <td
+                    v-for="column in dataView.columns"
+                    :key="column"
+                    class="text-sm py-2 px-3 border-r last:border-r-0 whitespace-nowrap"
+                  >
+                    <span v-if="column === 'id'" class="font-mono text-xs text-muted-foreground">{{ row[column] }}</span>
+                    <Badge v-else-if="column === 'role' || column === 'status'" variant="secondary" class="text-[10px] h-5">{{ row[column] }}</Badge>
+                    <span v-else :title="String(row[column])">{{ row[column] }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Pagination -->
+        <!-- Pagination - fixed at bottom -->
         <div class="flex items-center justify-between px-4 py-2.5 border-t text-xs text-muted-foreground shrink-0">
           <span>
             {{ __('Showing :from to :to of :total rows', {
               from: (page - 1) * perPage + 1,
-              to: Math.min(page * perPage, mockTableData.totalRows),
-              total: mockTableData.totalRows,
+              to: Math.min(page * perPage, dataView?.totalRows ?? 0),
+              total: dataView?.totalRows ?? 0,
             }) }}
           </span>
           <div class="flex items-center gap-1">
-            <Button variant="outline" size="sm" class="h-7 text-xs" :disabled="page <= 1">
+            <Button variant="outline" size="sm" class="h-7 text-xs" :disabled="page <= 1" @click="page--; loadTableData()">
               {{ __('Previous') }}
             </Button>
             <span class="px-2">{{ page }}</span>
-            <Button variant="outline" size="sm" class="h-7 text-xs" :disabled="page >= Math.ceil(mockTableData.totalRows / perPage)">
+            <Button variant="outline" size="sm" class="h-7 text-xs" :disabled="!dataView || page >= Math.ceil(dataView.totalRows / perPage)" @click="page++; loadTableData()">
               {{ __('Next') }}
             </Button>
           </div>
