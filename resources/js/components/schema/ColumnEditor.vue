@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -12,7 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { X } from 'lucide-vue-next'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { X, Key, HelpCircle } from 'lucide-vue-next'
 import type { ColumnDefinition, PostgresType } from '@/types/schema'
 
 interface Props {
@@ -93,18 +100,17 @@ const update = (field: keyof ColumnDefinition, value: unknown) => {
 </script>
 
 <template>
-  <tr class="group border-b last:border-b-0 hover:bg-accent/30 transition-colors">
-    <td class="py-2 px-3">
+  <div class="group relative rounded-lg border bg-background p-3 transition-all hover:border-primary/30 hover:shadow-sm">
+    <!-- Header row: name + type + badges + remove -->
+    <div class="flex items-center gap-2 mb-2.5">
       <Input
         :model-value="column.name"
         placeholder="column_name"
-        class="h-8 text-sm font-mono"
+        class="h-8 text-sm font-mono flex-1"
         @update:model-value="update('name', $event)"
       />
-    </td>
-    <td class="py-2 px-3">
       <Select :model-value="column.type" @update:model-value="update('type', $event)">
-        <SelectTrigger class="h-8 text-sm">
+        <SelectTrigger class="h-8 text-sm w-36">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
@@ -116,48 +122,75 @@ const update = (field: keyof ColumnDefinition, value: unknown) => {
           </SelectGroup>
         </SelectContent>
       </Select>
-    </td>
-    <td class="py-2 px-3">
-      <Input
-        v-if="needsLength"
-        :model-value="column.length ?? ''"
-        type="number"
-        placeholder="255"
-        class="h-8 w-20 text-sm"
-        @update:model-value="update('length', $event ? Number($event) : null)"
-      />
-      <span v-else class="text-xs text-muted-foreground">—</span>
-    </td>
-    <td class="py-2 px-3 text-center">
-      <Checkbox
-        :checked="column.nullable"
-        @update:checked="update('nullable', $event)"
-      />
-    </td>
-    <td class="py-2 px-3">
-      <Input
-        :model-value="column.defaultValue ?? ''"
-        placeholder="gen_random_uuid()"
-        class="h-8 text-sm font-mono"
-        @update:model-value="update('defaultValue', $event || null)"
-      />
-    </td>
-    <td class="py-2 px-3 text-center">
-      <Checkbox
-        :checked="column.isPrimaryKey"
-        @update:checked="update('isPrimaryKey', $event)"
-      />
-    </td>
-    <td class="py-2 px-3 w-10">
+      <Badge v-if="column.isPrimaryKey" variant="default" class="h-6 text-[10px] gap-1 shrink-0">
+        <Key class="h-3 w-3" />
+        PK
+      </Badge>
       <Button
         v-if="canRemove"
         variant="ghost"
         size="icon"
-        class="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+        class="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
         @click="emit('remove', index)"
       >
-        <X class="h-3.5 w-3.5 text-destructive" />
+        <X class="h-3.5 w-3.5" />
       </Button>
-    </td>
-  </tr>
+    </div>
+
+    <!-- Options row -->
+    <div class="flex items-center gap-4 pl-0.5">
+      <!-- Length (only for varchar/char) -->
+      <div v-if="needsLength" class="flex items-center gap-1.5">
+        <span class="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{{ __('Length') }}</span>
+        <Input
+          :model-value="column.length ?? ''"
+          type="number"
+          placeholder="255"
+          class="h-7 w-16 text-xs text-center"
+          @update:model-value="update('length', $event ? Number($event) : null)"
+        />
+      </div>
+
+      <!-- Nullable -->
+      <label class="flex items-center gap-1.5 cursor-pointer select-none">
+        <Checkbox
+          :checked="column.nullable"
+          @update:checked="update('nullable', $event)"
+        />
+        <span class="text-xs text-muted-foreground">{{ __('Nullable') }}</span>
+      </label>
+
+      <!-- Primary Key -->
+      <label class="flex items-center gap-1.5 cursor-pointer select-none">
+        <Checkbox
+          :checked="column.isPrimaryKey"
+          @update:checked="update('isPrimaryKey', $event)"
+        />
+        <span class="text-xs text-muted-foreground">{{ __('Primary Key') }}</span>
+      </label>
+
+      <!-- Default -->
+      <div class="flex items-center gap-1.5 ml-auto">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="text-[10px] uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-0.5">
+                {{ __('Default') }}
+                <HelpCircle class="h-3 w-3 text-muted-foreground/50" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" class="max-w-64">
+              <p class="text-xs">{{ __('A raw SQL expression used as the default value. Examples: gen_random_uuid(), now(), 0, true.') }}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <Input
+          :model-value="column.defaultValue ?? ''"
+          placeholder="gen_random_uuid()"
+          class="h-7 w-40 text-xs font-mono"
+          @update:model-value="update('defaultValue', $event || null)"
+        />
+      </div>
+    </div>
+  </div>
 </template>

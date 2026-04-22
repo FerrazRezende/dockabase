@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import type { PostgresType, ValidationPresetType } from '@/types/schema'
 
 interface Props {
@@ -85,13 +84,13 @@ const getValue = (type: ValidationPresetType): string => {
   return String(val)
 }
 
-const toggle = (type: ValidationPresetType, checked: boolean) => {
+const toggle = (type: ValidationPresetType) => {
   const updated = { ...props.modelValue }
-  if (checked) {
+  if (isEnabled(type)) {
+    delete updated[type]
+  } else {
     const preset = allPresets.find(p => p.type === type)
     updated[type] = preset?.hasValue ? '' : true
-  } else {
-    delete updated[type]
   }
   emit('update:modelValue', updated)
 }
@@ -104,30 +103,30 @@ const setValue = (type: ValidationPresetType, value: string) => {
 </script>
 
 <template>
-  <div class="space-y-3">
-    <p class="text-sm font-medium">{{ columnName }} <span class="text-muted-foreground font-normal">({{ columnType }})</span></p>
-    <div class="grid gap-2.5 sm:grid-cols-2">
-      <div
-        v-for="preset in applicablePresets"
-        :key="preset.type"
-        class="flex items-center gap-3 rounded-lg border px-3 py-2"
-        :class="isEnabled(preset.type) ? 'border-primary/40 bg-primary/5' : 'border-border'"
-      >
-        <Checkbox
-          :checked="isEnabled(preset.type)"
-          @update:checked="toggle(preset.type, $event)"
-        />
-        <Label class="text-sm cursor-pointer flex-1" @click="toggle(preset.type, !isEnabled(preset.type))">
-          {{ __(preset.label) }}
-        </Label>
-        <Input
-          v-if="preset.hasValue && isEnabled(preset.type)"
-          :model-value="getValue(preset.type)"
-          :placeholder="preset.valuePlaceholder"
-          class="h-7 w-32 text-xs font-mono"
-          @update:model-value="setValue(preset.type, $event)"
-        />
-      </div>
-    </div>
+  <div class="grid gap-1.5 sm:grid-cols-2">
+    <button
+      v-for="preset in applicablePresets"
+      :key="preset.type"
+      type="button"
+      class="flex items-center gap-2.5 rounded-md px-3 py-2 text-left transition-all"
+      :class="isEnabled(preset.type)
+        ? 'bg-primary/10 border border-primary/30 hover:bg-primary/15'
+        : 'bg-muted/30 border border-transparent hover:bg-muted/60'"
+      @click="toggle(preset.type)"
+    >
+      <Checkbox
+        :checked="isEnabled(preset.type)"
+        class="pointer-events-none"
+      />
+      <span class="text-sm flex-1">{{ __(preset.label) }}</span>
+      <Input
+        v-if="preset.hasValue && isEnabled(preset.type)"
+        :model-value="getValue(preset.type)"
+        :placeholder="preset.valuePlaceholder"
+        class="h-7 w-28 text-xs font-mono pointer-events-auto"
+        @click.stop
+        @update:model-value="setValue(preset.type, $event)"
+      />
+    </button>
   </div>
 </template>

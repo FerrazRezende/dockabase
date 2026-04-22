@@ -677,5 +677,10 @@
     "In list": "En lista",
     "more tables": "más tablas",
     "rows": "filas",
-    "No tables yet": "Aún no hay tablas"
+    "No tables yet": "Aún no hay tablas",
+    "New Table": "Nueva Tabla",
+    "Define the columns of your table": "Define las columnas de tu tabla",
+    "Set validation rules for each column": "Establece reglas de validación para cada columna",
+    "Primary Key": "Clave Primaria",
+    "A raw SQL expression used as the default value. Examples: gen_random_uuid(), now(), 0, true.": "Una expresión SQL pura usada como valor predeterminado. Ejemplos: gen_random_uuid(), now(), 0, true."
 }

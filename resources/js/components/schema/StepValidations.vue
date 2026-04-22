@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { ChevronDown, ChevronRight } from 'lucide-vue-next'
+import { Badge } from '@/components/ui/badge'
 import ValidationPresets from '@/components/schema/ValidationPresets.vue'
 import type { ColumnDefinition } from '@/types/schema'
 
@@ -16,6 +17,12 @@ const emit = defineEmits<{
 
 const expandedColumns = ref<Set<string>>(new Set(props.columns.map(c => c.name)))
 
+// Re-expand when columns change
+watch(() => props.columns.map(c => c.name).join(','), (newKeys) => {
+  const newNames = props.columns.map(c => c.name)
+  expandedColumns.value = new Set(newNames.filter(n => expandedColumns.value.has(n) || true))
+})
+
 const toggleExpand = (name: string) => {
   const updated = new Set(expandedColumns.value)
   if (updated.has(name)) {
@@ -29,28 +36,38 @@ const toggleExpand = (name: string) => {
 const updateColumnValidations = (columnName: string, presets: Record<string, boolean | number | string>) => {
   emit('update:modelValue', { ...props.modelValue, [columnName]: presets })
 }
+
+const ruleCount = (columnName: string): number => {
+  const v = props.modelValue[columnName]
+  if (!v) return 0
+  return Object.values(v).filter(val => val !== false && val !== null && val !== undefined).length
+}
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="space-y-2">
     <div
       v-for="column in columns"
       :key="column.name"
-      class="rounded-lg border"
+      class="rounded-lg border overflow-hidden"
     >
       <button
-        class="flex items-center gap-2 w-full px-4 py-3 text-left hover:bg-accent/30 transition-colors"
+        type="button"
+        class="flex items-center gap-2 w-full px-4 py-2.5 text-left hover:bg-accent/50 transition-colors"
         @click="toggleExpand(column.name)"
       >
-        <ChevronDown v-if="expandedColumns.has(column.name)" class="h-4 w-4 text-muted-foreground" />
-        <ChevronRight v-else class="h-4 w-4 text-muted-foreground" />
+        <component :is="expandedColumns.has(column.name) ? ChevronDown : ChevronRight" class="h-4 w-4 text-muted-foreground shrink-0" />
         <span class="text-sm font-medium">{{ column.name }}</span>
-        <span class="text-xs text-muted-foreground">({{ column.type }})</span>
-        <span v-if="modelValue[column.name] && Object.keys(modelValue[column.name]).length > 0" class="ml-auto text-xs text-primary">
-          {{ Object.keys(modelValue[column.name]).length }} {{ __('rules') }}
-        </span>
+        <Badge variant="secondary" class="text-[10px] h-5">{{ column.type }}</Badge>
+        <Badge
+          v-if="ruleCount(column.name) > 0"
+          variant="default"
+          class="text-[10px] h-5 ml-auto"
+        >
+          {{ ruleCount(column.name) }} {{ __('rules') }}
+        </Badge>
       </button>
-      <div v-if="expandedColumns.has(column.name)" class="px-4 pb-4 pt-1 border-t">
+      <div v-if="expandedColumns.has(column.name)" class="px-4 pb-4 pt-2 border-t bg-muted/20">
         <ValidationPresets
           :column-name="column.name"
           :column-type="column.type"

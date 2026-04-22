@@ -677,5 +677,10 @@
     "In list": "In list",
     "more tables": "more tables",
     "rows": "rows",
-    "No tables yet": "No tables yet"
+    "No tables yet": "No tables yet",
+    "New Table": "New Table",
+    "Define the columns of your table": "Define the columns of your table",
+    "Set validation rules for each column": "Set validation rules for each column",
+    "Primary Key": "Primary Key",
+    "A raw SQL expression used as the default value. Examples: gen_random_uuid(), now(), 0, true.": "A raw SQL expression used as the default value. Examples: gen_random_uuid(), now(), 0, true."
 }

@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Loader2, ChevronLeft } from 'lucide-vue-next'
+import { Loader2, ChevronLeft, Table2, ShieldCheck } from 'lucide-vue-next'
 import StepColumns from '@/components/schema/StepColumns.vue'
 import StepValidations from '@/components/schema/StepValidations.vue'
 import { useToast } from 'vue-toastification'
@@ -96,40 +96,55 @@ const submit = async () => {
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
+    <!-- Header with back + title -->
+    <div class="flex items-center gap-4">
       <button
-        class="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        class="flex items-center justify-center h-8 w-8 rounded-lg border hover:bg-accent transition-colors"
         @click="emit('cancel')"
       >
         <ChevronLeft class="h-4 w-4" />
-        {{ __('Back to schemas') }}
       </button>
-      <span class="text-sm text-muted-foreground">
-        {{ currentStep }} / 2
-      </span>
+      <div class="flex-1">
+        <h2 class="text-lg font-semibold">{{ __('New Table') }}</h2>
+        <p class="text-sm text-muted-foreground">{{ currentStep === 1 ? __('Define the columns of your table') : __('Set validation rules for each column') }}</p>
+      </div>
     </div>
 
-    <!-- Step indicator -->
+    <!-- Step indicator pills -->
     <div class="flex gap-2">
-      <div class="h-1 flex-1 rounded-full" :class="currentStep >= 1 ? 'bg-primary' : 'bg-muted'" />
-      <div class="h-1 flex-1 rounded-full" :class="currentStep >= 2 ? 'bg-primary' : 'bg-muted'" />
+      <button
+        class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+        :class="currentStep === 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'"
+        @click="currentStep === 2 && canProceedToStep2 && (currentStep = 1)"
+      >
+        <Table2 class="h-3.5 w-3.5" />
+        {{ __('Columns') }}
+      </button>
+      <button
+        class="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+        :class="currentStep === 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'"
+        :disabled="!canProceedToStep2"
+        @click="canProceedToStep2 && (currentStep = 2)"
+      >
+        <ShieldCheck class="h-3.5 w-3.5" />
+        {{ __('Validations') }}
+      </button>
     </div>
 
     <!-- Table name + schema selector -->
     <div class="grid gap-4 sm:grid-cols-2">
-      <div class="space-y-2">
-        <Label>{{ __('Table Name') }}</Label>
+      <div class="space-y-1.5">
+        <Label class="text-xs">{{ __('Table Name') }}</Label>
         <Input
           v-model="tableName"
           placeholder="products"
-          class="font-mono"
+          class="font-mono h-9"
         />
       </div>
-      <div class="space-y-2">
-        <Label>{{ __('Schema') }} <span class="text-destructive">*</span></Label>
+      <div class="space-y-1.5">
+        <Label class="text-xs">{{ __('Schema') }} <span class="text-destructive">*</span></Label>
         <Select v-model="selectedSchema">
-          <SelectTrigger>
+          <SelectTrigger class="h-9">
             <SelectValue :placeholder="__('Select schema')" />
           </SelectTrigger>
           <SelectContent>
@@ -141,24 +156,21 @@ const submit = async () => {
       </div>
     </div>
 
-    <!-- Step 1: Columns -->
-    <div v-if="currentStep === 1">
-      <h3 class="text-sm font-medium mb-3">{{ __('Columns') }}</h3>
-      <StepColumns v-model="columns" />
-    </div>
-
-    <!-- Step 2: Validations -->
-    <div v-if="currentStep === 2">
-      <h3 class="text-sm font-medium mb-3">{{ __('Validations') }}</h3>
-      <StepValidations
-        :columns="columns"
-        :model-value="validations"
-        @update:model-value="Object.assign(validations, $event)"
-      />
+    <!-- Step content -->
+    <div class="rounded-xl border bg-card">
+      <div class="p-4">
+        <StepColumns v-if="currentStep === 1" v-model="columns" />
+        <StepValidations
+          v-else
+          :columns="columns"
+          :model-value="validations"
+          @update:model-value="Object.assign(validations, $event)"
+        />
+      </div>
     </div>
 
     <!-- Actions -->
-    <div class="flex justify-between pt-4 border-t">
+    <div class="flex justify-between pt-2">
       <Button
         v-if="currentStep === 2"
         variant="outline"
@@ -169,7 +181,7 @@ const submit = async () => {
       <div v-else />
 
       <div class="flex gap-2">
-        <Button variant="outline" @click="emit('cancel')">
+        <Button variant="ghost" @click="emit('cancel')">
           {{ __('Cancel') }}
         </Button>
         <Button
