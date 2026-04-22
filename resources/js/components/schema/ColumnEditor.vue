@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -13,13 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { X, Key, HelpCircle } from 'lucide-vue-next'
+import { X, Key } from 'lucide-vue-next'
 import type { ColumnDefinition, PostgresType } from '@/types/schema'
 
 interface Props {
@@ -97,6 +91,101 @@ const needsLength = computed(() => props.column.type === 'varchar' || props.colu
 const update = (field: keyof ColumnDefinition, value: unknown) => {
   emit('update', props.index, { ...props.column, [field]: value })
 }
+
+// Default value autocomplete
+const defaultSuggestions: Record<string, { value: string; label: string; desc: string }[]> = {
+  uuid: [
+    { value: 'gen_random_uuid()', label: 'gen_random_uuid()', desc: 'Auto-generated UUID v4' },
+  ],
+  timestamp: [
+    { value: 'now()', label: 'now()', desc: 'Current timestamp' },
+    { value: "CURRENT_TIMESTAMP", label: 'CURRENT_TIMESTAMP', desc: 'SQL standard timestamp' },
+  ],
+  date: [
+    { value: 'CURRENT_DATE', label: 'CURRENT_DATE', desc: 'Current date' },
+    { value: 'now()', label: 'now()', desc: 'Current timestamp' },
+  ],
+  time: [
+    { value: 'CURRENT_TIME', label: 'CURRENT_TIME', desc: 'Current time' },
+  ],
+  boolean: [
+    { value: 'true', label: 'true', desc: 'Boolean true' },
+    { value: 'false', label: 'false', desc: 'Boolean false' },
+  ],
+  integer: [
+    { value: '0', label: '0', desc: 'Zero' },
+    { value: '1', label: '1', desc: 'One' },
+  ],
+  bigint: [
+    { value: '0', label: '0', desc: 'Zero' },
+  ],
+  decimal: [
+    { value: '0', label: '0', desc: 'Zero' },
+    { value: '0.0', label: '0.0', desc: 'Zero (decimal)' },
+  ],
+  real: [
+    { value: '0', label: '0', desc: 'Zero' },
+  ],
+  varchar: [
+    { value: "''", label: "'' (empty string)", desc: 'Empty string' },
+  ],
+  text: [
+    { value: "''", label: "'' (empty string)", desc: 'Empty string' },
+  ],
+  jsonb: [
+    { value: "'{}'", label: "'{}'", desc: 'Empty JSON object' },
+    { value: "'[]'", label: "'[]'", desc: 'Empty JSON array' },
+  ],
+  json: [
+    { value: "'{}'", label: "'{}'", desc: 'Empty JSON object' },
+    { value: "'[]'", label: "'[]'", desc: 'Empty JSON array' },
+  ],
+}
+
+const suggestionsForType = computed(() => {
+  return defaultSuggestions[props.column.type] ?? []
+})
+
+const defaultInput = ref('')
+const showSuggestions = ref(false)
+const suggestionsRef = ref<HTMLElement | null>(null)
+const inputRef = ref<HTMLElement | null>(null)
+
+// Sync external value
+watch(() => props.column.defaultValue, (val) => {
+  defaultInput.value = val ?? ''
+}, { immediate: true })
+
+const filteredSuggestions = computed(() => {
+  const q = defaultInput.value.toLowerCase().trim()
+  if (!q) return suggestionsForType.value
+  return suggestionsForType.value.filter(s =>
+    s.value.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q)
+  )
+})
+
+const onDefaultInput = (value: string) => {
+  defaultInput.value = value
+  showSuggestions.value = true
+  update('defaultValue', value || null)
+}
+
+const selectSuggestion = (value: string) => {
+  defaultInput.value = value
+  showSuggestions.value = false
+  update('defaultValue', value)
+}
+
+const onDefaultFocus = () => {
+  showSuggestions.value = true
+}
+
+const onDefaultBlur = () => {
+  // Delay to allow click on suggestion
+  setTimeout(() => {
+    showSuggestions.value = false
+  }, 150)
+}
 </script>
 
 <template>
@@ -169,27 +258,36 @@ const update = (field: keyof ColumnDefinition, value: unknown) => {
         <span class="text-xs text-muted-foreground">{{ __('Primary Key') }}</span>
       </label>
 
-      <!-- Default -->
-      <div class="flex items-center gap-1.5 ml-auto">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <span class="text-[10px] uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-0.5">
-                {{ __('Default') }}
-                <HelpCircle class="h-3 w-3 text-muted-foreground/50" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" class="max-w-64">
-              <p class="text-xs">{{ __('A raw SQL expression used as the default value. Examples: gen_random_uuid(), now(), 0, true.') }}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <Input
-          :model-value="column.defaultValue ?? ''"
-          placeholder="gen_random_uuid()"
-          class="h-7 w-40 text-xs font-mono"
-          @update:model-value="update('defaultValue', $event || null)"
-        />
+      <!-- Default (autocomplete) -->
+      <div class="flex items-center gap-1.5 ml-auto relative">
+        <span class="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{{ __('Default') }}</span>
+        <div class="relative">
+          <Input
+            ref="inputRef"
+            :model-value="defaultInput"
+            placeholder="gen_random_uuid()"
+            class="h-7 w-40 text-xs font-mono"
+            @update:model-value="onDefaultInput"
+            @focus="onDefaultFocus"
+            @blur="onDefaultBlur"
+          />
+          <div
+            v-if="showSuggestions && filteredSuggestions.length > 0"
+            ref="suggestionsRef"
+            class="absolute z-50 top-full mt-1 w-56 rounded-md border bg-popover p-1 shadow-md"
+          >
+            <button
+              v-for="s in filteredSuggestions"
+              :key="s.value"
+              type="button"
+              class="flex items-center gap-2 w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent transition-colors"
+              @mousedown.prevent="selectSuggestion(s.value)"
+            >
+              <span class="font-mono font-medium">{{ s.label }}</span>
+              <span class="text-muted-foreground ml-auto">{{ s.desc }}</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
