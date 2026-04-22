@@ -250,9 +250,9 @@ const onDefaultBlur = () => {
       </label>
 
       <!-- Primary Key -->
-      <label class="flex items-center gap-1.5 cursor-pointer select-none">
+      <label v-if="!column.isPrimaryKey" class="flex items-center gap-1.5 cursor-pointer select-none">
         <Checkbox
-          :checked="column.isPrimaryKey"
+          :checked="false"
           @update:checked="update('isPrimaryKey', $event)"
         />
         <span class="text-xs text-muted-foreground">{{ __('Primary Key') }}</span>
