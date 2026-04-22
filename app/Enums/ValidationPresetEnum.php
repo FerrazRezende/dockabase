@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-use App\Enums\PostgresTypeEnum;
-
 enum ValidationPresetEnum: string
 {
     case REQUIRED = 'required';
@@ -38,62 +36,70 @@ enum ValidationPresetEnum: string
             self::MAX_VALUE => 'Max Value',
             self::INTEGER => 'Integer',
             self::NUMERIC => 'Numeric',
-            self::REGEX => 'Regex Pattern',
-            self::UNIQUE => 'Unique in Table',
-            self::EXISTS => 'Exists in Table',
-            self::EMAIL => 'Must be Email',
-            self::URL => 'Must be URL',
-            self::UUID => 'Must be UUID',
-            self::DATE => 'Must be Date',
-            self::BOOLEAN => 'Must be Boolean',
+            self::REGEX => 'Regex',
+            self::UNIQUE => 'Unique',
+            self::EXISTS => 'Exists',
+            self::EMAIL => 'Email',
+            self::URL => 'URL',
+            self::UUID => 'UUID',
+            self::DATE => 'Date',
+            self::BOOLEAN => 'Boolean',
             self::IN_LIST => 'In List',
-            self::ALPHA => 'Only Letters',
-            self::ALPHA_NUM => 'Letters + Numbers',
-            self::ALPHA_DASH => 'Letters, Numbers, Dash',
+            self::ALPHA => 'Alpha',
+            self::ALPHA_NUM => 'Alpha Num',
+            self::ALPHA_DASH => 'Alpha Dash',
         };
     }
 
-    public function toLaravelRule(mixed $value = null): string
+    public function hasValue(): bool
+    {
+        return in_array($this, [
+            self::MIN_LENGTH, self::MAX_LENGTH,
+            self::MIN_VALUE, self::MAX_VALUE,
+            self::REGEX, self::EXISTS, self::IN_LIST,
+        ], true);
+    }
+
+    public function applicableCategories(): array
+    {
+        $all = ['text', 'numeric', 'boolean', 'datetime', 'uuid', 'json', 'array', 'network'];
+
+        return match ($this) {
+            self::REQUIRED, self::NUMERIC => $all,
+            self::MIN_LENGTH, self::MAX_LENGTH, self::REGEX,
+            self::EMAIL, self::URL, self::UUID,
+            self::ALPHA, self::ALPHA_NUM, self::ALPHA_DASH,
+            self::IN_LIST => ['text'],
+            self::MIN_VALUE, self::MAX_VALUE, self::INTEGER => ['numeric'],
+            self::BOOLEAN => ['boolean'],
+            self::DATE => ['datetime'],
+            self::UNIQUE => $all,
+            self::EXISTS => $all,
+        };
+    }
+
+    public function toLaravelRule(?string $value = null, ?string $table = null, ?string $column = null): string
     {
         return match ($this) {
             self::REQUIRED => 'required',
-            self::MIN_LENGTH => $value !== null ? "min:{$value}" : 'min',
-            self::MAX_LENGTH => $value !== null ? "max:{$value}" : 'max',
-            self::MIN_VALUE => $value !== null ? "min:{$value}" : 'min',
-            self::MAX_VALUE => $value !== null ? "max:{$value}" : 'max',
+            self::MIN_LENGTH => "min:{$value}",
+            self::MAX_LENGTH => "max:{$value}",
+            self::MIN_VALUE => "min:{$value}",
+            self::MAX_VALUE => "max:{$value}",
             self::INTEGER => 'integer',
             self::NUMERIC => 'numeric',
-            self::REGEX => $value !== null ? "regex:{$value}" : 'regex',
-            self::UNIQUE => $value !== null ? "unique:{$value}" : 'unique',
-            self::EXISTS => $value !== null ? "exists:{$value}" : 'exists',
+            self::REGEX => "regex:{$value}",
+            self::UNIQUE => "unique:{$table},{$column}",
+            self::EXISTS => "exists:{$value}",
             self::EMAIL => 'email',
             self::URL => 'url',
             self::UUID => 'uuid',
             self::DATE => 'date',
             self::BOOLEAN => 'boolean',
-            self::IN_LIST => $value !== null ? "in:{$value}" : 'in',
+            self::IN_LIST => "in:{$value}",
             self::ALPHA => 'alpha',
             self::ALPHA_NUM => 'alpha_num',
             self::ALPHA_DASH => 'alpha_dash',
-        };
-    }
-
-    public function applicableTypes(): array
-    {
-        return match ($this) {
-            self::REQUIRED, self::NUMERIC, self::UNIQUE, self::EXISTS, self::UUID, self::BOOLEAN => PostgresTypeEnum::cases(),
-            self::MIN_LENGTH, self::MAX_LENGTH, self::REGEX, self::ALPHA, self::ALPHA_NUM, self::ALPHA_DASH, self::EMAIL, self::URL => [
-                PostgresTypeEnum::VARCHAR, PostgresTypeEnum::TEXT, PostgresTypeEnum::CHAR,
-            ],
-            self::MIN_VALUE, self::MAX_VALUE, self::INTEGER => [
-                PostgresTypeEnum::INTEGER, PostgresTypeEnum::BIGINT, PostgresTypeEnum::DECIMAL, PostgresTypeEnum::REAL,
-            ],
-            self::DATE => [
-                PostgresTypeEnum::TIMESTAMP, PostgresTypeEnum::DATE, PostgresTypeEnum::TIME,
-            ],
-            self::IN_LIST => [
-                PostgresTypeEnum::VARCHAR, PostgresTypeEnum::TEXT, PostgresTypeEnum::CHAR,
-            ],
         };
     }
 }
