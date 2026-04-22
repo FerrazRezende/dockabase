@@ -36,6 +36,7 @@ import {
   Plus,
 } from 'lucide-vue-next'
 import axios from 'axios'
+import CreateTableWizard from '@/components/schema/CreateTableWizard.vue'
 
 interface Props {
   databaseId: string
@@ -63,7 +64,8 @@ const {
 const toast = useToast()
 const { canEdit } = usePermissions()
 
-const view = ref<'folders' | 'browser'>('folders')
+const view = ref<'folders' | 'browser' | 'create-table'>('folders')
+const creatingForSchema = ref<string | null>(null)
 const searchInput = ref('')
 const createDialogOpen = ref(false)
 const newSchemaName = ref('')
@@ -117,6 +119,22 @@ const createSchema = async () => {
   } finally {
     creating.value = false
   }
+}
+
+const openCreateTable = (schemaName?: string) => {
+  creatingForSchema.value = schemaName ?? null
+  view.value = 'create-table'
+}
+
+const handleTableCreated = async () => {
+  view.value = 'folders'
+  creatingForSchema.value = null
+  await loadSchemas()
+}
+
+const cancelCreateTable = () => {
+  view.value = 'folders'
+  creatingForSchema.value = null
 }
 
 onMounted(() => {
@@ -207,13 +225,25 @@ onMounted(() => {
           </div>
         </div>
 
+        <div class="mt-3 pt-3 border-t" v-if="canEdit('databases')">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="w-full text-xs"
+            @click.stop="openCreateTable(schema.name)"
+          >
+            <Plus class="h-3 w-3 mr-1" />
+            {{ __('New Table') }}
+          </Button>
+        </div>
+
         <div class="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       </button>
     </div>
   </div>
 
   <!-- BROWSER VIEW: Table sidebar + data - FIXED HEIGHT, NO PAGE SCROLL -->
-  <div v-else class="flex rounded-lg border bg-card" style="height: calc(100vh - 14rem); min-height: 500px;">
+  <div v-else-if="view === 'browser'" class="flex rounded-lg border bg-card" style="height: calc(100vh - 14rem); min-height: 500px;">
     <!-- Left Sidebar: Tables - FIXED, no scroll on page -->
     <div class="w-60 border-r flex flex-col shrink-0">
       <div class="p-3 border-b">
@@ -233,6 +263,12 @@ onMounted(() => {
             {{ currentSchemaTables.length }}
           </Badge>
         </div>
+      </div>
+      <div v-if="canEdit('databases')" class="px-3 pb-2">
+        <Button variant="ghost" size="sm" class="w-full" @click="openCreateTable(selectedSchema!)">
+          <Plus class="h-3.5 w-3.5 mr-1.5" />
+          {{ __('New Table') }}
+        </Button>
       </div>
 
       <div class="flex-1 overflow-y-auto">
@@ -359,6 +395,16 @@ onMounted(() => {
       </template>
     </div>
   </div>
+
+  <!-- CREATE TABLE VIEW -->
+  <CreateTableWizard
+    v-if="view === 'create-table'"
+    :database-id="databaseId"
+    :schemas="schemas"
+    :pre-selected-schema="creatingForSchema ?? undefined"
+    @cancel="cancelCreateTable"
+    @created="handleTableCreated"
+  />
 
   <!-- Create Schema Dialog -->
   <Dialog v-model:open="createDialogOpen">
