@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import { useSchemaBrowser } from '@/composables/useSchemaBrowser'
 import { usePermissions } from '@/composables/usePermissions'
 import { useToast } from 'vue-toastification'
@@ -37,9 +37,11 @@ import {
 } from 'lucide-vue-next'
 import axios from 'axios'
 import CreateTableWizard from '@/components/schema/CreateTableWizard.vue'
+import { __ } from '@/composables/useLang'
 
 interface Props {
   databaseId: string
+  databaseStatus?: string
 }
 
 const props = defineProps<Props>()
@@ -138,13 +140,29 @@ const cancelCreateTable = () => {
 }
 
 onMounted(() => {
-  loadSchemas()
+  if (props.databaseStatus === 'ready') {
+    loadSchemas()
+  }
+})
+
+watch(() => props.databaseStatus, (newStatus) => {
+  if (newStatus === 'ready' && schemas.value.length === 0) {
+    loadSchemas()
+  }
 })
 </script>
 
 <template>
   <!-- FOLDERS VIEW: Schema cards -->
   <div v-if="view === 'folders'">
+    <!-- Database not ready -->
+    <div v-if="databaseStatus && databaseStatus !== 'ready'" class="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+      <Loader2 v-if="databaseStatus === 'processing'" class="h-6 w-6 animate-spin text-primary" />
+      <Folder v-else class="h-12 w-12 opacity-20" />
+      <p class="text-sm">{{ databaseStatus === 'processing' ? __('Database is being created...') : __('Database is not ready yet') }}</p>
+    </div>
+
+    <template v-else>
     <div class="flex items-center justify-between mb-6">
       <div>
         <h3 class="text-lg font-semibold">{{ __('Schemas') }}</h3>
@@ -225,21 +243,20 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="mt-3 pt-3 border-t" v-if="canEdit('databases')">
-          <Button
-            variant="ghost"
-            size="sm"
-            class="w-full text-xs"
+        <div v-if="canEdit('databases')" class="px-5 pb-4 pt-2">
+          <button
+            class="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium transition-colors"
             @click.stop="openCreateTable(schema.name)"
           >
-            <Plus class="h-3 w-3 mr-1" />
+            <Plus class="h-3 w-3" />
             {{ __('New Table') }}
-          </Button>
+          </button>
         </div>
 
         <div class="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       </button>
     </div>
+    </template>
   </div>
 
   <!-- BROWSER VIEW: Table sidebar + data - FIXED HEIGHT, NO PAGE SCROLL -->

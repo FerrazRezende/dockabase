@@ -500,7 +500,7 @@ const saveDatabase = () => {
                 <!-- Schema Tab -->
                 <PvTabsContent value="schema" :active-tab="activeTab" v-if="activeFeatures?.includes('schema-builder')">
                     <div class="overflow-hidden">
-                        <SchemaBrowser :database-id="database.id" />
+                        <SchemaBrowser :database-id="database.id" :database-status="status" />
                     </div>
                 </PvTabsContent>
             </PvTabs>
