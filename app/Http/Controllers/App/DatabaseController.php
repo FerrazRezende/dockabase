@@ -9,6 +9,7 @@ use App\Http\Requests\Database\CreateDatabaseRequest;
 use App\Http\Requests\Database\UpdateDatabaseRequest;
 use App\Http\Resources\App\DatabaseCollection;
 use App\Http\Resources\App\DatabaseResource;
+use App\Jobs\AttachCredentialJob;
 use App\Jobs\CreateDatabaseJob;
 use App\Models\Credential;
 use App\Models\Database;
@@ -145,9 +146,8 @@ class DatabaseController extends Controller
         $credential = Credential::findOrFail($request->input('credential_id'));
         $this->databaseService->attachCredential($database, $credential);
 
-        app(NotificationService::class)->notifyCredentialAttachedToDatabase(
-            $credential, $database, $request->user()
-        );
+        // Dispatch notification + future role creation to queue
+        AttachCredentialJob::dispatch($database, $credential, $request->user());
 
         return redirect()->back()->with('toast', ['message' => __('Credential added successfully')]);
     }
