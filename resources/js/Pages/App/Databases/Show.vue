@@ -4,6 +4,9 @@ import { __ } from '@/composables/useLang';
 import { ref, onMounted, onUnmounted, computed, reactive } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import PvTabs from '@/components/ui/pv-tabs/PvTabs.vue';
+import PvTabsContent from '@/components/ui/pv-tabs/PvTabsContent.vue';
+import SchemaBrowser from '@/components/schema/SchemaBrowser.vue';
 import {
     Card,
     CardContent,
@@ -45,7 +48,7 @@ import {
 } from '@/components/ui/table';
 import type { Database, DatabaseStatus, CreationStep } from '@/types/database';
 import type { Credential } from '@/types/credential';
-import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, Link2, AlertCircle, CheckCircle2, Loader2, Plus, Trash2, Key, Mail, Pencil, X } from 'lucide-vue-next';
+import { ArrowLeft, Server, Database as DatabaseIcon, Calendar, AlertCircle, Loader2, Plus, Trash2, Key, Mail, Pencil } from 'lucide-vue-next';
 import { useEcho } from '@/composables/useEcho';
 import { useEchoChannels } from '@/composables/useEchoChannels';
 import type { UserStatusChangedEvent, UserStatus } from '@/types/user-status';
@@ -64,31 +67,41 @@ const props = defineProps<Props>();
 const page = usePage();
 const toast = useToast();
 const { canEdit } = usePermissions();
+const activeFeatures = computed(() => page.props.activeFeatures as string[] | undefined);
+
+const tabs = computed(() => {
+    const baseTabs = [
+        { value: 'info', label: __('Information'), icon: 'Server' },
+    ];
+
+    if (activeFeatures.value?.includes('schema-builder')) {
+        baseTabs.push({ value: 'schema', label: __('Schema'), icon: 'Database' });
+    }
+
+    return baseTabs;
+});
 
 const currentStep = ref<CreationStep | null>(props.database.current_step);
 const progress = ref(props.database.progress);
 const status = ref<DatabaseStatus>(props.database.status);
 const errorMessage = ref(props.database.error_message);
+const activeTab = ref('info');
 
 const { subscribeToDatabase } = useEcho();
 
 let channel: ReturnType<typeof subscribeToDatabase> | null = null;
 
-// Add credential dialog
 const addCredentialDialogOpen = ref(false);
 const selectedCredentialId = ref<string>('');
 const attaching = ref(false);
 
-// Detach credential
 const detaching = ref<string | null>(null);
 const credentialToDelete = ref<{ id: string; name: string } | null>(null);
 const detachDialogOpen = ref(false);
 
-// Real-time user status
 const userStatuses = reactive<Record<string, UserStatus>>({});
 const { connect: connectPresence, listenToPresenceChannel, disconnect: disconnectPresence } = useEchoChannels();
 
-// Flash message on mount
 onMounted(async () => {
     const message = page.props.flash?.message as string | undefined;
     const messageType = page.props.flash?.messageType as string | undefined;
@@ -105,14 +118,13 @@ onMounted(async () => {
         }
     }
 
-    // Subscribe to database updates
     channel = subscribeToDatabase(props.database.id, {
         onStepUpdated: (data) => {
             currentStep.value = data.step;
             progress.value = data.progress;
             status.value = 'processing';
         },
-        onDatabaseCreated: (data) => {
+        onDatabaseCreated: () => {
             status.value = 'ready';
             currentStep.value = 'ready';
             progress.value = 100;
@@ -125,7 +137,6 @@ onMounted(async () => {
         },
     });
 
-    // Fetch initial user statuses from all credentials
     const userIds = credentials.value.flatMap(c => c.users?.map(u => u.id) || []);
     if (userIds.length > 0) {
         try {
@@ -134,14 +145,13 @@ onMounted(async () => {
         } catch { /* ignore */ }
     }
 
-    // Subscribe to presence channel for real-time user status
     try {
         await connectPresence();
         listenToPresenceChannel((event: UserStatusChangedEvent) => {
             userStatuses[event.user_id] = event.status as UserStatus;
         });
     } catch {
-        // Non-blocking: continue without real-time status updates
+        // Non-blocking
     }
 });
 
@@ -228,9 +238,7 @@ const getPermissionBadgeClass = (permission: string): string => {
 };
 
 const credentials = computed(() => props.database.credentials || []);
-const showReadyAlert = ref(true);
 
-// Edit database dialog
 const editDialogOpen = ref(false);
 const editForm = ref({
     display_name: '',
@@ -274,7 +282,6 @@ const saveDatabase = () => {
         }
     );
 };
-
 </script>
 
 <template>
@@ -300,217 +307,203 @@ const saveDatabase = () => {
             </div>
         </template>
 
-        <div class="space-y-6">
-            <!-- Timeline Card (only for pending/processing databases) -->
-            <Card v-if="status === 'pending' || status === 'processing'">
-                <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        <Loader2 v-if="status === 'processing'" class="h-5 w-5 animate-spin text-primary" />
-                        {{ __('Database Creation') }}
-                    </CardTitle>
-                    <CardDescription>
-                        {{ __('Monitor the creation progress') }}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <CreationTimeline
-                        :current-step="currentStep"
-                        :progress="progress"
-                        :status="status"
-                    />
-                </CardContent>
-            </Card>
-
-            <!-- Error Alert -->
-            <Alert v-if="status === 'failed'" variant="destructive">
-                <AlertCircle class="h-4 w-4" />
-                <AlertTitle>{{ __('Creation error') }}</AlertTitle>
-                <AlertDescription>
-                    {{ errorMessage }}
-                </AlertDescription>
-            </Alert>
-
-            <!-- Success Alert -->
-            <Alert v-if="status === 'ready' && showReadyAlert" class="border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950 relative">
-                <CheckCircle2 class="h-4 w-4 text-success" />
-                <AlertTitle class="text-success">{{ __('Database ready') }}</AlertTitle>
-                <AlertDescription>
-                    {{ __('The database is created and available for use.') }}
-                </AlertDescription>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    class="absolute top-2 right-2 h-6 w-6 text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200"
-                    @click="showReadyAlert = false"
-                >
-                    <X class="h-3 w-3" />
-                </Button>
-            </Alert>
-
-            <div class="grid gap-6 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle class="flex items-center justify-between">
-                            {{ __('Information') }}
-                            <Button v-if="canEdit('databases')" variant="outline" size="sm" @click="openEditDialog">
-                                <Pencil class="h-4 w-4 mr-2" />
-                                {{ __('Edit') }}
-                            </Button>
-                        </CardTitle>
-                        <CardDescription>{{ __('Database details') }}</CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
-                        <div class="flex justify-between">
-                            <span class="text-muted-foreground">{{ __('Name') }}</span>
-                            <span class="font-medium">{{ database.name }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-muted-foreground">{{ __('Database Name') }}</span>
-                            <span class="font-medium font-mono text-sm">{{ database.database_name }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-muted-foreground">{{ __('Status') }}</span>
-                            <Badge
-                                :variant="getStatusBadge().variant"
-                                :class="getStatusBadge().class"
-                            >
-                                {{ getStatusBadge().label }}
-                            </Badge>
-                        </div>
-                        <div v-if="database.description" class="pt-2 border-t">
-                            <span class="text-muted-foreground text-sm">{{ __('Description') }}</span>
-                            <p class="mt-1">{{ database.description }}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{{ __('Connection') }}</CardTitle>
-                        <CardDescription>{{ __('Connection settings') }}</CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-muted-foreground flex items-center gap-2">
-                                <Server class="h-4 w-4" />
-                                {{ __('Host') }}
-                            </span>
-                            <span class="font-medium font-mono text-sm">{{ database.host }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-muted-foreground">{{ __('Port') }}</span>
-                            <span class="font-medium">{{ database.port }}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <!-- Credentials Card -->
-                <Card class="md:col-span-2">
-                    <CardHeader>
-                        <div class="flex items-center justify-between">
-                            <div>
+        <div class="max-w-full overflow-hidden">
+            <PvTabs v-model="activeTab" :tabs="tabs">
+                <!-- Info Tab -->
+                <PvTabsContent value="info" :active-tab="activeTab">
+                    <div class="space-y-6">
+                        <!-- Timeline Card (pending/processing) -->
+                        <Card v-if="status === 'pending' || status === 'processing'">
+                            <CardHeader>
                                 <CardTitle class="flex items-center gap-2">
-                                    <Key class="h-5 w-5" />
-                                    {{ __('Credentials') }}
+                                    <Loader2 v-if="status === 'processing'" class="h-5 w-5 animate-spin text-primary" />
+                                    {{ __('Database Creation') }}
                                 </CardTitle>
-                                <CardDescription>{{ __('Credentials with access to this database') }}</CardDescription>
-                            </div>
-                            <Button v-if="canEdit('databases')" size="sm" @click="openAddCredentialDialog" :disabled="availableCredentials.length === 0">
-                                <Plus class="h-4 w-4 mr-2" />
-                                {{ __('Add') }}
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div v-if="credentials.length > 0" class="space-y-6">
-                            <div
-                                v-for="credential in credentials"
-                                :key="credential.id"
-                                class="rounded-lg border bg-card"
-                            >
-                                <div class="flex items-center justify-between p-3 border-b">
-                                    <div class="flex items-center gap-2">
-                                        <Key class="h-4 w-4 text-muted-foreground" />
-                                        <span class="font-medium">{{ credential.name }}</span>
-                                        <Badge :class="getPermissionBadgeClass(credential.permission)" class="ml-2">
-                                            {{ credential.permission_label || credential.permission }}
+                                <CardDescription>
+                                    {{ __('Monitor the creation progress') }}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <CreationTimeline
+                                    :current-step="currentStep"
+                                    :progress="progress"
+                                    :status="status"
+                                />
+                            </CardContent>
+                        </Card>
+
+                        <!-- Error Alert -->
+                        <Alert v-if="status === 'failed'" variant="destructive">
+                            <AlertCircle class="h-4 w-4" />
+                            <AlertTitle>{{ __('Creation error') }}</AlertTitle>
+                            <AlertDescription>
+                                {{ errorMessage }}
+                            </AlertDescription>
+                        </Alert>
+
+                        <!-- Info + Connection Cards -->
+                        <div class="grid gap-6 md:grid-cols-2">
+                            <Card>
+                                <CardHeader class="pb-4">
+                                    <CardTitle class="flex items-center justify-between text-base">
+                                        {{ __('Information') }}
+                                        <Button v-if="canEdit('databases')" variant="outline" size="sm" @click="openEditDialog">
+                                            <Pencil class="h-4 w-4 mr-2" />
+                                            {{ __('Edit') }}
+                                        </Button>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent class="space-y-3">
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-sm text-muted-foreground">{{ __('Name') }}</span>
+                                        <span class="text-sm font-medium">{{ database.name }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-sm text-muted-foreground">{{ __('Database Name') }}</span>
+                                        <span class="text-sm font-medium font-mono bg-muted px-2 py-0.5 rounded">{{ database.database_name }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-sm text-muted-foreground">{{ __('Status') }}</span>
+                                        <Badge
+                                            :variant="getStatusBadge().variant"
+                                            :class="getStatusBadge().class"
+                                        >
+                                            {{ getStatusBadge().label }}
                                         </Badge>
                                     </div>
-                                    <Button
-                                        v-if="canEdit('databases')"
-                                        variant="ghost"
-                                        size="icon"
-                                        class="text-destructive hover:text-destructive h-8 w-8"
-                                        @click="openDeleteCredentialDialog(credential)"
-                                        :disabled="detaching === credential.id"
-                                    >
-                                        <Trash2 class="h-4 w-4" />
+                                    <div v-if="database.description" class="pt-3 mt-1 border-t">
+                                        <span class="text-sm text-muted-foreground">{{ __('Description') }}</span>
+                                        <p class="mt-1 text-sm">{{ database.description }}</p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader class="pb-4">
+                                    <CardTitle class="text-base">{{ __('Connection') }}</CardTitle>
+                                </CardHeader>
+                                <CardContent class="space-y-3">
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-sm text-muted-foreground flex items-center gap-2">
+                                            <Server class="h-3.5 w-3.5" />
+                                            {{ __('Host') }}
+                                        </span>
+                                        <span class="text-sm font-medium font-mono bg-muted px-2 py-0.5 rounded">{{ database.host }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-sm text-muted-foreground">{{ __('Port') }}</span>
+                                        <span class="text-sm font-medium">{{ database.port }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-sm text-muted-foreground flex items-center gap-2">
+                                            <Calendar class="h-3.5 w-3.5" />
+                                            {{ __('Created at') }}
+                                        </span>
+                                        <span class="text-sm">{{ new Date(database.created_at).toLocaleString(page.props.locale || 'pt-BR') }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-center py-1">
+                                        <span class="text-sm text-muted-foreground flex items-center gap-2">
+                                            <Calendar class="h-3.5 w-3.5" />
+                                            {{ __('Updated at') }}
+                                        </span>
+                                        <span class="text-sm">{{ new Date(database.updated_at).toLocaleString(page.props.locale || 'pt-BR') }}</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <!-- Credentials Card -->
+                        <Card>
+                            <CardHeader class="pb-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle class="flex items-center gap-2 text-base">
+                                            <Key class="h-4 w-4" />
+                                            {{ __('Credentials') }}
+                                        </CardTitle>
+                                    </div>
+                                    <Button v-if="canEdit('databases')" size="sm" @click="openAddCredentialDialog" :disabled="availableCredentials.length === 0">
+                                        <Plus class="h-4 w-4 mr-2" />
+                                        {{ __('Add') }}
                                     </Button>
                                 </div>
-                                <Table v-if="credential.users && credential.users.length > 0">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>{{ __('User') }}</TableHead>
-                                            <TableHead>{{ __('Email') }}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        <TableRow v-for="user in credential.users" :key="user.id">
-                                            <TableCell>
-                                                <div class="flex items-center gap-3">
-                                                    <UserAvatarWithStatus
-                                                        :user-id="user.id"
-                                                        :user-name="user.name"
-                                                        :avatar-url="user.avatar"
-                                                        :status="userStatuses[user.id] || 'offline'"
-                                                        size="sm"
-                                                    />
-                                                    <span class="font-medium">{{ user.name }}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <span class="flex items-center gap-1 text-muted-foreground">
-                                                    <Mail class="h-3 w-3" />
-                                                    {{ user.email }}
-                                                </span>
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                                <p v-else class="text-muted-foreground text-sm text-center py-3">
-                                    {{ __('No users in this credential') }}
+                            </CardHeader>
+                            <CardContent>
+                                <div v-if="credentials.length > 0" class="space-y-4">
+                                    <div
+                                        v-for="credential in credentials"
+                                        :key="credential.id"
+                                        class="rounded-lg border bg-card"
+                                    >
+                                        <div class="flex items-center justify-between px-4 py-3 border-b">
+                                            <div class="flex items-center gap-2">
+                                                <Key class="h-4 w-4 text-muted-foreground" />
+                                                <span class="font-medium text-sm">{{ credential.name }}</span>
+                                                <Badge :class="getPermissionBadgeClass(credential.permission)" class="ml-1">
+                                                    {{ credential.permission_label || credential.permission }}
+                                                </Badge>
+                                            </div>
+                                            <Button
+                                                v-if="canEdit('databases')"
+                                                variant="ghost"
+                                                size="icon"
+                                                class="text-destructive hover:text-destructive h-8 w-8"
+                                                @click="openDeleteCredentialDialog(credential)"
+                                                :disabled="detaching === credential.id"
+                                            >
+                                                <Trash2 class="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <Table v-if="credential.users && credential.users.length > 0">
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>{{ __('User') }}</TableHead>
+                                                    <TableHead>{{ __('Email') }}</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                <TableRow v-for="user in credential.users" :key="user.id">
+                                                    <TableCell>
+                                                        <div class="flex items-center gap-3">
+                                                            <UserAvatarWithStatus
+                                                                :user-id="user.id"
+                                                                :user-name="user.name"
+                                                                :avatar-url="user.avatar"
+                                                                :status="userStatuses[user.id] || 'offline'"
+                                                                size="sm"
+                                                            />
+                                                            <span class="font-medium text-sm">{{ user.name }}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span class="flex items-center gap-1 text-sm text-muted-foreground">
+                                                            <Mail class="h-3 w-3" />
+                                                            {{ user.email }}
+                                                        </span>
+                                                    </TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                        <p v-else class="text-sm text-muted-foreground text-center py-3">
+                                            {{ __('No users in this credential') }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <p v-else class="text-sm text-muted-foreground text-center py-8">
+                                    {{ __('No credentials linked') }}
                                 </p>
-                            </div>
-                        </div>
-                        <p v-else class="text-muted-foreground text-center py-4">
-                            {{ __('No credentials linked') }}
-                        </p>
-                    </CardContent>
-                </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </PvTabsContent>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{{ __('Metadata') }}</CardTitle>
-                        <CardDescription>{{ __('Creation information') }}</CardDescription>
-                    </CardHeader>
-                    <CardContent class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-muted-foreground flex items-center gap-2">
-                                <Calendar class="h-4 w-4" />
-                                {{ __('Created at') }}
-                            </span>
-                            <span class="text-sm">{{ new Date(database.created_at).toLocaleString(page.props.locale || 'pt-BR') }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-muted-foreground flex items-center gap-2">
-                                <Calendar class="h-4 w-4" />
-                                {{ __('Updated at') }}
-                            </span>
-                            <span class="text-sm">{{ new Date(database.updated_at).toLocaleString(page.props.locale || 'pt-BR') }}</span>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                <!-- Schema Tab -->
+                <PvTabsContent value="schema" :active-tab="activeTab" v-if="activeFeatures?.includes('schema-builder')">
+                    <div class="overflow-hidden">
+                        <SchemaBrowser :database-id="database.id" :database-status="status" />
+                    </div>
+                </PvTabsContent>
+            </PvTabs>
         </div>
 
         <!-- Add Credential Dialog -->
