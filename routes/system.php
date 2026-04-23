@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\System\FeatureFlagController;
 use App\Http\Controllers\System\ImpersonateController;
+use App\Http\Controllers\System\MigrationController;
 use App\Http\Controllers\System\PermissionController;
 use App\Http\Controllers\System\RoleController;
 use App\Http\Controllers\System\UserController;
@@ -55,6 +56,14 @@ Route::middleware(['web', 'auth'])
         Route::post('/users/{user}/permissions', [UserController::class, 'syncPermissions'])->name('users.permissions.sync');
         Route::get('/users/{user}/activities', [UserController::class, 'activities'])->name('users.activities');
         Route::post('/users/{user}/impersonate', [ImpersonateController::class, 'start'])->name('users.impersonate.start');
+
+        // Migrations - requires schema-builder feature flag
+        Route::middleware(['feature:schema-builder'])->group(function (): void {
+            Route::get('/databases/{database}/migrations', [MigrationController::class, 'index'])->name('databases.migrations.index');
+            Route::post('/databases/{database}/migrations', [MigrationController::class, 'store'])->name('databases.migrations.store');
+            Route::post('/databases/{database}/migrations/{migration}/rollback', [MigrationController::class, 'rollback'])->name('databases.migrations.rollback');
+            Route::get('/databases/{database}/migrations/{migration}/sql', [MigrationController::class, 'showSql'])->name('databases.migrations.sql');
+        });
 
         // Impersonate
         Route::post('/stop-impersonating', [ImpersonateController::class, 'stop'])->name('impersonate.stop');
