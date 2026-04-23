@@ -58,6 +58,11 @@ class Database extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeNotDeleted($query)
+    {
+        return $query->where('status', '!=', 'deleted');
+    }
+
     public function scopeOfName($query, string $name)
     {
         return $query->where('name', $name);
