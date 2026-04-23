@@ -105,8 +105,8 @@ return [
         OperationTerminated::class => [
             FlushOnce::class,
             FlushTemporaryContainerInstances::class,
-            // DisconnectFromDatabases::class,
-            // CollectGarbage::class,
+            DisconnectFromDatabases::class,
+            CollectGarbage::class,
         ],
 
         WorkerErrorOccurred::class => [
@@ -151,10 +151,7 @@ return [
     */
 
     'tables' => [
-        'example:1000' => [
-            'name' => 'string:1000',
-            'votes' => 'int',
-        ],
+        //
     ],
 
     /*
@@ -171,9 +168,6 @@ return [
     'cache' => [
         'rows' => 1000,
         'bytes' => 10000,
-        'tables' => [
-            // No tables warmed — prevents state leak
-        ],
     ],
 
     /*

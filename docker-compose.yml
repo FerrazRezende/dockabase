@@ -19,6 +19,8 @@ services:
         condition: service_healthy
     environment:
       REDIS_HOST: redis
+      XDG_CONFIG_HOME: /app/config
+      XDG_DATA_HOME: /app/data
     networks:
       - dockabase_network
 
