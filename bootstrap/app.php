@@ -4,6 +4,7 @@ use App\Providers\FeatureServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
@@ -24,7 +25,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ])->each(fn ($path) => require $path),
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: '*');
+        $proxies = env('TRUSTED_PROXIES', '*');
+        $middleware->trustProxies(
+            at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)),
+            headers: Request::HEADER_X_FORWARDED_FOR |
+                Request::HEADER_X_FORWARDED_HOST |
+                Request::HEADER_X_FORWARDED_PORT |
+                Request::HEADER_X_FORWARDED_PROTO,
+        );
 
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
