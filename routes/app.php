@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Http\Controllers\App\CredentialController;
 use App\Http\Controllers\App\DatabaseController;
-use App\Http\Controllers\App\SchemaBuilderController;
 use App\Http\Controllers\System\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,16 +34,6 @@ Route::middleware(['web', 'auth'])
             Route::delete('/databases/{database}', [DatabaseController::class, 'destroy'])->name('databases.destroy');
             Route::post('/databases/{database}/credentials', [DatabaseController::class, 'attachCredential'])->name('databases.credentials.attach');
             Route::delete('/databases/{database}/credentials/{credential}', [DatabaseController::class, 'detachCredential'])->name('databases.credentials.detach');
-
-            // Schema Builder - requires schema-builder feature flag
-            Route::middleware(['feature:schema-builder'])->group(function (): void {
-                Route::get('/databases/{database}/schema', [SchemaBuilderController::class, 'index'])->name('databases.schema');
-                Route::post('/databases/{database}/schemas', [SchemaBuilderController::class, 'storeSchema'])->name('databases.schemas.store');
-                Route::get('/databases/{database}/tables/{schema}/{table}', [SchemaBuilderController::class, 'tableData'])->name('databases.tables.data');
-                Route::get('/databases/{database}/tables/{schema}/{table}/columns', [SchemaBuilderController::class, 'columns'])->name('databases.tables.columns');
-                Route::post('/databases/{database}/tables', [SchemaBuilderController::class, 'store'])->name('databases.tables.store');
-                Route::delete('/databases/{database}/tables/{schema}/{table}', [SchemaBuilderController::class, 'destroy'])->name('databases.tables.destroy');
-            });
         });
 
         // Credentials - requires credentials-manager feature flag

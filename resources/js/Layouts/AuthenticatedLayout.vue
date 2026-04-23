@@ -286,7 +286,7 @@ const initials = (name: string): string => {
         </aside>
 
         <!-- Main Content -->
-        <main :class="['flex-1 transition-all duration-300 flex flex-col min-w-0 overflow-x-hidden', collapsed ? 'ml-16' : 'ml-64']">
+        <main :class="['flex-1 transition-all duration-300 flex flex-col', collapsed ? 'ml-16' : 'ml-64']">
             <!-- Header -->
             <header
                 v-if="impersonating?.is_impersonating"

@@ -53,16 +53,6 @@ class Database extends Model
         return $this->hasMany(DatabaseSchemaHistory::class);
     }
 
-    public function migrations(): HasMany
-    {
-        return $this->hasMany(SystemMigration::class);
-    }
-
-    public function tableMetadata(): HasMany
-    {
-        return $this->hasMany(DatabaseTableMetadata::class);
-    }
-
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
