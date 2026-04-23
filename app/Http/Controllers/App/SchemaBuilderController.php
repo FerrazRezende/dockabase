@@ -6,6 +6,7 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Requests\SchemaBuilder\{CreateTableRequest, TableDataRequest};
 use App\Http\Resources\App\{ColumnResource, SchemaResource, TableDataResource};
+use App\Jobs\CreateSchemaJob;
 use App\Models\Database;
 use App\Models\DatabaseTableMetadata;
 use App\Services\{MigrationExecutorService, MigrationGeneratorService, SchemaBuilderService, SchemaIntrospectionService};
@@ -91,9 +92,11 @@ class SchemaBuilderController
             'name' => ['required', 'string', 'max:63', 'regex:/^[a-z][a-z0-9_]*$/'],
         ]);
 
-        $this->introspectionService->createSchema($database, $validated['name']);
+        CreateSchemaJob::dispatch($database, $validated['name']);
 
-        return response()->json(['message' => __('Schema created successfully')]);
+        return response()->json([
+            'message' => __('Schema creation request sent successfully'),
+        ]);
     }
 
     public function store(Database $database, CreateTableRequest $request): RedirectResponse
