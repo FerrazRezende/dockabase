@@ -11,6 +11,7 @@ use App\Http\Resources\App\DatabaseCollection;
 use App\Http\Resources\App\DatabaseResource;
 use App\Jobs\AttachCredentialJob;
 use App\Jobs\CreateDatabaseJob;
+use App\Jobs\DestroyDatabaseJob;
 use App\Models\Credential;
 use App\Models\Database;
 use App\Services\DatabaseService;
@@ -126,13 +127,17 @@ class DatabaseController extends Controller
     {
         $this->authorize('delete', $database);
 
-        $this->databaseService->delete($database->id);
+        $databaseId = $database->id;
+
+        // Dispatch async deletion to queue
+        DestroyDatabaseJob::dispatch($databaseId);
 
         if ($request->wantsJson()) {
-            return response()->json(null, 204);
+            return response()->json(null, 202);
         }
 
-        return to_route('app.databases.index');
+        return to_route('app.databases.index')
+            ->with('toast', ['message' => __('Database deletion request sent')]);
     }
 
     public function attachCredential(Request $request, Database $database): RedirectResponse
