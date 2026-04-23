@@ -1,4 +1,4 @@
-.PHONY: up down build shell composer-install npm-install npm-dev migrate migrate-fresh tinker test clean help
+.PHONY: up down build shell composer-install npm-install npm-dev migrate migrate-fresh tinker test clean help octane-restart
 
 # =============================================================================
 # DOCKER
@@ -119,6 +119,15 @@ reverb-logs:
 	docker compose logs -f reverb
 
 # =============================================================================
+# OCTANE (FrankenPHP)
+# =============================================================================
+octane-restart:
+	docker compose restart app
+
+octane-logs:
+	docker compose logs -f app
+
+# =============================================================================
 # LOGS
 # =============================================================================
 logs:
@@ -197,6 +206,10 @@ help:
 	@echo "Reverb (WebSocket):"
 	@echo "  make reverb-start     - Start Reverb server"
 	@echo "  make reverb-logs      - View Reverb logs"
+	@echo ""
+	@echo "Octane (FrankenPHP):"
+	@echo "  make octane-restart   - Restart Octane workers"
+	@echo "  make octane-logs      - View Octane logs"
 	@echo ""
 	@echo "Laravel:"
 	@echo "  make artisan cmd=xxx  - Run artisan command"
