@@ -624,6 +624,7 @@
     "Showing :from to :to of :total records": "Mostrando :from a :to de :total registros",
     "No data available": "Nenhum dado disponível",
     "Table created successfully": "Tabela criada com sucesso",
+    "Table creation request sent successfully": "Solicitação de criação de tabela enviada com sucesso",
     "Failed to load schema": "Falha ao carregar schema",
     "Failed to load table data": "Falha ao carregar dados da tabela",
     "Failed to export CSV": "Falha ao exportar CSV",

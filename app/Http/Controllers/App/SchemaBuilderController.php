@@ -6,12 +6,12 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Requests\SchemaBuilder\{CreateTableRequest, TableDataRequest};
 use App\Http\Resources\App\{ColumnResource, SchemaResource, TableDataResource};
-use App\Jobs\CreateSchemaJob;
+use App\Jobs\{CreateSchemaJob, CreateTableJob};
 use App\Models\Database;
 use App\Models\DatabaseTableMetadata;
 use App\Services\{MigrationExecutorService, MigrationGeneratorService, SchemaBuilderService, SchemaIntrospectionService};
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\{DB, Gate};
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -116,31 +116,17 @@ class SchemaBuilderController
             $metadata['columns'],
         );
 
-        return DB::transaction(function () use ($database, $migrationDef, $metadata, $request) {
-            $migration = $database->migrations()->create([
-                'batch' => 1,
-                'name' => 'Create table ' . $request->input('name'),
-                'operation' => $migrationDef['operation'],
-                'table_name' => $request->input('name'),
-                'schema_name' => $request->input('schema', 'public'),
-                'sql_up' => $migrationDef['sql_up'],
-                'sql_down' => $migrationDef['sql_down'],
-                'status' => 'executed',
-                'executed_at' => now(),
-            ]);
+        CreateTableJob::dispatch(
+            $database,
+            $request->input('schema', 'public'),
+            $request->input('name'),
+            $metadata['columns'],
+            $metadata['validations'],
+            $request->input('messages'),
+            $migrationDef,
+        );
 
-            $this->migrationExecutorService->execute($database, $migrationDef['sql_up']);
-
-            $database->tableMetadata()->create([
-                'schema_name' => $request->input('schema', 'public'),
-                'table_name' => $request->input('name'),
-                'columns' => $metadata['columns'],
-                'validations' => $metadata['validations'],
-                'messages' => $request->input('messages'),
-            ]);
-
-            return redirect()->back()->with('toast', ['message' => __('Table created successfully')]);
-        });
+        return redirect()->back()->with('toast', ['message' => __('Table creation request sent successfully')]);
     }
 
     public function destroy(Database $database, string $schema, string $table)
