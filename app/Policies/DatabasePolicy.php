@@ -23,15 +23,6 @@ class DatabasePolicy
         return $this->canAccess($user, $database);
     }
 
-    public function viewSchema(User $user, Database $database): bool
-    {
-        if (! $user->checkPermission('databases.view')) {
-            return false;
-        }
-
-        return $this->canAccess($user, $database);
-    }
-
     public function create(User $user): bool
     {
         return $user->checkPermission('databases.create');

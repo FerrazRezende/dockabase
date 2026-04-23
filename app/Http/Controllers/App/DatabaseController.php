@@ -14,8 +14,6 @@ use App\Models\Credential;
 use App\Models\Database;
 use App\Services\DatabaseService;
 use App\Services\NotificationService;
-use Illuminate\Support\Facades\Gate;
-use Laravel\Pennant\Feature;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,20 +102,9 @@ class DatabaseController extends Controller
             return new DatabaseResource($database);
         }
 
-        // Get active features for the current user
-        $activeFeatures = [];
-        $allFeatures = config('features.definitions');
-
-        foreach ($allFeatures as $key => $definition) {
-            if (Feature::for($request->user())->active($key)) {
-                $activeFeatures[] = $key;
-            }
-        }
-
         return Inertia::render('App/Databases/Show', [
             'database' => (new DatabaseResource($database))->toArray($request),
             'availableCredentials' => $availableCredentials,
-            'activeFeatures' => $activeFeatures,
         ]);
     }
 
