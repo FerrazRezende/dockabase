@@ -1,26 +1,7 @@
-FROM php:8.4-fpm
+FROM dunglas/frankenphp:latest-php8.4
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    postgresql-client \
-    libpq-dev \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libwebp-dev \
-    supervisor \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install \
+# Install PHP extensions using FrankenPHP's built-in helper
+RUN install-php-extensions \
     pdo \
     pdo_pgsql \
     pgsql \
@@ -31,27 +12,34 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     gd \
     zip \
     opcache \
-    sockets
+    sockets \
+    redis
 
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    postgresql-client \
+    unzip \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Install Node.js & NPM
+# Install Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /var/www/html
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-COPY . /var/www/html
+WORKDIR /app
 
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
+COPY . /app
 
-EXPOSE 9000
+RUN chown -R www-data:www-data /app \
+    && chmod -R 775 /app/storage \
+    && chmod -R 775 /app/bootstrap/cache
 
-CMD ["php-fpm"]
+EXPOSE 8000
+
+CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=8000"]
