@@ -31,6 +31,7 @@ class CreateTableRequest extends FormRequest
             'columns.*.foreign_key.table' => ['required_with:columns.*.foreign_key', 'string', 'max:63'],
             'columns.*.foreign_key.column' => ['required_with:columns.*.foreign_key', 'string', 'max:63'],
             'validations' => ['nullable', 'array'],
+            'messages' => ['nullable', 'array'],
         ];
     }
 }

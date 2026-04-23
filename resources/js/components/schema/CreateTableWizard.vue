@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
+import { __ } from '@/composables/useLang'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -53,6 +54,7 @@ const columns = ref<ColumnDefinition[]>([
 ])
 
 const validations = reactive<Record<string, Record<string, boolean | number | string>>>({})
+const messages = reactive<Record<string, Record<string, string>>>({})
 
 const canProceedToStep2 = computed(() => {
   return tableName.value.trim() !== '' &&
@@ -81,6 +83,7 @@ const submit = async () => {
         foreign_key: c.foreignKey,
       })),
       validations: validations,
+      messages: messages,
     })
 
     toast.success(__('Table created successfully'))
@@ -157,14 +160,16 @@ const submit = async () => {
     </div>
 
     <!-- Step content -->
-    <div class="rounded-xl border bg-card">
+    <div class="rounded-xl border bg-card min-h-[400px]">
       <div class="p-4">
         <StepColumns v-if="currentStep === 1" v-model="columns" />
         <StepValidations
           v-else
           :columns="columns"
           :model-value="validations"
+          :messages="messages"
           @update:model-value="Object.assign(validations, $event)"
+          @update:messages="Object.assign(messages, $event)"
         />
       </div>
     </div>

@@ -43,6 +43,8 @@ Route::middleware(['web', 'auth'])
                 Route::get('/databases/{database}/tables/{schema}/{table}', [SchemaBuilderController::class, 'tableData'])->name('databases.tables.data');
                 Route::get('/databases/{database}/tables/{schema}/{table}/columns', [SchemaBuilderController::class, 'columns'])->name('databases.tables.columns');
                 Route::post('/databases/{database}/tables', [SchemaBuilderController::class, 'store'])->name('databases.tables.store');
+                Route::get('/databases/{database}/tables/{schema}/{table}/settings', [SchemaBuilderController::class, 'settings'])->name('databases.tables.settings');
+                Route::put('/databases/{database}/tables/{schema}/{table}/settings', [SchemaBuilderController::class, 'updateSettings'])->name('databases.tables.settings.update');
                 Route::delete('/databases/{database}/tables/{schema}/{table}', [SchemaBuilderController::class, 'destroy'])->name('databases.tables.destroy');
             });
         });

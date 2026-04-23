@@ -7,9 +7,12 @@ namespace App\Http\Controllers\App;
 use App\Http\Requests\SchemaBuilder\{CreateTableRequest, TableDataRequest};
 use App\Http\Resources\App\{ColumnResource, SchemaResource, TableDataResource};
 use App\Models\Database;
+use App\Models\DatabaseTableMetadata;
 use App\Services\{MigrationExecutorService, MigrationGeneratorService, SchemaBuilderService, SchemaIntrospectionService};
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\{DB, Gate};
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SchemaBuilderController
 {
@@ -130,6 +133,7 @@ class SchemaBuilderController
                 'table_name' => $request->input('name'),
                 'columns' => $metadata['columns'],
                 'validations' => $metadata['validations'],
+                'messages' => $request->input('messages'),
             ]);
 
             return redirect()->back()->with('toast', ['message' => __('Table created successfully')]);
@@ -141,5 +145,49 @@ class SchemaBuilderController
         Gate::authorize('delete', $database);
 
         // TODO: Implement drop table
+    }
+
+    public function settings(Database $database, string $schema, string $table): Response
+    {
+        Gate::authorize('view', $database);
+
+        $columns = $this->introspectionService->getColumns($database, $schema, $table);
+        $metadata = DatabaseTableMetadata::where('database_id', $database->id)
+            ->where('schema_name', $schema)
+            ->where('table_name', $table)
+            ->first();
+
+        return Inertia::render('App/Tables/Settings', [
+            'database' => $database,
+            'schema' => $schema,
+            'table' => $table,
+            'columns' => $columns,
+            'validations' => $metadata?->validations ?? [],
+            'messages' => $metadata?->messages ?? [],
+        ]);
+    }
+
+    public function updateSettings(Database $database, string $schema, string $table, \Illuminate\Http\Request $request): RedirectResponse
+    {
+        Gate::authorize('update', $database);
+
+        $validated = $request->validate([
+            'validations' => ['nullable', 'array'],
+            'messages' => ['nullable', 'array'],
+        ]);
+
+        DatabaseTableMetadata::updateOrCreate(
+            [
+                'database_id' => $database->id,
+                'schema_name' => $schema,
+                'table_name' => $table,
+            ],
+            [
+                'validations' => $validated['validations'] ?? [],
+                'messages' => $validated['messages'] ?? [],
+            ],
+        );
+
+        return redirect()->back()->with('toast', ['message' => __('Table settings updated successfully')]);
     }
 }

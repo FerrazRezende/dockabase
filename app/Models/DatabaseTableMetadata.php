@@ -20,6 +20,7 @@ class DatabaseTableMetadata extends Model
         'table_name',
         'columns',
         'validations',
+        'messages',
     ];
 
     protected function casts(): array
@@ -27,6 +28,7 @@ class DatabaseTableMetadata extends Model
         return [
             'columns' => 'array',
             'validations' => 'array',
+            'messages' => 'array',
         ];
     }
 

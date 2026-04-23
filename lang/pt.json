@@ -682,5 +682,17 @@
     "Define the columns of your table": "Defina as colunas da sua tabela",
     "Set validation rules for each column": "Defina regras de validação para cada coluna",
     "Primary Key": "Chave Primária",
-    "A raw SQL expression used as the default value. Examples: gen_random_uuid(), now(), 0, true.": "Uma expressão SQL pura usada como valor padrão. Exemplos: gen_random_uuid(), now(), 0, true."
+    "A raw SQL expression used as the default value. Examples: gen_random_uuid(), now(), 0, true.": "Uma expressão SQL pura usada como valor padrão. Exemplos: gen_random_uuid(), now(), 0, true.",
+    "This table has no data yet": "Esta tabela ainda não possui dados",
+    "Table settings": "Configurações da tabela",
+    "Error Messages": "Mensagens de Erro",
+    "Custom error message (optional)": "Mensagem de erro personalizada (opcional)",
+    "Save Settings": "Salvar Configurações",
+    "Current column structure of this table": "Estrutura atual de colunas desta tabela",
+    "Configure validation rules and custom error messages for each column": "Configure regras de validação e mensagens de erro personalizadas para cada coluna",
+    "Validations & Messages": "Validações & Mensagens",
+    "Table settings updated successfully": "Configurações da tabela atualizadas com sucesso",
+    "Failed to update table settings": "Falha ao atualizar configurações da tabela",
+    "Table Settings: :name": "Configurações da Tabela: :name",
+    "No validations defined. Go back to Step 2 to add validation rules first.": "Nenhuma validação definida. Volte para a Etapa 2 para adicionar regras de validação."
 }

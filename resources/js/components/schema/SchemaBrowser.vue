@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from 'vue'
+import { router } from '@inertiajs/vue3'
 import { useSchemaBrowser } from '@/composables/useSchemaBrowser'
 import { usePermissions } from '@/composables/usePermissions'
 import { useToast } from 'vue-toastification'
@@ -28,15 +29,19 @@ import {
   Folder,
   Table as TableIcon,
   ChevronLeft,
+  ChevronRight,
+  ChevronDown,
   Search,
   Loader2,
   ArrowUpDown,
   Columns3,
   TableProperties,
   Plus,
+  Settings,
 } from 'lucide-vue-next'
 import axios from 'axios'
 import CreateTableWizard from '@/components/schema/CreateTableWizard.vue'
+import ColumnBadge from '@/components/schema/ColumnBadge.vue'
 import { __ } from '@/composables/useLang'
 
 interface Props {
@@ -50,11 +55,13 @@ const {
   schemas,
   selectedSchema,
   selectedTable,
+  expandedTables,
   loading,
   dataView,
   dataLoading,
   loadSchemas,
   selectTable,
+  toggleTableExpand,
   search,
   sortBy,
   sortDir,
@@ -290,21 +297,37 @@ watch(() => props.databaseStatus, (newStatus) => {
 
       <div class="flex-1 overflow-y-auto">
         <div class="p-2 space-y-0.5">
-          <button
-            v-for="table in currentSchemaTables"
-            :key="table.name"
-            class="w-full flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors text-left"
-            :class="selectedTable === table.name
-              ? 'bg-primary/10 text-primary font-medium'
-              : 'hover:bg-accent'"
-            @click="handleSelectTable(selectedSchema!, table.name)"
-          >
-            <TableIcon class="h-3.5 w-3.5 shrink-0 opacity-60" />
-            <span class="truncate">{{ table.name }}</span>
-            <span class="ml-auto text-[10px] text-muted-foreground font-mono">
-              {{ table.rowCount }}
-            </span>
-          </button>
+          <div v-for="table in currentSchemaTables" :key="table.name">
+            <div class="flex items-center">
+              <button
+                class="flex-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors text-left"
+                :class="selectedTable === table.name
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'hover:bg-accent'"
+                @click="handleSelectTable(selectedSchema!, table.name)"
+              >
+                <TableIcon class="h-3.5 w-3.5 shrink-0 opacity-60" />
+                <span class="truncate">{{ table.name }}</span>
+                <span class="ml-auto text-[10px] text-muted-foreground font-mono">
+                  {{ table.rowCount }}
+                </span>
+              </button>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="h-6 w-6 shrink-0"
+                @click="toggleTableExpand(table.name)"
+              >
+                <component :is="expandedTables.has(table.name) ? ChevronDown : ChevronRight" class="h-3 w-3" />
+              </Button>
+            </div>
+
+            <div v-if="expandedTables.has(table.name)" class="ml-5 mt-0.5 mb-1 space-y-0.5">
+              <div v-for="column in table.columns" :key="column.name" class="flex items-center gap-1 px-2 py-1 text-xs rounded hover:bg-accent/50">
+                <ColumnBadge :column="column" />
+              </div>
+            </div>
+          </div>
 
           <div v-if="currentSchemaTables.length === 0" class="text-center py-8 text-muted-foreground text-xs">
             {{ __('No tables found') }}
@@ -333,7 +356,20 @@ watch(() => props.databaseStatus, (newStatus) => {
               {{ dataView?.columns?.length ?? 0 }} {{ __('cols') }}
             </Badge>
           </div>
-          <div class="ml-auto">
+          <div class="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="h-8 w-8"
+              :title="__('Table settings')"
+              @click="router.visit(route('app.databases.tables.settings', {
+                database: databaseId,
+                schema: selectedSchema!,
+                table: selectedTable!,
+              }))"
+            >
+              <Settings class="h-4 w-4" />
+            </Button>
             <div class="relative w-52">
               <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
@@ -353,7 +389,7 @@ watch(() => props.databaseStatus, (newStatus) => {
           </div>
 
           <div v-else-if="dataView" style="overflow-x: auto; overflow-y: visible;">
-            <table class="w-max border-collapse">
+            <table v-if="dataView.columns.length > 0" class="w-max border-collapse">
               <thead>
                 <tr>
                   <th
@@ -374,6 +410,14 @@ watch(() => props.databaseStatus, (newStatus) => {
                 </tr>
               </thead>
               <tbody>
+                <tr v-if="dataView.rows.length === 0">
+                  <td :colspan="dataView.columns.length" class="p-0">
+                    <div class="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                      <TableIcon class="h-8 w-8 mb-2 opacity-20" />
+                      <p class="text-sm">{{ __('This table has no data yet') }}</p>
+                    </div>
+                  </td>
+                </tr>
                 <tr v-for="(row, idx) in dataView.rows" :key="idx" class="hover:bg-accent/30">
                   <td
                     v-for="column in dataView.columns"

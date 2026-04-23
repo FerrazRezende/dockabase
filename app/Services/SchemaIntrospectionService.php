@@ -166,7 +166,16 @@ class SchemaIntrospectionService
         $dataBindings[] = $offset;
 
         $rows = $connection->select($sql, $dataBindings);
-        $columns = ! empty($rows) ? array_keys((array) $rows[0]) : [];
+
+        if (! empty($rows)) {
+            $columns = array_keys((array) $rows[0]);
+        } else {
+            $colRows = $connection->select(
+                "SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ordinal_position",
+                [$schema, $table]
+            );
+            $columns = array_map(fn ($r) => $r->column_name, $colRows);
+        }
 
         return [
             'rows' => array_map(fn ($row) => (array) $row, $rows),
