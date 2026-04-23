@@ -44,7 +44,7 @@ Cada instância do DockaBase pode gerenciar **múltiplos databases PostgreSQL** 
 | Componente | Tecnologia |
 |------------|------------|
 | Backend | Laravel 13+ / PHP 8.4+ |
-| Performance | Laravel Octane (Swoole) |
+| Performance | Laravel Octane (FrankenPHP) |
 | Database | PostgreSQL 16+ |
 | Cache | Redis 7+ |
 | Queue | RabbitMQ 7+ |
