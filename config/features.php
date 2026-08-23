@@ -27,12 +27,12 @@ return [
         'schema-builder' => [
             'name' => 'Schema Builder',
             'description' => 'Visual interface for creating tables and columns',
-            'implemented_at' => null,
+            'implemented_at' => '2026-04-20',
         ],
         'table-manager' => [
             'name' => 'Table Manager',
             'description' => 'Spreadsheet-like CRUD data interface',
-            'implemented_at' => null,
+            'implemented_at' => '2026-04-27',
         ],
         'dynamic-api' => [
             'name' => 'Dynamic REST API',

@@ -10,7 +10,9 @@ use App\Jobs\{CreateSchemaJob, CreateTableJob};
 use App\Models\Database;
 use App\Models\DatabaseTableMetadata;
 use App\Services\{MigrationExecutorService, MigrationGeneratorService, SchemaBuilderService, SchemaIntrospectionService};
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,6 +29,7 @@ class SchemaBuilderController
     public function index(Database $database): SchemaResource
     {
         Gate::authorize('view', $database);
+        Gate::authorize('schemas.view');
 
         $schemas = [];
 
@@ -57,6 +60,7 @@ class SchemaBuilderController
     public function tableData(Database $database, string $schema, string $table, TableDataRequest $request): TableDataResource
     {
         Gate::authorize('view', $database);
+        Gate::authorize('schemas.view');
 
         $data = $this->introspectionService->getTableData(
             $database,
@@ -78,15 +82,17 @@ class SchemaBuilderController
     public function columns(Database $database, string $schema, string $table)
     {
         Gate::authorize('view', $database);
+        Gate::authorize('schemas.view');
 
         $columns = $this->introspectionService->getColumns($database, $schema, $table);
 
         return ColumnResource::collection($columns);
     }
 
-    public function storeSchema(Database $database, \Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    public function storeSchema(Database $database, Request $request): JsonResponse
     {
-        Gate::authorize('update', $database);
+        Gate::authorize('view', $database);
+        Gate::authorize('schemas.create');
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:63', 'regex:/^[a-z][a-z0-9_]*$/'],
@@ -101,7 +107,8 @@ class SchemaBuilderController
 
     public function store(Database $database, CreateTableRequest $request): RedirectResponse
     {
-        Gate::authorize('create', $database);
+        Gate::authorize('view', $database);
+        Gate::authorize('schemas.create');
 
         $this->schemaBuilderService->validateTableName($request->input('name'));
 
@@ -131,7 +138,8 @@ class SchemaBuilderController
 
     public function destroy(Database $database, string $schema, string $table)
     {
-        Gate::authorize('delete', $database);
+        Gate::authorize('view', $database);
+        Gate::authorize('schemas.delete');
 
         // TODO: Implement drop table
     }
@@ -139,6 +147,7 @@ class SchemaBuilderController
     public function settings(Database $database, string $schema, string $table): Response
     {
         Gate::authorize('view', $database);
+        Gate::authorize('schemas.view');
 
         $columns = $this->introspectionService->getColumns($database, $schema, $table);
         $metadata = DatabaseTableMetadata::where('database_id', $database->id)
@@ -156,9 +165,10 @@ class SchemaBuilderController
         ]);
     }
 
-    public function updateSettings(Database $database, string $schema, string $table, \Illuminate\Http\Request $request): RedirectResponse
+    public function updateSettings(Database $database, string $schema, string $table, Request $request): RedirectResponse
     {
-        Gate::authorize('update', $database);
+        Gate::authorize('view', $database);
+        Gate::authorize('schemas.update');
 
         $validated = $request->validate([
             'validations' => ['nullable', 'array'],

@@ -625,6 +625,7 @@
     "No data available": "No data available",
     "Table created successfully": "Table created successfully",
     "Table creation request sent successfully": "Table creation request sent successfully",
+    "Schema creation request sent successfully": "Schema creation request sent successfully",
     "Failed to load schema": "Failed to load schema",
     "Failed to load table data": "Failed to load table data",
     "Failed to export CSV": "Failed to export CSV",
@@ -695,5 +696,15 @@
     "Table settings updated successfully": "Table settings updated successfully",
     "Failed to update table settings": "Failed to update table settings",
     "Table Settings: :name": "Table Settings: :name",
-    "No validations defined. Go back to Step 2 to add validation rules first.": "No validations defined. Go back to Step 2 to add validation rules first."
+    "No validations defined. Go back to Step 2 to add validation rules first.": "No validations defined. Go back to Step 2 to add validation rules first.",
+    "Launch": "Launch",
+    "Launch Feature": "Launch Feature",
+    "Feature launched successfully": "Feature launched successfully",
+    "Launched": "Launched",
+    "Are you sure you want to launch this feature?": "Are you sure you want to launch this feature?",
+    "This will remove the feature flag. The feature stays active for all users.": "This will remove the feature flag. The feature stays active for all users.",
+    "Restore Flags": "Restore Flags",
+    "Flags restored successfully": "Flags restored successfully",
+    "No launched features to restore": "No launched features to restore",
+    "No launched features": "No launched features"
 }

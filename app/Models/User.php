@@ -114,6 +114,15 @@ class User extends Authenticatable
     }
 
     /**
+     * Override Spatie's checkPermissionTo to respect denied_permissions.
+     * This makes Gate::authorize(), $user->can(), and @can all honor denials.
+     */
+    public function checkPermissionTo($permission, ?string $guardName = null): bool
+    {
+        return $this->checkPermission($permission instanceof \Spatie\Permission\Contracts\Permission ? $permission->name : $permission);
+    }
+
+    /**
      * Check if user has permission, considering denied_permissions.
      * Denied permissions override everything.
      */

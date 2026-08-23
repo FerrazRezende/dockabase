@@ -109,6 +109,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
             ],
             'activeFeatures' => $activeFeatures,
+            'appEnv' => App::environment(),
             'userPermissions' => $userPermissions,
             'userStatus' => $userStatus,
             'impersonating' => $impersonating,

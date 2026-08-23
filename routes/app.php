@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\App\CredentialController;
 use App\Http\Controllers\App\DatabaseController;
+use App\Http\Controllers\App\SchemaBuilderController;
 use App\Http\Controllers\System\UserController;
 use Illuminate\Support\Facades\Route;
 

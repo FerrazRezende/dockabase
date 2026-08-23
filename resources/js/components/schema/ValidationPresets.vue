@@ -115,7 +115,7 @@ const setValue = (type: ValidationPresetType, value: string) => {
       @click="toggle(preset.type)"
     >
       <Checkbox
-        :checked="isEnabled(preset.type)"
+        :model-value="isEnabled(preset.type)"
         class="pointer-events-none"
       />
       <span class="text-sm flex-1">{{ __(preset.label) }}</span>

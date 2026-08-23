@@ -28,6 +28,8 @@ class FeatureFlagService
             ->map(function (array $definition, string $name) use ($settings) {
                 $setting = $settings->get($name);
 
+                $isLaunched = $setting?->is_launched ?? false;
+
                 // Se há setting, usa o status do banco
                 // Se não há setting, usa o default por ambiente
                 $isActive = $setting
@@ -44,7 +46,8 @@ class FeatureFlagService
                     strategy: $strategy,
                     isActive: $isActive,
                     percentage: $setting?->percentage ?? 0,
-                    userIds: $setting?->user_ids
+                    userIds: $setting?->user_ids,
+                    isLaunched: $isLaunched,
                 );
             })
             ->values();
@@ -63,6 +66,8 @@ class FeatureFlagService
 
         $setting = FeatureSetting::where('feature_name', $featureName)->first();
 
+        $isLaunched = $setting?->is_launched ?? false;
+
         // Usa a mesma lógica do getAllFeatures() para consistência
         $isActive = $setting
             ? $setting->is_active
@@ -77,7 +82,8 @@ class FeatureFlagService
             strategy: $strategy,
             isActive: $isActive,
             percentage: $setting?->percentage ?? 0,
-            userIds: $setting?->user_ids
+            userIds: $setting?->user_ids,
+            isLaunched: $isLaunched,
         );
     }
 
@@ -213,6 +219,55 @@ class FeatureFlagService
     }
 
     /**
+     * Launch a feature — mark as finalized, remove from active management.
+     */
+    public function launch(string $featureName, User $actor): array
+    {
+        $definition = config("features.definitions.{$featureName}");
+        abort_unless($definition, 404, "Feature {$featureName} not found");
+
+        $setting = FeatureSetting::firstOrCreate(
+            ['feature_name' => $featureName],
+            ['strategy' => RolloutStrategyEnum::ALL, 'is_active' => true]
+        );
+
+        $previousState = $setting->toArray();
+
+        $setting->update([
+            'is_launched' => true,
+            'is_active' => true,
+            'strategy' => RolloutStrategyEnum::ALL,
+            'percentage' => 0,
+            'user_ids' => null,
+        ]);
+
+        $this->recordHistory($setting, 'launched', $actor, $previousState, $setting->fresh()->toArray());
+
+        Feature::purge($featureName);
+
+        return $this->getFeature($featureName);
+    }
+
+    /**
+     * Restore all launched features back to active management (dev only).
+     *
+     * @return string[] Names of restored features
+     */
+    public function restoreLaunched(): array
+    {
+        $launchedSettings = FeatureSetting::where('is_launched', true)->get();
+        $restored = [];
+
+        foreach ($launchedSettings as $setting) {
+            $setting->update(['is_launched' => false]);
+            Feature::purge($setting->feature_name);
+            $restored[] = $setting->feature_name;
+        }
+
+        return $restored;
+    }
+
+    /**
      * Check if a feature is active for a specific user.
      *
      * Delegates to Pennant which uses the feature class's before()/resolve() methods.
@@ -301,7 +356,8 @@ class FeatureFlagService
         RolloutStrategyEnum $strategy,
         bool $isActive,
         int $percentage = 0,
-        ?array $userIds = null
+        ?array $userIds = null,
+        bool $isLaunched = false,
     ): array {
         return [
             'name' => $name,
@@ -309,6 +365,7 @@ class FeatureFlagService
             'description' => $definition['description'],
             'is_active' => $isActive,
             'implemented' => ($definition['implemented_at'] ?? null) !== null,
+            'launched' => $isLaunched,
             'strategy' => $strategy->value,
             'strategy_label' => $strategy->label(),
             'percentage' => $percentage,

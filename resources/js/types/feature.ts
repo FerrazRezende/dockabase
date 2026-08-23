@@ -3,6 +3,8 @@ export interface Feature {
     display_name: string;
     description: string;
     is_active: boolean;
+    implemented: boolean;
+    launched: boolean;
     strategy: 'inactive' | 'percentage' | 'users' | 'all';
     strategy_label: string;
     percentage: number;

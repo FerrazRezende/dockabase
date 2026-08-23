@@ -14,6 +14,7 @@ use App\Http\Resources\System\FeatureResource;
 use App\Models\User;
 use App\Services\FeatureFlagService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Inertia\Inertia;
 
 class FeatureFlagController extends Controller
@@ -160,6 +161,35 @@ class FeatureFlagController extends Controller
         $history = $this->featureService->getHistory($feature);
 
         return response()->json(['data' => $history]);
+    }
+
+    /**
+     * Launch a feature — mark as finalized.
+     */
+    public function launch(Request $request, string $feature)
+    {
+        abort_unless($request->user()->is_admin, 403);
+
+        $this->featureService->launch($feature, $request->user());
+
+        return redirect()->back()->with('toast', ['message' => __('Feature launched successfully')]);
+    }
+
+    /**
+     * Restore all launched features (dev only).
+     */
+    public function restoreLaunched(Request $request)
+    {
+        abort_unless($request->user()->is_admin, 403);
+        abort_unless(App::environment('local'), 403);
+
+        $restored = $this->featureService->restoreLaunched();
+
+        $message = count($restored) > 0
+            ? __('Flags restored successfully')
+            : __('No launched features to restore');
+
+        return redirect()->back()->with('toast', ['message' => $message]);
     }
 
     /**

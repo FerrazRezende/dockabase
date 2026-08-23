@@ -241,8 +241,8 @@ Ao criar uma nova feature, seguir ESTA ORDEM:
 
 1. **Feature Flag** (`config/features.php` + `app/Features/`)
    - Adicionar definição em `config/features.php`
-   - Criar classe Pennant em `app/Features/NomeFeature.php` estendendo `Feature` com `public string $name = 'nome-feature'`
-   - Registrar no `FeatureServiceProvider` com `Feature::define(NomeFeature::class)` (argumento único!)
+   - Criar classe Pennant em `app/Features/NomeFeature.php` estendendo `Feature` com atributo `#[Name('nome-feature')]`
+   - Auto-discover via `Feature::discover()` no `FeatureServiceProvider`
 
 2. **Backend** (TDD - testes primeiro):
    - Migration + Model (com `declare(strict_types=1)`)
@@ -277,8 +277,8 @@ Ao criar uma nova feature, seguir ESTA ORDEM:
 
 Cada feature DEVE ter:
 1. Definição em `config/features.php` (name, description, implemented_at)
-2. Classe em `app/Features/NomeFeature.php` estendendo `Feature` com `public string $name`
-3. Registro no `FeatureServiceProvider` com `Feature::define(NomeFeature::class)` (argumento único)
+2. Classe em `app/Features/NomeFeature.php` estendendo `Feature` com atributo `#[Name('nome-feature')]` (import `Laravel\Pennant\Attributes\Name`)
+3. Auto-discover via `Feature::discover()` no `FeatureServiceProvider` (registra todas as classes em `app/Features/`)
 4. Validação de exibição: Feature Flag (sidebar) + RBAC (botões)
 
 ### Traduções - REGRA CRÍTICA
@@ -589,26 +589,32 @@ Database: dev
 
 #### Como funciona
 
-Cada feature é uma classe em `app/Features/` que estende a base abstrata `Feature` e define `public string $name`:
+Cada feature é uma classe em `app/Features/` que estende a base abstrata `Feature` e usa o atributo `#[Name]` do Pennant:
 
 ```php
 // app/Features/Realtime.php
+use Laravel\Pennant\Attributes\Name;
+
+#[Name('realtime')]
 class Realtime extends Feature
 {
-    public string $name = 'realtime';
 }
 ```
 
 A classe base fornece:
 - `before(User $user)` — God Admin bypass (in-memory check)
 - `resolve(User $user)` — Rollout strategy do banco + fallback por ambiente
+- `featureName()` — Lê o atributo `#[Name]` via reflection
 
 #### Registro no FeatureServiceProvider
 
-**SEMPRE usar argumento único** — Pennant instancia a classe e chama `before()` + `resolve()`:
+**Usar `Feature::discover()`** — Pennant auto-descobre todas as classes em `app/Features/`:
 
 ```php
-// CORRETO — argumento único
+// CORRETO — auto-discover
+Feature::discover();
+
+// TAMBÉM FUNCIONA — registro manual (argumento único)
 Feature::define(Realtime::class);
 
 // ERRADO — dois argumentos faz Pennant tratar a string como valor resolvido (truthy!)
@@ -617,23 +623,23 @@ Feature::define('realtime', Realtime::class);  // NUNCA FAZER ISSO
 
 #### Como Pennant resolve o nome da feature
 
-Pennant lê a propriedade `$name` da classe para determinar o nome de storage/lookup. Isso permite:
-- `Feature::active('realtime')` → funciona (busca pelo nome)
+Pennant lê o atributo `#[Name('nome')]` da classe para determinar o nome de storage/lookup. Isso permite:
+- `Feature::active('realtime')` → funciona (resolve via #[Name] attribute)
 - `Feature::purge('realtime')` → funciona
 - Middleware `feature:realtime` → funciona
 
 #### Criando uma nova feature
 
 1. Criar classe em `app/Features/NomeFeature.php` estendendo `Feature`
-2. Definir `public string $name = 'nome-feature'`
-3. Registrar em `FeatureServiceProvider` com `Feature::define(NomeFeature::class)`
+2. Adicionar atributo `#[Name('nome-feature')]` com import `Laravel\Pennant\Attributes\Name`
+3. `Feature::discover()` no `FeatureServiceProvider` registra automaticamente
 4. Adicionar metadata em `config/features.php`
 
 #### Fluxo de resolução
 
 ```
 Feature::active('realtime')
-  → Pennant busca classe via nameMap
+  → Pennant resolve nome via atributo #[Name('realtime')]
   → before($user) — admin bypass? retorna true
   → resolve($user) — consulta FeatureSetting no banco
     → Se há setting: segue estratégia (ALL, PERCENTAGE, USERS, INACTIVE)

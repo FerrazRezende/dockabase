@@ -71,7 +71,7 @@ const {
 } = useSchemaBrowser(props.databaseId)
 
 const toast = useToast()
-const { canEdit } = usePermissions()
+const { canCreate, canEdit, canDelete } = usePermissions()
 
 const view = ref<'folders' | 'browser' | 'create-table'>('folders')
 const creatingForSchema = ref<string | null>(null)
@@ -175,7 +175,7 @@ watch(() => props.databaseStatus, (newStatus) => {
         <h3 class="text-lg font-semibold">{{ __('Schemas') }}</h3>
         <p class="text-sm text-muted-foreground">{{ schemas.length }} {{ schemas.length === 1 ? __('schema') : __('schemas') }} {{ __('in this database') }}</p>
       </div>
-      <Button v-if="canEdit('databases')" @click="createDialogOpen = true">
+      <Button v-if="canCreate('schemas')" @click="createDialogOpen = true">
         <Plus class="h-4 w-4 mr-2" />
         {{ __('New Schema') }}
       </Button>
@@ -250,7 +250,7 @@ watch(() => props.databaseStatus, (newStatus) => {
           </div>
         </div>
 
-        <div v-if="canEdit('databases')" class="px-5 pb-4 pt-2">
+        <div v-if="canCreate('schemas')" class="px-5 pb-4 pt-2">
           <button
             class="flex items-center gap-1.5 text-xs text-primary/70 hover:text-primary font-medium transition-colors"
             @click.stop="openCreateTable(schema.name)"
@@ -288,7 +288,7 @@ watch(() => props.databaseStatus, (newStatus) => {
           </Badge>
         </div>
       </div>
-      <div v-if="canEdit('databases')" class="px-3 pb-2">
+      <div v-if="canCreate('schemas')" class="px-3 pb-2">
         <Button variant="ghost" size="sm" class="w-full" @click="openCreateTable(selectedSchema!)">
           <Plus class="h-3.5 w-3.5 mr-1.5" />
           {{ __('New Table') }}

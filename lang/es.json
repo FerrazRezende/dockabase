@@ -625,6 +625,7 @@
     "No data available": "Sin datos disponibles",
     "Table created successfully": "Tabla creada con éxito",
     "Table creation request sent successfully": "Solicitud de creación de tabla enviada con éxito",
+    "Schema creation request sent successfully": "Solicitud de creación de esquema enviada con éxito",
     "Failed to load schema": "Error al cargar esquema",
     "Failed to load table data": "Error al cargar datos de la tabla",
     "Failed to export CSV": "Error al exportar CSV",
@@ -695,5 +696,15 @@
     "Table settings updated successfully": "Configuración de tabla actualizada exitosamente",
     "Failed to update table settings": "Error al actualizar la configuración de tabla",
     "Table Settings: :name": "Configuración de Tabla: :name",
-    "No validations defined. Go back to Step 2 to add validation rules first.": "Sin validaciones definidas. Vuelve al Paso 2 para agregar reglas de validación."
+    "No validations defined. Go back to Step 2 to add validation rules first.": "Sin validaciones definidas. Vuelve al Paso 2 para agregar reglas de validación.",
+    "Launch": "Lanzar",
+    "Launch Feature": "Lanzar Feature",
+    "Feature launched successfully": "Feature lanzada exitosamente",
+    "Launched": "Lanzada",
+    "Are you sure you want to launch this feature?": "¿Estás seguro de que deseas lanzar esta feature?",
+    "This will remove the feature flag. The feature stays active for all users.": "Esto eliminará la flag de la feature. La feature seguirá activa para todos los usuarios.",
+    "Restore Flags": "Restaurar Flags",
+    "Flags restored successfully": "Flags restauradas exitosamente",
+    "No launched features to restore": "No hay features lanzadas para restaurar",
+    "No launched features": "No hay features lanzadas"
 }

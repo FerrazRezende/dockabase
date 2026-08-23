@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Features;
 
+use App\Features\Base\Feature;
+
+use Laravel\Pennant\Attributes\Name;
+
+#[Name('dynamic-api')]
 class DynamicApi extends Feature
 {
-    public string $name = 'dynamic-api';
 }

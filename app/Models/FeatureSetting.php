@@ -20,6 +20,7 @@ class FeatureSetting extends Model
         'percentage',
         'user_ids',
         'is_active',
+        'is_launched',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class FeatureSetting extends Model
             'percentage' => 'integer',
             'user_ids' => 'array',
             'is_active' => 'boolean',
+            'is_launched' => 'boolean',
         ];
     }
 

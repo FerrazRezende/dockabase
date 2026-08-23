@@ -31,6 +31,8 @@ Route::middleware(['web', 'auth'])
         Route::post('/features/{feature}/deactivate', [FeatureFlagController::class, 'deactivate'])->name('features.deactivate');
         Route::patch('/features/{feature}', [FeatureFlagController::class, 'update'])->name('features.update');
         Route::get('/features/{feature}/history', [FeatureFlagController::class, 'history'])->name('features.history');
+        Route::post('/features/restore', [FeatureFlagController::class, 'restoreLaunched'])->name('features.restore');
+        Route::delete('/features/{feature}', [FeatureFlagController::class, 'launch'])->name('features.launch');
         Route::post('/features/{feature}/users', [FeatureFlagController::class, 'addUser'])->name('features.users.add');
         Route::delete('/features/{feature}/users/{userId}', [FeatureFlagController::class, 'removeUser'])->name('features.users.remove');
 

@@ -83,29 +83,49 @@ class CheckDeniedPermissions
     /**
      * Derive permission name from route name.
      *
-     * app.databases.index -> databases.view
-     * app.databases.create -> databases.create
-     * app.databases.store -> databases.create
-     * app.databases.edit -> databases.edit
-     * app.databases.update -> databases.edit
-     * app.databases.destroy -> databases.delete
+     * Simple: app.databases.index -> databases.view
+     * Nested: app.databases.schema -> schemas.view
+     *         app.databases.tables.store -> tables.create
      */
     private function derivePermissionFromRoute(string $routeName): ?string
     {
         // Remove 'app.' prefix
         $name = str_replace('app.', '', $routeName);
 
-        // Split into parts
+        // Map specific nested routes to their correct permissions
+        $nestedRouteMap = [
+            // Schema routes nested under databases
+            'databases.schema' => 'schemas.view',
+            'databases.schemas.store' => 'schemas.create',
+            // Table routes nested under databases
+            'databases.tables.data' => 'tables.view',
+            'databases.tables.columns' => 'tables.view',
+            'databases.tables.store' => 'tables.create',
+            'databases.tables.settings' => 'tables.view',
+            'databases.tables.settings.update' => 'tables.update',
+            'databases.tables.destroy' => 'tables.delete',
+            // Credential routes nested under databases
+            'databases.credentials.attach' => 'credentials.update',
+            'databases.credentials.detach' => 'credentials.delete',
+            // User routes nested under credentials
+            'credentials.users.attach' => 'credentials.update',
+            'credentials.users.detach' => 'credentials.update',
+        ];
+
+        if (isset($nestedRouteMap[$name])) {
+            return $nestedRouteMap[$name];
+        }
+
+        // Default derivation for simple routes (resource.action)
         $parts = explode('.', $name);
 
         if (count($parts) < 2) {
             return null;
         }
 
-        $resource = $parts[0]; // databases, schemas, credentials, etc.
-        $action = $parts[1];   // index, create, store, edit, update, destroy, show
+        $resource = $parts[0];
+        $action = $parts[1];
 
-        // Map route actions to permission actions
         $permissionMap = [
             'index' => 'view',
             'show' => 'view',

@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { ArrowLeft, Play, Square, History, UserPlus, X, Users } from 'lucide-vue-next';
+import { ArrowLeft, Play, Square, History, UserPlus, X, Users, Rocket } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick } from 'vue';
 import type { Feature } from '@/types/feature';
 import { useToast } from '@/composables/useToast';
@@ -71,6 +71,7 @@ const toast = useToast();
 
 const showActivateDialog = ref(false);
 const showDeactivateDialog = ref(false);
+const showLaunchDialog = ref(false);
 const activating = ref(false);
 
 // Form state for activation
@@ -161,6 +162,24 @@ const deactivateFeature = () => {
     });
 };
 
+const launchFeature = () => {
+    activating.value = true;
+
+    router.delete(route('system.features.launch', props.feature.name), {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success(__('Feature launched successfully'));
+        },
+        onError: () => {
+            toast.error(__('Error launching feature'));
+        },
+        onFinish: () => {
+            activating.value = false;
+            showLaunchDialog.value = false;
+        },
+    });
+};
+
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('pt-BR', {
         day: '2-digit',
@@ -179,6 +198,8 @@ const getActionBadge = (action: string) => {
             return { variant: 'outline', label: __('Deactivated'), class: '' };
         case 'updated':
             return { variant: 'secondary', label: __('Updated'), class: '' };
+        case 'launched':
+            return { variant: 'default', label: __('Launched'), class: 'badge-success' };
         default:
             return { variant: 'outline', label: action, class: '' };
     }
@@ -245,16 +266,25 @@ const accessDisplay = computed(() => {
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-4">
                             <Badge
-                                :variant="feature.is_active ? 'default' : 'outline'"
-                                :class="feature.is_active ? 'badge-success' : ''"
-                                class="text-base px-4 py-1"
+                                v-if="feature.launched"
+                                variant="default"
+                                class="badge-success text-base px-4 py-1"
                             >
-                                {{ feature.is_active ? __('Active') : __('Inactive') }}
+                                {{ __('Launched') }}
                             </Badge>
-                            <span class="text-muted-foreground">{{ actionLabel }}</span>
+                            <template v-else>
+                                <Badge
+                                    :variant="feature.is_active ? 'default' : 'outline'"
+                                    :class="feature.is_active ? 'badge-success' : ''"
+                                    class="text-base px-4 py-1"
+                                >
+                                    {{ feature.is_active ? __('Active') : __('Inactive') }}
+                                </Badge>
+                                <span class="text-muted-foreground">{{ actionLabel }}</span>
+                            </template>
                         </div>
 
-                        <div class="flex gap-2">
+                        <div v-if="!feature.launched" class="flex gap-2">
                             <!-- Activate Dialog -->
                             <Dialog v-model:open="showActivateDialog">
                                 <DialogTrigger as-child>
@@ -405,7 +435,45 @@ const accessDisplay = computed(() => {
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
+
+                            <!-- Launch Button -->
+                            <Button
+                                v-if="feature.is_active && feature.implemented"
+                                variant="outline"
+                                class="gap-2"
+                                @click="showLaunchDialog = true"
+                            >
+                                <Rocket class="h-4 w-4" />
+                                {{ __('Launch') }}
+                            </Button>
                         </div>
+
+                        <!-- Launch Dialog -->
+                        <Dialog v-model:open="showLaunchDialog">
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>{{ __('Launch Feature') }}</DialogTitle>
+                                    <DialogDescription>
+                                        {{ __('Are you sure you want to launch this feature?') }}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <p class="text-sm text-muted-foreground">
+                                    {{ __('This will remove the feature flag. The feature stays active for all users.') }}
+                                </p>
+                                <DialogFooter>
+                                    <Button variant="outline" @click="showLaunchDialog = false">
+                                        {{ __('Cancel') }}
+                                    </Button>
+                                    <Button
+                                        @click="launchFeature"
+                                        :disabled="activating"
+                                    >
+                                        <Rocket class="h-4 w-4 mr-2" />
+                                        {{ activating ? __('Launching...') : __('Launch') }}
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </CardContent>
             </Card>

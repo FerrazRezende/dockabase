@@ -66,7 +66,7 @@ const props = defineProps<Props>();
 
 const page = usePage();
 const toast = useToast();
-const { canEdit } = usePermissions();
+const { canEdit, canView } = usePermissions();
 const activeFeatures = computed(() => page.props.activeFeatures as string[] | undefined);
 
 const tabs = computed(() => {
@@ -74,7 +74,7 @@ const tabs = computed(() => {
         { value: 'info', label: __('Information'), icon: 'Server' },
     ];
 
-    if (activeFeatures.value?.includes('schema-builder')) {
+    if (activeFeatures.value?.includes('schema-builder') && canView('schemas')) {
         baseTabs.push({ value: 'schema', label: __('Schema'), icon: 'Database' });
     }
 

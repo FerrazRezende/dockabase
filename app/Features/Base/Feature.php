@@ -2,21 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Features;
+namespace App\Features\Base;
 
 use App\Enums\RolloutStrategyEnum;
 use App\Models\FeatureSetting;
 use App\Models\User;
 use Carbon\Carbon;
+use Laravel\Pennant\Attributes\Name;
+use ReflectionClass;
 
 abstract class Feature
 {
-    /**
-     * The feature name used for config lookup and database storage.
-     * Override this in each concrete feature class.
-     */
-    protected string $name = '';
-
     /**
      * Run an in-memory check before the stored value is retrieved.
      * God Admin always bypasses all feature checks.
@@ -36,7 +32,7 @@ abstract class Feature
      */
     public function resolve(User $user): mixed
     {
-        $setting = FeatureSetting::where('feature_name', $this->name)->first();
+        $setting = FeatureSetting::where('feature_name', $this->featureName())->first();
 
         if (! $setting) {
             return $this->isActiveByDefault();
@@ -61,16 +57,18 @@ abstract class Feature
      */
     protected function isActiveByDefault(): bool
     {
-        $feature = config("features.definitions.{$this->name}");
+        $env = config('app.env');
+
+        // Dev: all features active by default
+        if (in_array($env, ['local', 'development', 'dev', 'testing'])) {
+            return true;
+        }
+
+        // Prod: only features with implemented_at up to first_deploy_date
+        $feature = config("features.definitions.{$this->featureName()}");
 
         if (! ($feature['implemented_at'] ?? null)) {
             return false;
-        }
-
-        $env = config('app.env');
-
-        if (in_array($env, ['local', 'development', 'dev', 'testing'])) {
-            return true;
         }
 
         $deployDate = config('features.first_deploy_date');
@@ -92,5 +90,20 @@ abstract class Feature
         $hash = crc32($userId);
 
         return ($hash % 100) < $percentage;
+    }
+
+    /**
+     * Read the feature name from the #[Name] attribute on the concrete class.
+     */
+    protected function featureName(): string
+    {
+        $attrs = (new ReflectionClass(static::class))
+            ->getAttributes(Name::class);
+
+        if ($attrs === []) {
+            return '';
+        }
+
+        return $attrs[0]->getArguments()[0];
     }
 }
